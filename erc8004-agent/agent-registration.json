@@ -1,18 +1,45 @@
 {
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "name": "OnFRA",
-  "description": "OnFRA (OnChain Financial Reputation Agent) — ERC-8004 registration for Wallet Profile on Celo. Platform: https://wallet-profile-orpin.vercel.app",
-  "agentURI": "https://wallet-profile-orpin.vercel.app/.well-known/agent.json",
-  "identityRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-  "reputationRegistry": "eip155:42220:0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
-  "chain": "celo",
-  "chainId": 42220,
-  "agentLogo": "https://wallet-profile-orpin.vercel.app/agent_logo.png",
+  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. The agent evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to transform raw onchain data into lender-friendly financial intelligence. Outputs include Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI-generated financial summaries, and borrowing capacity recommendations. OnFRA solves the proof-of-income problem for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Users interact through Wallet Profile at https://wallet-profile-orpin.vercel.app to connect a wallet, view their profile, generate statements, receive AI insights, purchase Verified Financial Reputation Reports, or query any wallet address. Currently analyzing Celo blockchain , additional EVM chains planned.",
+  "image": "https://wallet-profile-orpin.vercel.app/agent_logo.png",
+  "homepage": "https://wallet-profile-orpin.vercel.app",
+  "category": "financial-reputation,proof-of-income,credit-scoring,microfinance",
+  "tags": [
+    "financial_reputation",
+    "proof_of_income",
+    "wallet_analysis",
+    "credit_scoring",
+    "income_stability",
+    "loan_capacity",
+    "portfolio_risk",
+    "transaction_statements",
+    "financial_attestation",
+    "microfinance",
+    "freelancer_finance",
+    "celo",
+    "defi",
+    "x402",
+    "erc-8004"
+  ],
+  "license": "MIT",
+  "documentation": "https://github.com/jeffIshmael/wallet-profile",
+  "capabilities": [
+    "wallet_financial_analysis",
+    "financial_health_scoring",
+    "wallet_reputation_scoring",
+    "income_stability_assessment",
+    "portfolio_risk_analysis",
+    "loan_capacity_estimation",
+    "cash_flow_statements",
+    "transaction_history_analysis",
+    "ai_financial_summaries",
+    "verified_reputation_reports",
+    "report_verification",
+    "external_wallet_queries",
+    "multi_turn_chat_analysis"
+  ],
   "services": [
-    {
-      "name": "web",
-      "endpoint": "https://wallet-profile-orpin.vercel.app",
-      "version": "1.0.0"
-    },
     {
       "name": "A2A",
       "endpoint": "https://wallet-profile-orpin.vercel.app/.well-known/agent-card.json",
@@ -22,15 +49,46 @@
       "name": "MCP",
       "endpoint": "https://wallet-profile-orpin.vercel.app/.well-known/mcp.json",
       "version": "2026-06-08"
+    },
+    {
+      "name": "WEB",
+      "endpoint": "https://wallet-profile-orpin.vercel.app/",
+      "version": "1.0.0"
+    },
+    {
+      "name": "OASF",
+      "skills": [
+        "onchain_financial_reputation/finance/credit_scoring",
+        "proof_of_income_verification/finance/lending",
+        "wallet_behavior_analysis/finance/risk_assessment",
+        "microfinance_underwriting/finance/microfinance",
+        "crypto_native_income/finance/fintech",
+        "transaction_statement_generation/finance/reporting"
+      ],
+      "domains": [
+        "finance/lending/microfinance",
+        "finance/credit/credit_scoring",
+        "finance/banking/fintech",
+        "technology/blockchain/blockchain",
+        "technology/blockchain/cryptocurrency",
+        "technology/blockchain/defi",
+        "technology/artificial_intelligence"
+      ],
+      "version": "0.8.0",
+      "endpoint": "https://github.com/agntcy/oasf/"
     }
   ],
-  "pricing": {
-    "external_wallet_analysis": "0.05 USDT",
-    "verified_financial_reputation_report": "0.10 USDT"
-  },
-  "registrationNotes": [
-    "Pin agent.json to IPFS and pass ipfs:// URI to IdentityRegistry.register() for content-addressed metadata.",
-    "Agent logo: /agent_logo.png (OnFRA mascot). Celo chain logo is separate (celoLogo.jpg).",
-    "Update services[].version when agent-card protocolVersion or mcp.json version changes."
+  "x402Support": true,
+  "active": true,
+  "registrations": [
+    {
+      "agentId": 9219,
+      "agentRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+    }
+  ],
+  "supportedTrust": [
+    "reputation",
+    "validation",
+    "crypto-economic"
   ]
 }

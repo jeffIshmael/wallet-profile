@@ -12,6 +12,9 @@ export const AGENT_LOGO_PATH = "/agent_logo.png";
 export const ERC8004_IDENTITY_REGISTRY =
   "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" as const;
 
+/** OnFRA agent ID on Celo mainnet Identity Registry */
+export const ERC8004_AGENT_ID = 9219;
+
 /** Celo Sepolia Identity Registry (testnet) */
 export const ERC8004_IDENTITY_REGISTRY_SEPOLIA =
   "0x8004A818BFB912233c491871b3d84c89A494BD9e" as const;
@@ -52,11 +55,15 @@ export function getAgentLogoUrl(): string {
 }
 
 export const AGENT = {
-  name: "OnFRA",
-  fullName: "OnFRA — Wallet Profile",
-  shortName: "Wallet Profile",
+  name: "OnFRA — Wallet Profile Financial Intelligence Agent",
+  shortName: "OnFRA",
+  platform: "Wallet Profile",
   provider: "Wallet Profile",
+  homepage: APP_BASE_URL,
+  documentation: "https://github.com/jeffIshmael/wallet-profile",
   protocolVersion: "0.3.0",
   mcpVersion: "2026-06-08",
-  appVersion: "1.0.0"
+  appVersion: "1.0.0",
+  category: "financial-reputation,proof-of-income,credit-scoring,microfinance",
+  license: "MIT"
 } as const;

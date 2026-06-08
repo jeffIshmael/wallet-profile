@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 /**
- * Register OnFRA on the ERC-8004 Identity Registry (Celo).
+ * Update OnFRA metadata URI on the ERC-8004 Identity Registry (Celo).
  *
- * Usage (from repo root or erc8004-agent/):
- *   cd erc8004-agent && npm install && npm run register
+ * Usage:
+ *   cd erc8004-agent && npm run set-uri
  *
- * Env vars (or set in erc8004-agent/.env):
- *   AGENT_IPFS_URI=ipfs://...   (required, content-addressed)
- *   PRIVATE_KEY=0x...           (required)
- *   RPC_URL=https://forno.celo.org  (optional)
- *   CHAIN_ID=42220              (42220 mainnet, 11142220 Sepolia)
+ * Env vars (or erc8004-agent/.env):
+ *   AGENT_IPFS_URI=ipfs://...   (required)
+ *   AGENT_ID=9219                 (required for existing agents)
+ *   PRIVATE_KEY=0x...             (must be agent owner)
+ *   RPC_URL=https://forno.celo.org
+ *   CHAIN_ID=42220
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -52,27 +53,35 @@ const IDENTITY_REGISTRY_SEPOLIA = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const identityRegistryAbi = [
   {
     type: "function",
-    name: "register",
+    name: "setAgentURI",
     stateMutability: "nonpayable",
-    inputs: [{ name: "agentURI", type: "string" }],
-    outputs: [{ name: "agentId", type: "uint256" }]
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "newURI", type: "string" }
+    ],
+    outputs: []
   }
 ];
 
 async function main() {
   const agentUri = process.env.AGENT_IPFS_URI;
+  const agentId = Number(process.env.AGENT_ID || "9219");
   const privateKey = process.env.PRIVATE_KEY;
   const rpcUrl = process.env.RPC_URL || "https://forno.celo.org";
   const chainId = Number(process.env.CHAIN_ID || "42220");
 
   if (!agentUri?.startsWith("ipfs://") && !agentUri?.startsWith("data:")) {
     console.error("AGENT_IPFS_URI must be content-addressed (ipfs:// or data:).");
-    console.error("Pin web/public/.well-known/agent.json to IPFS first.");
     process.exit(1);
   }
 
   if (!privateKey) {
-    console.error("PRIVATE_KEY is required (set in erc8004-agent/.env or environment).");
+    console.error("PRIVATE_KEY is required.");
+    process.exit(1);
+  }
+
+  if (!Number.isInteger(agentId) || agentId <= 0) {
+    console.error("AGENT_ID must be a positive integer.");
     process.exit(1);
   }
 
@@ -90,20 +99,21 @@ async function main() {
     transport: http(rpcUrl)
   });
 
-  console.log(`Registering agent on ${chain.name} (${chain.id})`);
+  console.log(`Updating agent URI on ${chain.name} (${chain.id})`);
   console.log(`Registry: ${registry}`);
-  console.log(`Agent URI: ${agentUri}`);
+  console.log(`Agent ID: ${agentId}`);
+  console.log(`New URI: ${agentUri}`);
   console.log(`Owner: ${account.address}`);
 
   const hash = await client.writeContract({
     address: registry,
     abi: identityRegistryAbi,
-    functionName: "register",
-    args: [agentUri]
+    functionName: "setAgentURI",
+    args: [BigInt(agentId), agentUri]
   });
 
   console.log(`Transaction submitted: ${hash}`);
-  console.log("Check 8004scan or Celoscan for agentId after confirmation.");
+  console.log(`View on Celoscan: https://celoscan.io/tx/${hash}`);
 }
 
 main().catch((err) => {

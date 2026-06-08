@@ -1,0 +1,13 @@
+{
+  "name": "@walletprofile/erc8004-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "register": "node scripts/register.mjs",
+    "set-uri": "node scripts/set-agent-uri.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.51.3"
+  }
+}

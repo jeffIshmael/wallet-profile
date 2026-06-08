@@ -15,6 +15,25 @@ Source of truth for schemas: [`../schemas/`](../schemas/) — copy to `web/publi
 
 Constants: [`../web/src/lib/blockchain/constants.ts`](../web/src/lib/blockchain/constants.ts)
 
+## IPFS upload
+
+The file to pin is **`web/public/.well-known/agent.json`**. It follows the ERC-8004 `#registration-v1` spec with full metadata (capabilities, tags, OASF skills/domains, x402, services).
+
+**Do not include the `_registration` block** from `erc8004-agent/agent-registration.json` in the IPFS upload — that file is a local superset with registration helpers.
+
+After on-chain `register()` assigns an `agentId`, add to `registrations` and re-pin:
+
+```json
+"registrations": [
+  {
+    "agentId": 9219,
+    "agentRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+  }
+]
+```
+
+**Registered:** OnFRA is agent `#9219` on Celo mainnet. Re-pin `agent.json` to IPFS and call `setAgentURI(9219, ipfs://...)` if metadata changes.
+
 ## Pre-registration checklist
 
 1. Deploy the web app so all `/.well-known/*` URLs resolve publicly.
@@ -31,11 +50,29 @@ Constants: [`../web/src/lib/blockchain/constants.ts`](../web/src/lib/blockchain/
 **Identity Registry:** `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`
 
 ```bash
-# After pinning agent.json to IPFS:
-export AGENT_IPFS_URI="ipfs://QmYourCidHere"
-export PRIVATE_KEY="0x..."
-export RPC_URL="https://forno.celo.org"
+cd erc8004-agent
+npm install
 
+# Env in erc8004-agent/.env or exported:
+# AGENT_IPFS_URI=ipfs://...
+# PRIVATE_KEY=0x...
+
+npm run register
+```
+
+### Update metadata URI (existing agent)
+
+After re-pinning `agent.json` to IPFS:
+
+```bash
+cd erc8004-agent
+# AGENT_ID=9219 and AGENT_IPFS_URI=ipfs://... in .env
+npm run set-uri
+```
+
+Or from the repo root (after `npm install` inside `erc8004-agent/`):
+
+```bash
 node erc8004-agent/scripts/register.mjs
 ```
 
