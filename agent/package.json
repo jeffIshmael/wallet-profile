@@ -1,0 +1,21 @@
+{
+  "name": "onchain-financial-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.48",
+    "@langchain/google": "^0.1.12",
+    "langchain": "^1.4.2",
+    "viem": "^2.51.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}

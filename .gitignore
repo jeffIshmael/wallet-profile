@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Foundry
+contracts/**/cache/
+contracts/**/out/
+contracts/**/broadcast/
+contracts/**/lib/
+
+# Environment & secrets (never commit)
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!.env*.example
+!**/.env.example
+!**/.env*.example
+
+# Agent generated output
+agent/reports/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+.cursor/
+
+# Logs & debug
+*.log
+npm-debug.log*
+coverage/
+
+# Misc local artifacts
+*.zip
