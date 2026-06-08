@@ -1,0 +1,24 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "OnFRA",
+  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. The agent evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to transform raw onchain data into lender-friendly financial intelligence. Outputs include Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI-generated financial summaries, and borrowing capacity recommendations. OnFRA solves the proof-of-income problem for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Users interact through Wallet Profile at https://wallet-profile-orpin.vercel.app to connect a wallet, view their profile, generate statements, receive AI insights, purchase Verified Financial Reputation Reports, or query any wallet address. Celo-first; additional EVM chains planned.",
+  "image": "https://wallet-profile-orpin.vercel.app/agent_logo.png",
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://wallet-profile-orpin.vercel.app",
+      "version": "1.0.0"
+    },
+    {
+      "name": "A2A",
+      "endpoint": "https://wallet-profile-orpin.vercel.app/.well-known/agent-card.json",
+      "version": "0.3.0"
+    },
+    {
+      "name": "MCP",
+      "endpoint": "https://wallet-profile-orpin.vercel.app/.well-known/mcp.json",
+      "version": "2026-06-08"
+    }
+  ],
+  "supportedTrust": ["reputation", "validation"]
+}

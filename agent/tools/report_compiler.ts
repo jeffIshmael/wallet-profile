@@ -72,7 +72,7 @@ export const reportCompiler = tool(
       aiSummary: aiSummary || "Analysis in progress.",
       verification: {
         erc804AgentIdentity: "0x804ScoreAgentContractAddressPlaceHolder",
-        verificationEndpoint: `https://api.walletprofile.ai/v1/verify/${reportId}`,
+        verificationEndpoint: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://wallet-profile-orpin.vercel.app"}/api/agent/verify/${reportId}`,
         reportHash: "",
       },
     };

@@ -1,0 +1,36 @@
+{
+  "name": "OnFRA",
+  "description": "OnFRA (OnChain Financial Reputation Agent) — ERC-8004 registration for Wallet Profile on Celo. Platform: https://wallet-profile-orpin.vercel.app",
+  "agentURI": "https://wallet-profile-orpin.vercel.app/.well-known/agent.json",
+  "identityRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+  "reputationRegistry": "eip155:42220:0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+  "chain": "celo",
+  "chainId": 42220,
+  "agentLogo": "https://wallet-profile-orpin.vercel.app/agent_logo.png",
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://wallet-profile-orpin.vercel.app",
+      "version": "1.0.0"
+    },
+    {
+      "name": "A2A",
+      "endpoint": "https://wallet-profile-orpin.vercel.app/.well-known/agent-card.json",
+      "version": "0.3.0"
+    },
+    {
+      "name": "MCP",
+      "endpoint": "https://wallet-profile-orpin.vercel.app/.well-known/mcp.json",
+      "version": "2026-06-08"
+    }
+  ],
+  "pricing": {
+    "external_wallet_analysis": "0.05 USDT",
+    "verified_financial_reputation_report": "0.10 USDT"
+  },
+  "registrationNotes": [
+    "Pin agent.json to IPFS and pass ipfs:// URI to IdentityRegistry.register() for content-addressed metadata.",
+    "Agent logo: /agent_logo.png (OnFRA mascot). Celo chain logo is separate (celoLogo.jpg).",
+    "Update services[].version when agent-card protocolVersion or mcp.json version changes."
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/reportResult.schema.json",
+  "title": "ReportResult",
+  "description": "Premium attestation report metadata and verification references.",
+  "type": "object",
+  "required": ["status", "reportId", "walletAddress"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "processing", "failed"]
+    },
+    "reportId": {
+      "type": "string",
+      "pattern": "^REP-[A-F0-9]+$",
+      "description": "Report identifier (also used as verification code prefix WP-)."
+    },
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "verificationCode": {
+      "type": "string",
+      "description": "Human-readable verification code printed on the report."
+    },
+    "verificationEndpoint": {
+      "type": "string",
+      "format": "uri"
+    },
+    "reportHash": {
+      "type": "string",
+      "description": "SHA-256 hash of report contents for on-chain attestation."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/reportRequest.schema.json",
+  "title": "ReportRequest",
+  "description": "Request a signed premium financial attestation report (x402-gated).",
+  "type": "object",
+  "required": ["walletAddress"],
+  "properties": {
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "periodMonths": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "default": 3
+    }
+  },
+  "additionalProperties": false
+}

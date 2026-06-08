@@ -6,7 +6,7 @@ Agent identity and registration contracts for **OnFRA** (Onchain Financial Reput
 
 | Contract | Description |
 |----------|-------------|
-| `Wallet ProfileAgentRegistry` | Agent registration and `agentURI` anchoring |
+| `WalletProfileAgentRegistry` | Legacy placeholder — use ERC-8004 Identity Registry + `erc8004-agent/` for registration |
 
 ## Development
 

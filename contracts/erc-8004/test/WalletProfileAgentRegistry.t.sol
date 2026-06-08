@@ -12,7 +12,7 @@ contract WalletProfileAgentRegistryTest is Test {
     }
 
     function test_AgentURI() public view {
-        assertEq(registry.AGENT_URI(), "https://walletprofile.ai/.well-known/agent.json");
+        assertEq(registry.AGENT_URI(), "https://wallet-profile-orpin.vercel.app/.well-known/agent.json");
     }
 
     function test_RegisterAgent() public {
