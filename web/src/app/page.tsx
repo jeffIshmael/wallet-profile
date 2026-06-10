@@ -6,7 +6,7 @@ import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 export default function HomePage() {
   const router = useRouter();
-  const { ready, authenticated, login, address } = useWalletAuth();
+  const { ready, authenticated, login, logout, address, connectingMiniPay } = useWalletAuth();
 
   function handleAnalyseWallet() {
     router.push("/dashboard");
@@ -24,7 +24,9 @@ export default function HomePage() {
     <Design4LandingPage
       authenticated={ready && authenticated}
       address={ready ? address : null}
+      connecting={connectingMiniPay}
       onSignIn={login}
+      onDisconnect={logout}
       onAnalyseWallet={handleAnalyseWallet}
       onTryChat={handleTryChat}
     />

@@ -11,7 +11,9 @@ import { UsersSection } from "@/components/landing/design-4/sections/UsersSectio
 type Design4LandingPageProps = {
   authenticated: boolean;
   address: string | null;
+  connecting?: boolean;
   onSignIn: () => void;
+  onDisconnect: () => void;
   onAnalyseWallet: () => void;
   onTryChat: () => void;
 };
@@ -19,7 +21,9 @@ type Design4LandingPageProps = {
 export function Design4LandingPage({
   authenticated,
   address,
+  connecting,
   onSignIn,
+  onDisconnect,
   onAnalyseWallet,
   onTryChat
 }: Design4LandingPageProps) {
@@ -35,10 +39,12 @@ export function Design4LandingPage({
     <div className="min-h-screen bg-void font-inter text-white">
       <HeroSection
         onSignIn={onSignIn}
+        onDisconnect={onDisconnect}
         onAnalyze={handleAnalyze}
         onTryChat={onTryChat}
         authenticated={authenticated}
         address={address}
+        connecting={connecting}
       />
       <ProblemSection />
       <SolutionSection />

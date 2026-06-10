@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Bot } from "lucide-react";
 import { HeroAnimationPanel } from "@/components/landing/design-4/hero/HeroAnimationPanel";
 import { LandingNav } from "@/components/landing/design-4/LandingNav";
+import { truncateAddress } from "@/lib/format";
 
 const container = {
   hidden: {},
@@ -17,13 +18,23 @@ const item = {
 
 type HeroSectionProps = {
   onSignIn: () => void;
+  onDisconnect: () => void;
   onAnalyze: () => void;
   onTryChat: () => void;
   authenticated: boolean;
   address: string | null;
+  connecting?: boolean;
 };
 
-export function HeroSection({ onSignIn, onAnalyze, onTryChat, authenticated, address }: HeroSectionProps) {
+export function HeroSection({
+  onSignIn,
+  onDisconnect,
+  onAnalyze,
+  onTryChat,
+  authenticated,
+  address,
+  connecting
+}: HeroSectionProps) {
   function handleCta() {
     if (!authenticated) {
       onSignIn();
@@ -51,14 +62,16 @@ export function HeroSection({ onSignIn, onAnalyze, onTryChat, authenticated, add
 
       <LandingNav
         onSignIn={onSignIn}
+        onDisconnect={onDisconnect}
         onTryChat={onTryChat}
         authenticated={authenticated}
         address={address}
+        connecting={connecting}
         active="home"
       />
 
       <div className="relative z-10 mx-auto grid max-w-7xl gap-12 pt-12 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-16">
-        <motion.div variants={container} initial="hidden" animate="show">
+        <motion.div variants={container} initial="hidden" animate="show" className="text-center lg:text-left">
 
           <motion.h1 variants={item} className="mt-6 leading-tight">
             <span className="block font-roboto text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
@@ -69,19 +82,36 @@ export function HeroSection({ onSignIn, onAnalyze, onTryChat, authenticated, add
             </span>
           </motion.h1>
 
-          <motion.p variants={item} className="mt-6 max-w-lg text-base leading-relaxed text-stardust md:text-lg">
+          <motion.p variants={item} className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-stardust md:text-lg lg:mx-0">
             Bridge onchain earnings and traditional finance. Wallet Profile transforms raw wallet activity into verifiable
             financial intelligence lenders trust.
           </motion.p>
 
-          <motion.div variants={item} className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <motion.div variants={item} className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:items-start lg:justify-start">
             <button
               type="button"
               onClick={handleCta}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105"
+              disabled={connecting}
+              className="inline-flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full bg-btc-orange/80 px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105 disabled:cursor-wait disabled:opacity-70"
             >
-              Analyse My Wallet
-              <ArrowRight size={14} />
+              {connecting ? (
+                <span>Connecting...</span>
+              ) : authenticated && address ? (
+                <>
+                  <span className="inline-flex items-center gap-2">
+                    Analyse My Wallet
+                    <ArrowRight size={14} />
+                  </span>
+                  <span className="font-mono text-[10px] font-normal normal-case tracking-normal text-white/80">
+                    ({truncateAddress(address)})
+                  </span>
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  Sign in
+                  <ArrowRight size={14} />
+                </span>
+              )}
             </button>
             <a
               href="#how-it-works"

@@ -21,20 +21,30 @@ const steps = [
 type TimelineCardProps = {
   title: string;
   description: string;
-  align: "left" | "right";
+  align?: "left" | "right";
 };
 
-function TimelineCard({ title, description, align }: TimelineCardProps) {
+function StepBadge({ number }: { number: number }) {
+  return (
+    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-btc-orange bg-void-surface font-mono text-sm font-medium text-btc-orange shadow-[0_0_24px_rgba(247,147,26,0.35)]">
+      {number}
+    </div>
+  );
+}
+
+function TimelineCard({ title, description, align = "left" }: TimelineCardProps) {
   return (
     <div
-      className={`relative rounded-xl border border-btc-orange/40 bg-void-surface p-6 backdrop-blur-sm transition-all duration-300 hover:border-btc-orange/70 hover:shadow-[0_0_30px_-10px_rgba(247,147,26,0.2)] ${
-        align === "right" ? "text-right" : "text-left"
+      className={`relative rounded-xl border border-btc-orange/40 bg-void-surface p-5 backdrop-blur-sm transition-all duration-300 hover:border-btc-orange/70 hover:shadow-[0_0_30px_-10px_rgba(247,147,26,0.2)] sm:p-6 ${
+        align === "right" ? "md:text-right" : "text-left"
       }`}
     >
       <div className="pointer-events-none absolute -left-px -top-px h-5 w-5 border-l-2 border-t-2 border-btc-orange" />
       <div className="pointer-events-none absolute -bottom-px -right-px h-5 w-5 border-b-2 border-r-2 border-btc-orange" />
-      <h3 className="font-space text-lg font-semibold text-white">{title}</h3>
-      <p className={`mt-2 text-sm leading-6 text-stardust ${align === "right" ? "md:ml-auto md:max-w-[90%]" : ""}`}>
+      <h3 className="font-space text-base font-semibold text-white sm:text-lg">{title}</h3>
+      <p
+        className={`mt-2 text-sm leading-6 text-stardust ${align === "right" ? "md:ml-auto md:max-w-[90%]" : ""}`}
+      >
         {description}
       </p>
     </div>
@@ -54,26 +64,46 @@ export function HowItWorksSection() {
           understand.
         </p>
 
-        <div className="relative mx-auto mt-16 max-w-4xl">
+        {/* Mobile: left-aligned timeline with step badge beside each card */}
+        <div className="relative mx-auto mt-12 max-w-lg md:hidden">
+          <div
+            aria-hidden
+            className="absolute bottom-4 left-5 top-4 w-px bg-gradient-to-b from-btc-orange via-btc-orange/70 to-btc-orange/20"
+          />
+
+          <div className="flex flex-col gap-6">
+            {steps.map((step, i) => (
+              <div key={step.title} className="relative flex items-start gap-4 pl-1">
+                <StepBadge number={i + 1} />
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <TimelineCard title={step.title} description={step.description} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: alternating center timeline */}
+        <div className="relative mx-auto mt-16 hidden max-w-4xl md:block">
           <div
             aria-hidden
             className="absolute bottom-12 left-1/2 top-12 w-px -translate-x-1/2 bg-gradient-to-b from-btc-orange via-btc-orange/70 to-btc-orange/20"
           />
 
-          <div className="flex flex-col gap-20 md:gap-24">
+          <div className="flex flex-col gap-24">
             {steps.map((step, i) => {
               const isLeft = i % 2 === 0;
 
               return (
                 <div key={step.title} className="relative min-h-[120px]">
-                  <div className="absolute left-1/2 top-1/2 z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-btc-orange bg-void-surface font-mono text-sm font-medium text-btc-orange shadow-[0_0_24px_rgba(247,147,26,0.35)]">
-                    {i + 1}
+                  <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+                    <StepBadge number={i + 1} />
                   </div>
 
                   <div
-                    className={`relative z-10 mx-auto w-full max-w-md pt-14 md:absolute md:top-1/2 md:w-[calc(50%-2.5rem)] md:max-w-none md:-translate-y-1/2 md:pt-0 ${
-                      isLeft ? "md:left-0 md:pr-10" : "md:left-auto md:right-0 md:pl-10"
-                    }`}
+                    className={`relative z-10 w-[calc(50%-2.5rem)] max-w-none ${
+                      isLeft ? "left-0 pr-10" : "left-auto right-0 ml-auto pl-10"
+                    } absolute top-1/2 -translate-y-1/2`}
                   >
                     <TimelineCard
                       title={step.title}
