@@ -381,3 +381,118 @@ html.light-theme .growth-token-btn:not(.bg-btc-orange\/20):hover {
   color: #ea580c;
   background-color: rgba(247, 147, 26, 0.08);
 }
+
+/* Wallet summary — theme-aware value colors */
+.wallet-section-label {
+  color: #94a3b8;
+}
+
+html.light-theme .wallet-section-label {
+  color: #64748b;
+}
+
+.wallet-field-label {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+html.light-theme .wallet-field-label {
+  color: #64748b;
+}
+
+.wallet-value-address {
+  color: #7dd3fc;
+  font-family: var(--font-dm-mono, ui-monospace, monospace);
+}
+
+html.light-theme .wallet-value-address {
+  color: #0369a1;
+}
+
+.wallet-value-age {
+  color: #6ee7b7;
+}
+
+html.light-theme .wallet-value-age {
+  color: #047857;
+}
+
+.wallet-value-tx-count {
+  color: #f7931a;
+  font-family: var(--font-dm-mono, ui-monospace, monospace);
+}
+
+.wallet-value-muted {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+html.light-theme .wallet-value-muted {
+  color: #475569;
+}
+
+.wallet-value-recent {
+  color: #fcd34d;
+}
+
+html.light-theme .wallet-value-recent {
+  color: #b45309;
+}
+
+.wallet-value-body {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+html.light-theme .wallet-value-body {
+  color: #1e293b;
+}
+
+.wallet-token-usdc {
+  color: #7dd3fc;
+}
+
+html.light-theme .wallet-token-usdc {
+  color: #0369a1;
+}
+
+.wallet-token-usdt {
+  color: #6ee7b7;
+}
+
+html.light-theme .wallet-token-usdt {
+  color: #047857;
+}
+
+.wallet-token-usdm {
+  color: #f7931a;
+}
+
+html.light-theme .wallet-token-usdm {
+  color: #c2410c;
+}
+
+.wallet-token-celo {
+  color: #fde68a;
+}
+
+html.light-theme .wallet-token-celo {
+  color: #92400e;
+}
+
+html.light-theme .wallet-summary-section {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+html.light-theme .report-btn-secondary {
+  color: #64748b;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html.light-theme .report-btn-secondary:hover {
+  color: #111111;
+  border-color: rgba(247, 147, 26, 0.4);
+}
+
+html.light-theme .report-btn-primary .report-price-badge {
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.2);
+}
