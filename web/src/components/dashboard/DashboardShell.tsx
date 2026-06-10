@@ -1,10 +1,12 @@
 "use client";
 
+import { clsx } from "clsx";
 import { MessageCircle, Sparkles, X } from "lucide-react";
 import { type ReactNode } from "react";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Header } from "@/components/layout/Header";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -21,8 +23,18 @@ export function DashboardShell({
   scrollable = false,
   hideChatFab = false
 }: DashboardShellProps) {
+  const { ready, authenticated } = useWalletAuth();
+  const mobileNavVisible = ready && authenticated;
+
   return (
-    <main className="dashboard-shell relative h-screen overflow-hidden bg-void font-inter text-white">
+    <main
+      className={clsx(
+        "dashboard-shell relative overflow-hidden bg-void font-inter text-white",
+        mobileNavVisible
+          ? "h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px))] md:h-screen"
+          : "h-screen"
+      )}
+    >
       <div
         className="dashboard-grid pointer-events-none absolute inset-0 opacity-20"
         style={{
@@ -46,9 +58,6 @@ export function DashboardShell({
           <div
             className={`min-w-0 flex-1 px-3 py-3 sm:px-4 ${scrollable ? "overflow-y-auto" : "overflow-hidden"}`}
           >
-            <div className="mb-3 lg:hidden">
-              <DashboardNav compact />
-            </div>
             {children}
           </div>
         </div>

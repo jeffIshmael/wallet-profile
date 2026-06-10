@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { MobileAppShell } from "@/components/layout/MobileAppShell";
 import { AppAuthProvider } from "@/providers/AuthProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
@@ -37,7 +38,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          <AppAuthProvider>{children}</AppAuthProvider>
+          <AppAuthProvider>
+            <MobileAppShell>{children}</MobileAppShell>
+          </AppAuthProvider>
         </ThemeProvider>
       </body>
     </html>
