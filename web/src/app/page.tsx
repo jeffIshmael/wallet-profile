@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { Design4LandingPage } from "@/components/landing/design-4/Design4LandingPage";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { clearAnalysisSession } from "@/lib/dashboardSession";
 
 export default function HomePage() {
   const router = useRouter();
   const { ready, authenticated, login, logout, address, connectingMiniPay } = useWalletAuth();
 
   function handleAnalyseWallet() {
-    router.push("/dashboard");
+    router.push("/dashboard?analyze=1");
   }
 
   function handleTryChat() {
@@ -26,7 +27,10 @@ export default function HomePage() {
       address={ready ? address : null}
       connecting={connectingMiniPay}
       onSignIn={login}
-      onDisconnect={logout}
+      onDisconnect={() => {
+        clearAnalysisSession();
+        logout();
+      }}
       onAnalyseWallet={handleAnalyseWallet}
       onTryChat={handleTryChat}
     />

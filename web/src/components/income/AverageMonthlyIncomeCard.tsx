@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 import { moneyPrecise } from "@/lib/format";
 
 function Sparkline({ values }: { values: number[] }) {
@@ -27,9 +27,11 @@ function Sparkline({ values }: { values: number[] }) {
 }
 
 export function AverageMonthlyIncomeCard() {
-  const amount = mockWallet.metrics.incomeProfile.averageInflowUsd;
-  const stats = mockWallet.monthlyIncomeStats;
-  const history = [...mockWallet.monthlyIncomeHistory];
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const amount = walletData.metrics.incomeProfile.averageInflowUsd;
+  const stats = walletData.monthlyIncomeStats;
+  const history = [...walletData.monthlyIncomeHistory];
   const changePositive = stats.changePct >= 0;
 
   return (

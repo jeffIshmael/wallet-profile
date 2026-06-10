@@ -1,12 +1,14 @@
 "use client";
 
 import { incomeAnimals } from "@/data/incomeAnimals";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 import { getFinancialHealthLabel, getReputationTag } from "@/lib/format";
 import { ScoreCard } from "@/components/scores/ScoreCard";
 
 export function FinancialHealthGauge() {
-  const score = mockWallet.metrics.financialHealth.score;
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const score = walletData.metrics.financialHealth.score;
 
   return (
     <ScoreCard
@@ -28,7 +30,9 @@ export function FinancialHealthGauge() {
 }
 
 export function IncomeStabilityCard() {
-  const income = mockWallet.metrics.incomeProfile;
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const income = walletData.metrics.incomeProfile;
   const animal = incomeAnimals[income.label];
 
   return (
@@ -51,7 +55,9 @@ export function IncomeStabilityCard() {
 }
 
 export function ReputationScoreCard() {
-  const { score, rationale } = mockWallet.metrics.reputation;
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const { score, rationale } = walletData.metrics.reputation;
   const tag = getReputationTag(score);
   const badgeVariant = score >= 90 ? "green" : score >= 75 ? "blue" : score >= 50 ? "amber" : "red";
 

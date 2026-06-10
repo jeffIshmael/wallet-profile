@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 import { getRiskCategory } from "@/lib/format";
 
 const segments = [
@@ -32,8 +32,11 @@ function RiskDonut({ allocation }: { allocation: Record<string, number> }) {
 }
 
 export function RiskExposureCard() {
-  const allocation = mockWallet.metrics.risk.allocation;
-  const category = getRiskCategory(allocation);
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const allocation = walletData.metrics.risk.allocation;
+  const nftCount = walletData.portfolio.nftCount;
+  const category = getRiskCategory(allocation, nftCount);
   const tone = category === "Low Risk" ? "green" : category === "Medium Risk" ? "amber" : "red";
   const riskPosition = category === "Low Risk" ? 25 : category === "Medium Risk" ? 55 : 80;
 
@@ -45,8 +48,9 @@ export function RiskExposureCard() {
             compact
             title="Portfolio Risk"
             help={{
-              meaning: "How your onchain assets are distributed across risk categories.",
-              calculation: "Percentage allocation across stablecoins, volatile assets, DeFi positions, and NFT holdings.",
+              meaning: "How your liquid onchain holdings are split across risk categories.",
+              calculation:
+                "Stablecoins, volatile assets, and DeFi positions are shown as shares of your fungible portfolio (summing to 100%). NFTs are listed separately by count because onchain USD value is unreliable.",
               lenderRelevance: "Lenders prefer stable, liquid collateral over volatile or illiquid exposure."
             }}
           />
@@ -71,7 +75,13 @@ export function RiskExposureCard() {
       <div className="mt-2 flex flex-1 flex-col justify-center gap-1.5">
         {segments.map(({ label, key, color, help }) => {
           const value = allocation[key];
-          const width = `${value}%`;
+          const isNftRow = key === "nft";
+          const showNftCount = isNftRow && nftCount > 0 && value === 0;
+          const displayLabel = showNftCount
+            ? `${nftCount} NFT${nftCount === 1 ? "" : "s"}`
+            : `${value}%`;
+          const barWidth = showNftCount ? "100%" : `${value}%`;
+          const barOpacity = showNftCount ? 0.35 : 1;
 
           return (
             <div key={key} className="grid grid-cols-[72px_1fr] items-center gap-2" title={help}>
@@ -79,9 +89,14 @@ export function RiskExposureCard() {
               <div className="relative h-5 overflow-hidden rounded-md bg-white/5">
                 <div
                   className="flex h-full items-center justify-end rounded-md px-1.5"
-                  style={{ width, minWidth: value > 0 ? "2rem" : 0, background: color }}
+                  style={{
+                    width: value > 0 || showNftCount ? barWidth : 0,
+                    minWidth: value > 0 || showNftCount ? "2rem" : 0,
+                    background: color,
+                    opacity: barOpacity
+                  }}
                 >
-                  <span className="text-[10px] font-bold text-white">{value}%</span>
+                  <span className="text-[10px] font-bold text-white">{displayLabel}</span>
                 </div>
               </div>
             </div>

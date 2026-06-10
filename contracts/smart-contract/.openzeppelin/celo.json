@@ -1,0 +1,311 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x50a8Fc322497e2EAc5489A64ce162E07Fb85E6AB",
+      "txHash": "0xbcc3ff4b07037d45029f570d68bd88c46c912119ec74a5e228c2357b7a99cdf1",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "e5ef1dc463bf21ccde9c31bd29a0b551db644b05054a77b046aaf5c18bf99ef9": {
+      "address": "0xA656BFda3EE51D30F21220936A72C7d0D7257BA9",
+      "txHash": "0xbe97d6262c6422a6b99c38de2f418b8f75e3e8c44ba7b9e697d3d0f58a0abf3f",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "_reporter",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:36"
+          },
+          {
+            "label": "_reportCount",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:37"
+          },
+          {
+            "label": "_reports",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_uint256,t_struct(FinancialAttestation)42412_storage)",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:38"
+          },
+          {
+            "label": "_purchases",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_struct(Purchase)42419_storage)",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:39"
+          },
+          {
+            "label": "_walletReportIds",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:40"
+          },
+          {
+            "label": "_reportHashToId",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:41"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_array(t_uint256)47_storage",
+            "contract": "OnchainReporter",
+            "src": "project/contracts/OnchainReporter.sol:233"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)24_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)34_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)474_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)187_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)24_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]",
+            "numberOfBytes": "1504"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(FinancialAttestation)42412_storage)": {
+            "label": "mapping(uint256 => struct OnchainReporter.FinancialAttestation)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Purchase)42419_storage)": {
+            "label": "mapping(uint256 => struct OnchainReporter.Purchase)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(FinancialAttestation)42412_storage": {
+            "label": "struct OnchainReporter.FinancialAttestation",
+            "members": [
+              {
+                "label": "wallet",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "buyer",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "reputationScore",
+                "type": "t_uint8",
+                "offset": 20,
+                "slot": "1"
+              },
+              {
+                "label": "financialHealthScore",
+                "type": "t_uint8",
+                "offset": 21,
+                "slot": "1"
+              },
+              {
+                "label": "loanCapacity",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "reportHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "publishedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(Purchase)42419_storage": {
+            "label": "struct OnchainReporter.Purchase",
+            "members": [
+              {
+                "label": "buyer",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "reportHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "npm/@openzeppelin/contracts-upgradeable@5.6.1/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+              "src": "npm/@openzeppelin/contracts-upgradeable@5.6.1/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "npm/@openzeppelin/contracts@5.6.1/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "npm/@openzeppelin/contracts@5.6.1/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

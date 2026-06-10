@@ -4,7 +4,7 @@ type RouteContext = { params: Promise<{ reportId: string }> };
 
 export async function GET(_req: Request, context: RouteContext) {
   const { reportId } = await context.params;
-  const result = verifyReportCode(reportId);
+  const result = await verifyReportCode(reportId);
 
   if (!result.valid) {
     return Response.json({ valid: false, reportId }, { status: 404 });
@@ -12,8 +12,14 @@ export async function GET(_req: Request, context: RouteContext) {
 
   return Response.json({
     valid: true,
-    reportId,
+    reportId: result.reportId,
     walletAddress: result.walletAddress,
-    verificationCode: reportId.startsWith("REP-") ? "WP-7A30EF182A4729CB" : reportId
+    verificationCode: result.reportId,
+    reputationScore: result.reputationScore,
+    financialHealthScore: result.financialHealthScore,
+    loanCapacity: result.loanCapacity,
+    reportHash: result.reportHash,
+    publishedAt: result.publishedAt,
+    source: result.source
   });
 }

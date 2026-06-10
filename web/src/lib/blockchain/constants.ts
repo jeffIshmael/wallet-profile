@@ -25,6 +25,12 @@ export const USDC_CELO_MAINNET =
 export const USDT_CELO_MAINNET =
   "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e" as const;
 
+/** UUPS proxy for OnchainReporter on Celo mainnet (override via env). */
+export const ONCHAIN_REPORTER_PROXY = (process.env.ONCHAIN_REPORTER_PROXY_ADDRESS?.trim() ||
+  "0x50a8Fc322497e2EAc5489A64ce162E07Fb85E6AB") as `0x${string}`;
+
+export const CELOSCAN_BASE_URL = "https://celoscan.io" as const;
+
 export const PAYMENT_HEADER = "X-PAYMENT" as const;
 export const PAYMENT_HEADER_ALIASES = ["PAYMENT-SIGNATURE", "x-payment"] as const;
 export const AUTH_SCHEME = "x402" as const;

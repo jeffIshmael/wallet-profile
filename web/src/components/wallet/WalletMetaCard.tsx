@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { WalletIdentityAvatar } from "@/components/wallet/WalletIdentityAvatar";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 import { formatTokenBalance, formatUtc, formatWalletAge, truncateAddress } from "@/lib/format";
 
 function daysSince(timestamp: string) {
@@ -33,45 +33,58 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function WalletMetaCard() {
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+
   const identity = [
     {
       label: "Wallet Address",
-      value: truncateAddress(mockWallet.walletAddress, 8, 6),
+      value: truncateAddress(walletData.walletAddress, 8, 6),
       valueClass: "wallet-value-address"
     },
-    { label: "ENS Name on Celo", value: mockWallet.ens, isEns: true, valueClass: "wallet-value-muted" },
-    { label: "Wallet Age", value: formatWalletAge(mockWallet.walletAgeMonths), valueClass: "wallet-value-age" }
+    { label: "ENS Name on Celo", value: walletData.ens, isEns: true, valueClass: "wallet-value-muted" },
+    {
+      label: "Wallet Age",
+      value: formatWalletAge(walletData.walletAgeMonths),
+      valueClass: "wallet-value-age"
+    }
   ];
 
-  const lastActiveDays = daysSince(mockWallet.lastTransaction.timestamp);
+  const lastActiveDays = walletData.lastTransaction
+    ? daysSince(walletData.lastTransaction.timestamp)
+    : 0;
 
   const activity = [
     {
       label: "Total Txns on Celo",
-      value: mockWallet.totalTransactions.toLocaleString(),
+      value: walletData.totalTransactions.toLocaleString(),
       valueClass: "wallet-value-tx-count"
     },
     {
       label: "First Tx on Celo",
-      value: formatUtc(mockWallet.firstTransaction.timestamp),
+      value: walletData.firstTransaction ? formatUtc(walletData.firstTransaction.timestamp) : "—",
       valueClass: "wallet-value-muted"
     },
-    { label: "Last Tx on Celo", value: `${lastActiveDays} days ago`, valueClass: "wallet-value-recent" }
+    {
+      label: "Last Tx on Celo",
+      value: walletData.lastTransaction ? `${lastActiveDays} days ago` : "—",
+      valueClass: "wallet-value-recent"
+    }
   ];
 
-  const balances = mockWallet.tokens.map(({ symbol, balance }) => ({
+  const balances = walletData.tokens.map(({ symbol, balance }) => ({
     label: formatTokenBalance(balance, symbol),
     colorClass: TOKEN_COLOR_CLASS[symbol] ?? "wallet-value-body"
   }));
   const balanceSlots = [...balances, null, null].slice(0, 6);
 
-  const yearsActive = (mockWallet.walletAgeMonths / 12).toFixed(1);
+  const yearsActive = (walletData.walletAgeMonths / 12).toFixed(1);
 
   return (
     <Card compact className="h-full !py-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2.5">
-          <WalletIdentityAvatar address={mockWallet.walletAddress} size={40} />
+          <WalletIdentityAvatar address={walletData.walletAddress} size={40} />
           <div className="min-w-0">
             <SectionHeader
               compact
@@ -86,7 +99,7 @@ export function WalletMetaCard() {
               <span className="text-stardust">Active for </span>
               <span className="font-semibold text-btc-orange">{yearsActive} years</span>
               <span className="text-stardust"> · </span>
-              <span className="wallet-value-body font-semibold">{mockWallet.totalTransactions} transactions</span>
+              <span className="wallet-value-body font-semibold">{walletData.totalTransactions} transactions</span>
             </p>
           </div>
         </div>
@@ -138,7 +151,7 @@ export function WalletMetaCard() {
               {balanceSlots.map((balance, index) => (
                 <div key={`balance-${index}`} className="flex min-h-[22px] items-baseline">
                   {balance ? (
-                    <dd className={`text-sm font-semibold`}>{balance.label}</dd>
+                    <dd className={`text-sm font-semibold ${balance.colorClass}`}>{balance.label}</dd>
                   ) : (
                     <dd className="text-sm text-transparent" aria-hidden>
                       —

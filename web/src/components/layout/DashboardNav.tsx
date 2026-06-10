@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
-import { clearAnalysisSession } from "@/lib/dashboardSession";
+import { useWalletData } from "@/hooks/useWalletData";
 
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -17,9 +17,10 @@ export function DashboardNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useWalletAuth();
+  const { clearWallet } = useWalletData();
 
   function handleDisconnect() {
-    clearAnalysisSession();
+    clearWallet();
     logout();
     router.push("/");
   }

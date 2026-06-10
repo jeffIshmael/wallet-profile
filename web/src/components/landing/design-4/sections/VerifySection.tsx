@@ -1,17 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeCheck, ShieldCheck, XCircle } from "lucide-react";
+import { BadgeCheck, Loader2, ShieldCheck, XCircle } from "lucide-react";
 import { ReportCodeGuide } from "@/components/landing/design-4/sections/ReportCodeGuide";
-import { verifyReportCode } from "@/lib/verifyReport";
+import type { VerifyResult } from "@/lib/verifyReport";
 import { truncateAddress } from "@/lib/format";
 
 export function VerifySection() {
   const [code, setCode] = useState("");
-  const [result, setResult] = useState<ReturnType<typeof verifyReportCode> | null>(null);
+  const [result, setResult] = useState<VerifyResult | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  function handleVerify() {
-    setResult(verifyReportCode(code));
+  async function handleVerify() {
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setResult({ valid: false });
+      return;
+    }
+
+    setIsVerifying(true);
+    setResult(null);
+
+    try {
+      const response = await fetch(`/api/agent/verify/${encodeURIComponent(trimmed)}`);
+      const payload = (await response.json()) as VerifyResult & { valid: boolean };
+      setResult(payload.valid ? payload : { valid: false });
+    } catch {
+      setResult({ valid: false });
+    } finally {
+      setIsVerifying(false);
+    }
   }
 
   return (
@@ -42,15 +60,16 @@ export function VerifySection() {
                     setCode(e.target.value);
                     setResult(null);
                   }}
-                  placeholder="WP-7A30EF182A4729CB"
+                  placeholder="REP-1"
                   className="min-h-[44px] flex-1 rounded-lg border border-white/10 bg-black/40 px-4 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-btc-orange/50 focus:shadow-[0_0_20px_-8px_rgba(247,147,26,0.4)]"
                 />
                 <button
                   type="button"
-                  onClick={handleVerify}
-                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full bg-btc-orange px-6 py-2 font-mono text-xs font-medium uppercase tracking-wider text-white transition hover:bg-btc-orange/90"
+                  onClick={() => void handleVerify()}
+                  disabled={isVerifying}
+                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full bg-btc-orange px-6 py-2 font-mono text-xs font-medium uppercase tracking-wider text-white transition hover:bg-btc-orange/90 disabled:opacity-60"
                 >
-                  Verify
+                  {isVerifying ? <Loader2 size={16} className="animate-spin" /> : "Verify"}
                 </button>
               </div>
             </div>
@@ -70,6 +89,15 @@ export function VerifySection() {
                       This verification code is authentic. The report belongs to wallet{" "}
                       <span className="font-mono text-btc-orange">{truncateAddress(result.walletAddress, 6, 4)}</span>.
                     </p>
+                    {result.source === "onchain" && (
+                      <p className="mt-2 text-xs text-stardust/80">
+                        Verified on Celo mainnet
+                        {result.reputationScore !== undefined && result.financialHealthScore !== undefined
+                          ? ` · Reputation ${result.reputationScore}/100 · Health ${result.financialHealthScore}/100`
+                          : ""}
+                        {result.loanCapacity ? ` · Loan capacity ${result.loanCapacity}` : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

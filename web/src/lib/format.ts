@@ -51,12 +51,43 @@ export function formatWalletAge(months: number) {
   return `${yearLabel} ${monthLabel}`;
 }
 
+export function formatLocalDateTime(timestamp: string) {
+  const date = new Date(timestamp);
+  const datePart = date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+  const timePart = date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  return { datePart, timePart };
+}
+
+export function formatTxAmountUsd(value: number) {
+  const abs = Math.abs(value);
+  if (abs > 0 && abs < 0.001) return "< $0.001";
+  const formatted = abs.toFixed(3);
+  if (Number(formatted) === 0) return "$0.000";
+  return `$${formatted}`;
+}
+
+export function formatTxAmountToken(value: number, token: string) {
+  const abs = Math.abs(value);
+  if (abs > 0 && abs < 0.0001) return `< 0.0001 ${token}`;
+  const formatted = abs.toFixed(4);
+  if (Number(formatted) === 0) return `0.0000 ${token}`;
+  return `${formatted} ${token}`;
+}
+
 export function formatTokenBalance(balance: number, symbol: string) {
   const displaySymbol = symbol === "CELO" ? "Celo" : symbol;
   const amount =
     balance >= 1000
       ? balance.toLocaleString("en-US", { maximumFractionDigits: 2 })
-      : parseFloat(balance.toPrecision(6)).toString();
+      : parseFloat(balance.toPrecision(3)).toString();
   return `${amount} ${displaySymbol}`;
 }
 
@@ -79,9 +110,12 @@ export function getReputationTag(score: number) {
   return "Needs More History";
 }
 
-export function getRiskCategory(allocation: { stablecoin: number; volatile: number; defi: number; nft: number }) {
+export function getRiskCategory(
+  allocation: { stablecoin: number; volatile: number; defi: number; nft: number },
+  nftCount = 0
+) {
   const risky = allocation.volatile + allocation.defi + allocation.nft;
-  if (risky <= 30) return "Low Risk";
-  if (risky <= 55) return "Medium Risk";
+  if (risky <= 30 && nftCount < 5) return "Low Risk";
+  if (risky <= 55 && nftCount < 10) return "Medium Risk";
   return "High Risk";
 }

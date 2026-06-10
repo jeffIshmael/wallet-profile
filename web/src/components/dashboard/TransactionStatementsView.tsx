@@ -19,10 +19,16 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { mockWallet } from "@/data/mockWallet";
-import { formatUtc, moneyPrecise, truncateAddress } from "@/lib/format";
+import { useWalletData } from "@/hooks/useWalletData";
+import {
+  formatLocalDateTime,
+  formatTxAmountToken,
+  formatTxAmountUsd,
+  moneyPrecise,
+  truncateAddress
+} from "@/lib/format";
 
-type Period = keyof typeof mockWallet.incomeByPeriod;
+type Period = "1M" | "3M" | "6M" | "12M";
 type SortKey = "timestamp" | "amount" | "token";
 type SortDir = "asc" | "desc";
 type DirectionFilter = "All" | "Incoming" | "Outgoing";
@@ -55,6 +61,7 @@ function TokenIcon({ token }: { token: string }) {
 }
 
 export function TransactionStatementsView() {
+  const { walletData } = useWalletData();
   const [period, setPeriod] = useState<Period>("3M");
   const [search, setSearch] = useState("");
   const [directionFilter, setDirectionFilter] = useState<DirectionFilter>("All");
@@ -65,15 +72,10 @@ export function TransactionStatementsView() {
   const [pageSize, setPageSize] = useState(10);
   const [expandedHash, setExpandedHash] = useState<string | null>(null);
 
-  const current = mockWallet.incomeByPeriod[period];
-  const savingsRate = current.inbound > 0 ? ((current.net / current.inbound) * 100).toFixed(1) : "0";
-  const monthlyFlow =
-    mockWallet.statementMonthlyFlow[period as keyof typeof mockWallet.statementMonthlyFlow] ??
-    mockWallet.statementMonthlyFlow["3M"];
-
   const filtered = useMemo(() => {
+    if (!walletData) return [];
     const q = search.trim().toLowerCase();
-    let rows = [...mockWallet.transactions];
+    let rows = [...walletData.transactions];
 
     if (directionFilter !== "All") {
       rows = rows.filter((tx) => tx.direction === directionFilter);
@@ -85,7 +87,7 @@ export function TransactionStatementsView() {
       rows = rows.filter(
         (tx) =>
           tx.token.toLowerCase().includes(q) ||
-          tx.counterparty.toLowerCase().includes(q) ||
+          tx.recipient.toLowerCase().includes(q) ||
           tx.hash.toLowerCase().includes(q) ||
           String(tx.amount).includes(q)
       );
@@ -100,7 +102,15 @@ export function TransactionStatementsView() {
     });
 
     return rows;
-  }, [search, directionFilter, tokenFilter, sortKey, sortDir]);
+  }, [walletData, search, directionFilter, tokenFilter, sortKey, sortDir]);
+
+  if (!walletData) return null;
+
+  const current = walletData.incomeByPeriod[period];
+  const savingsRate = current.inbound > 0 ? ((current.net / current.inbound) * 100).toFixed(1) : "0";
+  const monthlyFlow =
+    walletData.statementMonthlyFlow[period as keyof typeof walletData.statementMonthlyFlow] ??
+    walletData.statementMonthlyFlow["3M"];
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -114,10 +124,10 @@ export function TransactionStatementsView() {
   }
 
   function exportCsv() {
-    const header = "Timestamp,Token,Amount,Direction,Counterparty,Hash\n";
+    const header = "Timestamp,Token,Amount,Direction,Recipient,Hash\n";
     const body = filtered
       .map((tx) =>
-        [tx.timestamp, tx.token, tx.amount, tx.direction, tx.counterparty, tx.hash].join(",")
+        [tx.timestamp, tx.token, tx.amount, tx.direction, tx.recipient, tx.hash].join(",")
       )
       .join("\n");
     const blob = new Blob([header + body], { type: "text/csv" });
@@ -264,7 +274,7 @@ export function TransactionStatementsView() {
             <thead>
               <tr className="border-b border-white/10 text-stardust">
                 <th className="px-3 py-2 font-semibold uppercase tracking-wide">By Token</th>
-                {mockWallet.tokenFlows.map(({ symbol }) => (
+                {walletData.tokenFlows.map(({ symbol }) => (
                   <th key={symbol} className="px-3 py-2 font-semibold">
                     <button
                       type="button"
@@ -284,7 +294,7 @@ export function TransactionStatementsView() {
             <tbody>
               <tr className="border-b border-white/5">
                 <td className="px-3 py-2 text-stardust">Inflow</td>
-                {mockWallet.tokenFlows.map(({ symbol, inflow }) => (
+                {walletData.tokenFlows.map(({ symbol, inflow }) => (
                   <td key={symbol} className="px-3 py-2 font-mono font-semibold text-white">
                     {inflow > 0 ? moneyPrecise(inflow) : "—"}
                   </td>
@@ -292,7 +302,7 @@ export function TransactionStatementsView() {
               </tr>
               <tr>
                 <td className="px-3 py-2 text-stardust">Outflow</td>
-                {mockWallet.tokenFlows.map(({ symbol, outflow }) => (
+                {walletData.tokenFlows.map(({ symbol, outflow }) => (
                   <td key={symbol} className="px-3 py-2 font-mono font-semibold text-white">
                     {outflow > 0 ? moneyPrecise(outflow) : "—"}
                   </td>
@@ -368,7 +378,7 @@ export function TransactionStatementsView() {
                   </button>
                 </th>
                 <th className="py-1.5 pr-2">Direction</th>
-                <th className="py-1.5 pr-2">Counterparty</th>
+                <th className="py-1.5 pr-2">Recipient</th>
                 <th className="py-1.5">Hash</th>
               </tr>
             </thead>
@@ -392,6 +402,7 @@ export function TransactionStatementsView() {
                 paged.map((tx) => {
                   const incoming = tx.direction === "Incoming";
                   const expanded = expandedHash === tx.hash;
+                  const { datePart, timePart } = formatLocalDateTime(tx.timestamp);
 
                   return (
                     <Fragment key={tx.hash}>
@@ -402,20 +413,8 @@ export function TransactionStatementsView() {
                         style={{ borderLeft: `3px solid ${incoming ? "#00d4aa" : "#f5a623"}` }}
                       >
                         <td className="py-2 pr-2 pl-1.5">
-                          <p className="text-[10px] font-semibold text-white">
-                            {new Date(tx.timestamp).toLocaleDateString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric"
-                            })}
-                          </p>
-                          <p className="text-[9px] text-stardust">
-                            {new Date(tx.timestamp).toLocaleTimeString("en-GB", {
-                              hour: "2-digit",
-                              minute: "2-digit"
-                            })}{" "}
-                            UTC
-                          </p>
+                          <p className="text-[10px] font-semibold text-white">{datePart}</p>
+                          <p className="text-[9px] text-stardust">{timePart}</p>
                         </td>
                         <td className="py-2 pr-2 font-bold text-white">
                           <TokenIcon token={tx.token} />
@@ -423,7 +422,7 @@ export function TransactionStatementsView() {
                         </td>
                         <td className={`py-2 pr-2 font-mono font-semibold ${incoming ? "text-teal" : "text-btc-orange"}`}>
                           {incoming ? "+" : "−"}
-                          {moneyPrecise(tx.amount)}{" "}
+                          {formatTxAmountUsd(tx.amount)}{" "}
                           {incoming ? <ArrowUp size={10} className="inline" /> : <ArrowDown size={10} className="inline" />}
                         </td>
                         <td className="py-2 pr-2">
@@ -433,18 +432,22 @@ export function TransactionStatementsView() {
                         </td>
                         <td className="py-2 pr-2">
                           <div className="flex items-center gap-1">
-                            <span className="font-mono text-[10px] text-stardust">{tx.counterparty}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard?.writeText(tx.counterparty);
-                              }}
-                              className="text-stardust hover:text-btc-orange"
-                              aria-label="Copy counterparty"
-                            >
-                              <Copy size={11} />
-                            </button>
+                            <span className="font-mono text-[10px] text-stardust">
+                              {tx.recipient ? truncateAddress(tx.recipient, 6, 4) : "—"}
+                            </span>
+                            {tx.recipient ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard?.writeText(tx.recipient);
+                                }}
+                                className="text-stardust hover:text-btc-orange"
+                                aria-label="Copy recipient"
+                              >
+                                <Copy size={11} />
+                              </button>
+                            ) : null}
                           </div>
                         </td>
                         <td className="py-2 pr-1">
@@ -486,19 +489,20 @@ export function TransactionStatementsView() {
                                 <span className="text-white">Full Hash:</span> {tx.hash}
                               </p>
                               <p>
-                                <span className="text-white">Counterparty:</span> {tx.counterparty}
+                                <span className="text-white">Recipient:</span> {tx.recipient || "—"}
                               </p>
                               <p>
-                                <span className="text-white">Block:</span> 28,431,220
+                                <span className="text-white">Amount:</span>{" "}
+                                {formatTxAmountToken(tx.amountToken, tx.token)}
                               </p>
                               <p>
-                                <span className="text-white">Gas Fee:</span> 0.00012 CELO ($0.000007)
+                                <span className="text-white">USD Value:</span> {formatTxAmountUsd(tx.amount)}
                               </p>
                               <p>
                                 <span className="text-white">Network:</span> Celo Mainnet
                               </p>
                               <p>
-                                <span className="text-white">Time:</span> {formatUtc(tx.timestamp)}
+                                <span className="text-white">Time:</span> {datePart} {timePart}
                               </p>
                             </div>
                           </td>

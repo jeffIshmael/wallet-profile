@@ -57,7 +57,8 @@ export const mockWallet = {
       token: "USDT",
       amount: 420,
       direction: "Incoming" as const,
-      counterparty: "0x7a3f...9c12",
+      amountToken: 420,
+      recipient: "0x7a3f0000000000000000000000000000009c12",
       hash: "0xaa647c82e0cc8f43f639672c58b5f246219bdb28b27ac793e8e87181f959d073"
     },
     {
@@ -65,7 +66,8 @@ export const mockWallet = {
       token: "USDC",
       amount: 180,
       direction: "Outgoing" as const,
-      counterparty: "0x2b91...4e88",
+      amountToken: 180,
+      recipient: "0x2b910000000000000000000000000000004e88",
       hash: "0xd4752aa1fde1f9584ab802a000b94ecde313a38044b3978ae45bd5a85de94bd3"
     },
     {
@@ -73,7 +75,8 @@ export const mockWallet = {
       token: "USDm",
       amount: 650,
       direction: "Incoming" as const,
-      counterparty: "0x9c44...1a07",
+      amountToken: 650,
+      recipient: "0x9c440000000000000000000000000000001a07",
       hash: "0x3f8a2bc1d9e4f5678901234567890abcdef1234567890abcdef1234567890ab"
     },
     {
@@ -81,7 +84,8 @@ export const mockWallet = {
       token: "USDT",
       amount: 95,
       direction: "Outgoing" as const,
-      counterparty: "0x5d12...8f33",
+      amountToken: 95,
+      recipient: "0x5d120000000000000000000000000000008f33",
       hash: "0x1a2b3c4d5e6f7890123456789012345678901234567890123456789012345678"
     },
     {
@@ -89,7 +93,8 @@ export const mockWallet = {
       token: "USDC",
       amount: 1250,
       direction: "Incoming" as const,
-      counterparty: "0x8e77...2b19",
+      amountToken: 1250,
+      recipient: "0x8e770000000000000000000000000000002b19",
       hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
     },
     {
@@ -97,7 +102,8 @@ export const mockWallet = {
       token: "CELO",
       amount: 240,
       direction: "Outgoing" as const,
-      counterparty: "0x1f66...7d44",
+      amountToken: 240,
+      recipient: "0x1f660000000000000000000000000000007d44",
       hash: "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba"
     }
   ],

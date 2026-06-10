@@ -5,11 +5,13 @@ import { useState } from "react";
 import { AttestationModal } from "@/components/ai/AttestationModal";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 
 export function AISummaryCard() {
   const [reportOpen, setReportOpen] = useState(false);
-  const assessment = mockWallet.onfraAssessment;
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const assessment = walletData.onfraAssessment;
 
   return (
     <>

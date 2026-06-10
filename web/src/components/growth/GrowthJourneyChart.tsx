@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 
 type AssetKey = "CELO" | "USDm" | "USDC" | "USDT";
 
@@ -19,10 +19,11 @@ const tokenCycle: { key: AssetKey; label: string }[] = [
 const ROTATE_MS = 4000;
 
 export function GrowthJourneyChart() {
+  const { walletData } = useWalletData();
   const [tokenIndex, setTokenIndex] = useState(0);
   const rotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const asset = tokenCycle[tokenIndex];
-  const fullData = mockWallet.growthHistory[asset.key];
+  const fullData = walletData?.growthHistory[asset.key] ?? [];
 
   const chartData = useMemo(() => fullData.slice(-3), [fullData]);
 
@@ -34,6 +35,8 @@ export function GrowthJourneyChart() {
       if (rotateRef.current) clearInterval(rotateRef.current);
     };
   }, []);
+
+  if (!walletData) return null;
 
   function selectToken(index: number) {
     setTokenIndex(index);
@@ -55,8 +58,8 @@ export function GrowthJourneyChart() {
           compact
           title="Financial Growth"
           help={{
-            meaning: "How your onchain financial position has evolved month over month.",
-            calculation: "Monthly snapshots of asset balances aggregated by token or across all holdings.",
+            meaning: "Running balance over time — deposits push the line up, spending pulls it down.",
+            calculation: "Reconstructed from your indexed Celo transfers, anchored to your current holdings.",
             lenderRelevance: "Upward trends signal financial growth and improving creditworthiness."
           }}
         />
@@ -66,7 +69,9 @@ export function GrowthJourneyChart() {
       <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-lg font-bold text-white">{asset.label}</span>
-          <span className="font-mono text-lg font-bold text-white">${latest.toLocaleString()}</span>
+          <span className="font-mono text-lg font-bold text-white">
+            {latest >= 1000 ? `$${latest.toLocaleString()}` : `$${latest.toFixed(3)}`}
+          </span>
           <span className={`text-xs font-semibold ${change >= 0 ? "text-teal" : "text-danger"}`}>
             {change >= 0 ? "+" : ""}
             {changePct}%
@@ -113,7 +118,7 @@ export function GrowthJourneyChart() {
               axisLine={false}
               width={42}
               tick={{ fill: "#64748b", fontSize: 9 }}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+              tickFormatter={(v) => (v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${Number(v).toFixed(2)}`)}
             />
             <Tooltip
               contentStyle={{

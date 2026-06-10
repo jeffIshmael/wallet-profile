@@ -1,14 +1,12 @@
 "use client";
 
 import { Copy, ExternalLink, Wallet } from "lucide-react";
-import { useEffect, useState } from "react";
 import { DashboardHeaderActions } from "@/components/layout/DashboardHeaderActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ThemeToggleButton } from "@/providers/ThemeProvider";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { truncateAddress } from "@/lib/format";
-import { connectInjectedWallet, isMiniPay } from "@/lib/minipay";
 
 type HeaderProps = {
   compact?: boolean;
@@ -16,19 +14,9 @@ type HeaderProps = {
 };
 
 export function Header({ compact = false, dashboardActions }: HeaderProps) {
-  const [address, setAddress] = useState<string>(mockWallet.walletAddress);
-  const [miniPay, setMiniPay] = useState(false);
-  const [connecting, setConnecting] = useState(false);
-
-  useEffect(() => {
-    if (!isMiniPay()) return;
-    setMiniPay(true);
-    setConnecting(true);
-    connectInjectedWallet()
-      .then((connected) => connected && setAddress(connected))
-      .catch(() => setAddress(mockWallet.walletAddress))
-      .finally(() => setConnecting(false));
-  }, []);
+  const { address: authAddress, miniPay, connectingMiniPay } = useWalletAuth();
+  const address = authAddress ?? "";
+  const connecting = connectingMiniPay;
 
   return (
     <header className="sticky top-0 z-30 shrink-0 border-b border-white/10 bg-black/90 backdrop-blur-xl">

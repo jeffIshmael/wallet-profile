@@ -2,11 +2,13 @@
 
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 import { moneyPrecise } from "@/lib/format";
 
 export function LoanCapacityCard() {
-  const loan = mockWallet.metrics.loanCapacity;
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const loan = walletData.metrics.loanCapacity;
   const { minLoanUsd, maxLoanUsd, scaleMaxUsd, factors } = loan;
   const left = (minLoanUsd / scaleMaxUsd) * 100;
   const width = ((maxLoanUsd - minLoanUsd) / scaleMaxUsd) * 100;

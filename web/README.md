@@ -1,28 +1,77 @@
 # Wallet Profile Web
 
-Next.js frontend for Wallet Profile — dashboard, landing page, wallet analysis UI, and API routes.
+Next.js 14 application for Wallet Profile — landing page, financial dashboard, transaction statements, AI chat, and REST API routes that expose the OnFRA agent.
 
 ## Setup
 
 ```bash
 npm install
-cp .env.local.example .env   # add your Privy app ID
+cp .env.local.example .env
 npm run dev
 ```
 
-Runs at [http://localhost:3000](http://localhost:3000).
+Runs at [http://localhost:3000](http://localhost:3000). `predev` builds the OnFRA agent from `../OnFRA agent/`.
+
+From the repo root: `npm run dev` (npm workspaces).
+
+## Environment
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_PRIVY_APP_ID` | Privy wallet authentication |
+| `NEXT_PUBLIC_APP_URL` | Public base URL for manifests and verification links |
+| `REPORTER_PRIVATE_KEY` | Backend signer with `REPORTER_ROLE` on `OnchainReporter` |
+| `ONCHAIN_REPORTER_PROXY_ADDRESS` | UUPS proxy on Celo (default: mainnet deployment) |
+| `X402_ENFORCE` + `THIRDWEB_SECRET_KEY` | Enable x402 micropayment enforcement |
 
 ## Structure
 
 ```
 src/
-├── app/           # Next.js App Router pages & API routes
-├── components/    # React components
-├── data/          # Mock wallet data (dev)
-├── hooks/
+├── app/
+│   ├── page.tsx              # Landing page
+│   ├── dashboard/            # Analysis dashboard + statements
+│   ├── verify/               # Public report verification
+│   └── api/agent/            # REST API (analyze, chat, report, verify)
+├── components/               # UI (landing, dashboard, scores, chat)
 ├── lib/
-├── providers/
-└── public/        # Static assets (Celo logo, etc.)
+│   ├── agent/                # OnFRA loader, wallet data mapper, x402
+│   └── blockchain/           # Chain constants, OnchainReporter client
+├── providers/                # Auth (Privy/MiniPay), wallet data context
+└── types/                    # WalletData and shared types
+
+public/
+├── .well-known/              # ERC-8004 agent.json, agent-card, MCP manifest
+└── schemas/                  # JSON schemas served at /schemas/*
 ```
 
-From the repo root you can also run `npm run dev` via npm workspaces.
+## API routes
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/agent/analyze` | POST | Full wallet analysis (0.05 USDT) |
+| `/api/agent/chat` | POST | AI chat about a wallet (0.05 USDT) |
+| `/api/agent/report` | POST | Verified report + onchain attestation (0.10 USDT) |
+| `/api/agent/verify/{id}` | GET | Verify `REP-{id}` or onchain hash |
+
+## JSON schemas
+
+Request and response schemas live in **`public/schemas/`** and are served at `/schemas/*.schema.json` (rewritten in `next.config.mjs`). This is the single source of truth — edit files here when MCP tool shapes change.
+
+Schemas referenced by `public/.well-known/mcp.json`:
+
+- `walletAnalysisRequest.schema.json` / `walletAnalysisResult.schema.json`
+- `chatRequest.schema.json`
+- `reportRequest.schema.json` / `reportResult.schema.json`
+
+## Onchain integration
+
+After a paid report, the API calls `publishFinancialReport()` on the Celo `OnchainReporter` proxy via `src/lib/blockchain/onchainReporter.ts`. Verification codes use the onchain format `REP-{reportId}`.
+
+## Agent discovery
+
+ERC-8004 and MCP manifests are static files under `public/.well-known/`:
+
+- `agent.json` — on-chain `agentURI` target (pin to IPFS for registration)
+- `agent-card.json` — A2A capabilities and x402 pricing
+- `mcp.json` — MCP tool definitions pointing at the API routes above

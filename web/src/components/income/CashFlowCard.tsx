@@ -4,11 +4,13 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { mockWallet } from "@/data/mockWallet";
+import { useWalletData } from "@/hooks/useWalletData";
 import { moneyPrecise } from "@/lib/format";
 
 export function CashFlowCard() {
-  const flow = mockWallet.cashFlow;
+  const { walletData } = useWalletData();
+  if (!walletData) return null;
+  const flow = walletData.cashFlow;
   const maxBar = Math.max(...flow.monthly.map((m) => Math.max(m.in, m.out)));
 
   return (

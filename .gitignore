@@ -27,7 +27,7 @@ contracts/**/lib/
 !**/.env*.example
 
 # Agent generated output
-agent/reports/
+OnFRA agent/reports/
 
 # OS / IDE
 .DS_Store

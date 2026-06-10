@@ -2,14 +2,17 @@
 
 import { Send, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 const suggested = [
-  "Qualify for a $2,000 loan?",
-  "Why is reputation low?",
-  "Explain portfolio risk",
-  "Improve loan capacity",
-  "Summarize for lender"
+  "What is my financial health score?",
+  "Why is my reputation score what it is?",
+  "Explain my portfolio risk",
+  "What is my safe loan range?",
+  "Summarize my wallet for a lender"
 ];
+
+type ChatMessage = { role: "user" | "ai"; text: string };
 
 export function ChatSidebar({
   overlay = false,
@@ -19,46 +22,57 @@ export function ChatSidebar({
   overlay?: boolean;
   onClose?: () => void;
 }) {
-  const [messages, setMessages] = useState([
+  const { address } = useWalletAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "ai",
       text: "Ask me about your Wallet Profile signals, loan capacity, or portfolio risk."
     }
   ]);
   const [input, setInput] = useState("");
-  const [pendingExternal, setPendingExternal] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  function isExternalWalletQuery(text: string) {
-    return /analyze wallet\s+0x[a-fA-F0-9]+/i.test(text);
-  }
+  async function send(text = input) {
+    if (!text.trim() || sending) return;
 
-  function send(text = input) {
-    if (!text.trim()) return;
+    const userMessage = text.trim();
+    setMessages((current) => [...current, { role: "user", text: userMessage }]);
+    setInput("");
+    setSending(true);
 
-    if (isExternalWalletQuery(text) && !pendingExternal) {
+    try {
+      const history = messages
+        .filter((m) => m.role === "user" || m.role === "ai")
+        .map((m) => ({
+          role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+          content: m.text
+        }));
+
+      const response = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          walletAddress: address,
+          history
+        })
+      });
+
+      const payload = (await response.json()) as { response?: string; error?: string };
+      const reply =
+        payload.response ??
+        payload.error ??
+        "Wallet Profile AI could not respond right now. Please try again.";
+
+      setMessages((current) => [...current, { role: "ai", text: reply }]);
+    } catch {
       setMessages((current) => [
         ...current,
-        { role: "user", text },
-        {
-          role: "ai",
-          text: "External Wallet Analysis requires 0.01 USDT via X402 before analysis begins."
-        }
+        { role: "ai", text: "Network error while contacting Wallet Profile AI." }
       ]);
-      setPendingExternal(true);
-      setInput("");
-      return;
+    } finally {
+      setSending(false);
     }
-
-    setMessages((current) => [
-      ...current,
-      { role: "user", text },
-      {
-        role: "ai",
-        text: "Wallet Profile agent responses can be billed via X402 in MiniPay before analysis runs."
-      }
-    ]);
-    setInput("");
-    setPendingExternal(false);
   }
 
   return (
@@ -90,7 +104,7 @@ export function ChatSidebar({
             key={prompt}
             type="button"
             onClick={() => send(prompt)}
-            className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-[10px] font-semibold text-stardust hover:border-btc-orange/40 hover:text-btc-orange"
+            className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-stardust transition hover:border-btc-orange/40 hover:text-white"
           >
             {prompt}
           </button>
@@ -98,27 +112,35 @@ export function ChatSidebar({
       </div>
 
       <form
-        className="mt-2.5 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 p-1.5"
+        className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2"
         onSubmit={(event) => {
           event.preventDefault();
-          send();
+          void send();
         }}
       >
-        <Sparkles size={14} className="ml-1.5 shrink-0 text-btc-orange" />
+        <Sparkles size={14} className="shrink-0 text-btc-orange" />
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          placeholder="Ask about this wallet..."
-          className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-stardust/70"
+          placeholder={address ? "Ask OnFRA about your wallet..." : "Connect wallet to chat"}
+          disabled={!address || sending}
+          className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-stardust"
         />
         <button
           type="submit"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-btc-orange text-white hover:bg-btc-orange/90"
-          aria-label="Send chat message"
+          disabled={!address || sending || !input.trim()}
+          className="grid h-8 w-8 place-items-center rounded-lg bg-btc-orange text-white transition hover:bg-btc-orange/90 disabled:opacity-50"
+          aria-label="Send message"
         >
           <Send size={14} />
         </button>
       </form>
+
+      {overlay && onClose && (
+        <button type="button" onClick={onClose} className="sr-only">
+          Close chat
+        </button>
+      )}
     </div>
   );
 }
