@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:agent": "npm run build --prefix \"../OnFRA agent\"",
+    "build:agent": "npm ci --prefix \"../OnFRA agent\" && npm run build --prefix \"../OnFRA agent\"",
     "predev": "npm run build:agent",
     "prebuild": "npm run build:agent",
     "dev": "next dev",
