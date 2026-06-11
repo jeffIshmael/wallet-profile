@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { MobileAppShell } from "@/components/layout/MobileAppShell";
+import { AppToaster } from "@/components/ui/AppToaster";
 import { AppAuthProvider } from "@/providers/AuthProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AppAuthProvider>
             <MobileAppShell>{children}</MobileAppShell>
           </AppAuthProvider>
+          <AppToaster />
         </ThemeProvider>
       </body>
     </html>

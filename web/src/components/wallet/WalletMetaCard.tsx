@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { Copy, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { WalletIdentityAvatar } from "@/components/wallet/WalletIdentityAvatar";
 import { useWalletData } from "@/hooks/useWalletData";
+import { copyWithToast } from "@/lib/copyToClipboard";
 import { formatTokenBalance, formatUtc, formatWalletAge, truncateAddress } from "@/lib/format";
 
 function daysSince(timestamp: string) {
@@ -114,7 +116,23 @@ export function WalletMetaCard() {
                 <div key={label} className="flex min-h-[22px] items-baseline justify-between gap-3">
                   <FieldLabel>{label}</FieldLabel>
                   <dd className="text-right">
-                    {isEns && !value ? (
+                    {label === "Wallet Address" ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>
+                        <Tooltip label="Copy wallet address">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void copyWithToast(walletData.walletAddress, "Wallet address copied")
+                            }
+                            className="text-stardust transition hover:text-btc-orange"
+                            aria-label="Copy wallet address"
+                          >
+                            <Copy size={12} />
+                          </button>
+                        </Tooltip>
+                      </span>
+                    ) : isEns && !value ? (
                       <Link
                         href="https://names.celo.org/"
                         target="_blank"

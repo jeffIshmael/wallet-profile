@@ -2,12 +2,16 @@
 
 import { clsx } from "clsx";
 import { MessageCircle, Sparkles, X } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { AgentChatHeader } from "@/components/chat/AgentChatHeader";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Header } from "@/components/layout/Header";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+
+const MIN_CHAT_WIDTH = 300;
+const DEFAULT_CHAT_WIDTH = 320;
+const MAX_CHAT_WIDTH = 560;
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -26,11 +30,34 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const { ready, authenticated } = useWalletAuth();
   const mobileNavVisible = ready && authenticated;
+  const [chatWidth, setChatWidth] = useState(DEFAULT_CHAT_WIDTH);
+
+  const startResize = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      const startX = event.clientX;
+      const startWidth = chatWidth;
+
+      function onMove(moveEvent: MouseEvent) {
+        const next = Math.min(MAX_CHAT_WIDTH, Math.max(MIN_CHAT_WIDTH, startWidth + (startX - moveEvent.clientX)));
+        setChatWidth(next);
+      }
+
+      function onUp() {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      }
+
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    },
+    [chatWidth]
+  );
 
   return (
     <main
       className={clsx(
-        "dashboard-shell relative overflow-hidden bg-void font-inter text-white",
+        "dashboard-shell relative overflow-x-hidden bg-void font-inter text-white",
         mobileNavVisible
           ? "h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px))] md:h-screen"
           : "h-screen"
@@ -51,8 +78,8 @@ export function DashboardShell({
           dashboardActions={{ onChatOpen: () => onChatOpenChange?.(true) }}
         />
 
-        <div className="flex min-h-0 flex-1">
-          <aside className="dashboard-sidebar hidden h-full w-14 shrink-0 flex-col items-center overflow-visible border-r border-white/10 bg-black/40 py-3 lg:flex">
+        <div className="flex min-h-0 flex-1 overflow-visible">
+          <aside className="dashboard-sidebar relative z-20 hidden h-full w-14 shrink-0 flex-col items-center overflow-visible border-r border-white/10 bg-black/40 py-3 lg:flex">
             <DashboardNav />
           </aside>
 
@@ -84,7 +111,20 @@ export function DashboardShell({
               onClick={() => onChatOpenChange?.(false)}
               aria-label="Close chat overlay"
             />
-            <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] flex-col border-l border-white/10 bg-void-surface shadow-[-8px_0_32px_rgba(0,0,0,0.5)]">
+            <div
+              className="fixed inset-y-0 right-0 z-50 flex flex-col border-l border-white/10 bg-void-surface shadow-[-8px_0_32px_rgba(0,0,0,0.5)]"
+              style={{ width: chatWidth }}
+            >
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize chat panel"
+                onMouseDown={startResize}
+                className="absolute left-0 top-0 z-10 hidden h-full w-2 -translate-x-1/2 cursor-col-resize lg:block"
+              >
+                <div className="mx-auto h-full w-px bg-white/10 transition group-hover:bg-btc-orange/40" />
+              </div>
+
               <div className="flex items-center justify-between border-b border-white/10 pr-2">
                 <div className="min-w-0 flex-1">
                   <AgentChatHeader compact />

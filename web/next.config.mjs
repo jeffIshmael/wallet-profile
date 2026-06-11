@@ -7,7 +7,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["@langchain/core", "@langchain/google", "langchain"]
+    serverComponentsExternalPackages: [
+      "@langchain/core",
+      "@langchain/google",
+      "langchain",
+      "thirdweb",
+      "prisma",
+      "@prisma/client",
+      "pg",
+      "@prisma/adapter-pg"
+    ]
   },
   async headers() {
     return [
@@ -35,6 +44,8 @@ const nextConfig = {
       config.resolve.extensionAlias = {
         ".js": [".ts", ".tsx", ".js"]
       };
+      // Keep native / ORM deps out of webpack chunks (avoids missing chunk errors in dev).
+      config.externals = [...(config.externals ?? []), "pg"];
     }
     return config;
   }

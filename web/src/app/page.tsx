@@ -2,14 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { Design4LandingPage } from "@/components/landing/design-4/Design4LandingPage";
+import { useStoredAnalysis, type StoredAnalysisStatus } from "@/hooks/useStoredAnalysis";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { clearAnalysisSession } from "@/lib/dashboardSession";
 
 export default function HomePage() {
   const router = useRouter();
   const { ready, authenticated, login, logout, address, connectingMiniPay } = useWalletAuth();
+  const storedStatus = useStoredAnalysis(ready ? address : null);
 
   function handleAnalyseWallet() {
+    if (storedStatus === "yes") {
+      router.push("/dashboard");
+      return;
+    }
     router.push("/dashboard?analyze=1");
   }
 
@@ -21,7 +27,8 @@ export default function HomePage() {
     <Design4LandingPage
       authenticated={ready && authenticated}
       address={ready ? address : null}
-      connecting={connectingMiniPay}
+      connecting={connectingMiniPay || !ready}
+      storedAnalysisStatus={storedStatus}
       onSignIn={login}
       onDisconnect={() => {
         clearAnalysisSession();

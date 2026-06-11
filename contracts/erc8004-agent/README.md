@@ -34,6 +34,14 @@ After on-chain `register()` assigns an `agentId`, add to `registrations` and re-
 
 **Registered:** OnFRA is agent `#9219` on Celo mainnet. Re-pin `agent.json` to IPFS and call `setAgentURI(9219, ipfs://...)` if metadata changes.
 
+**Reputation Registry (mainnet):** `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
+
+Submit positive feedback from the web app env (`REPORTER_PRIVATE_KEY` must not be the agent owner):
+
+```bash
+cd ../../web && npm run feedback:erc8004
+```
+
 ## Pre-registration checklist
 
 1. Deploy the web app so all `/.well-known/*` URLs resolve publicly.

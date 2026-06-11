@@ -26,7 +26,7 @@ export default function VerifyPage() {
         onTryChat={handleTryChat}
         authenticated={ready && authenticated}
         address={ready ? address : null}
-        connecting={connectingMiniPay}
+        connecting={connectingMiniPay || !ready}
         active="verify"
       />
       <main className="pt-24">

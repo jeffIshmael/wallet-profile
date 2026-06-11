@@ -1,14 +1,21 @@
 "use client";
 
-import { ArrowRight, Wallet } from "lucide-react";
+import { ArrowRight, LayoutDashboard, Wallet } from "lucide-react";
 import { truncateAddress } from "@/lib/format";
 
 type AnalyzeWalletPromptProps = {
   address: string | null;
+  hasStoredAnalysis?: boolean;
   onAnalyze: () => void;
+  onGoToDashboard: () => void;
 };
 
-export function AnalyzeWalletPrompt({ address, onAnalyze }: AnalyzeWalletPromptProps) {
+export function AnalyzeWalletPrompt({
+  address,
+  hasStoredAnalysis = false,
+  onAnalyze,
+  onGoToDashboard
+}: AnalyzeWalletPromptProps) {
   return (
     <div className="relative flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px))] items-center justify-center bg-void px-6 pb-6 font-inter text-white md:min-h-screen">
       <div
@@ -27,9 +34,13 @@ export function AnalyzeWalletPrompt({ address, onAnalyze }: AnalyzeWalletPromptP
           <Wallet size={28} className="text-btc-orange" />
         </div>
 
-        <h1 className="font-space text-2xl font-bold">Analyse your wallet</h1>
+        <h1 className="font-space text-2xl font-bold">
+          {hasStoredAnalysis ? "Welcome back" : "Analyse your wallet"}
+        </h1>
         <p className="mt-3 text-sm leading-6 text-stardust">
-          Run a full onchain analysis to unlock your dashboard, financial scores, and transaction statements.
+          {hasStoredAnalysis
+            ? "Your wallet has been analysed before. Open your dashboard to view scores, statements, and AI insights."
+            : "Run a full onchain analysis to unlock your dashboard, financial scores, and transaction statements."}
         </p>
 
         {address && (
@@ -40,11 +51,20 @@ export function AnalyzeWalletPrompt({ address, onAnalyze }: AnalyzeWalletPromptP
 
         <button
           type="button"
-          onClick={onAnalyze}
+          onClick={hasStoredAnalysis ? onGoToDashboard : onAnalyze}
           className="mt-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-8 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105"
         >
-          Analyse My Wallet
-          <ArrowRight size={14} />
+          {hasStoredAnalysis ? (
+            <>
+              <LayoutDashboard size={14} />
+              Go to Dashboard
+            </>
+          ) : (
+            <>
+              Analyse My Wallet
+              <ArrowRight size={14} />
+            </>
+          )}
         </button>
       </div>
     </div>

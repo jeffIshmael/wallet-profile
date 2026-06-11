@@ -20,7 +20,7 @@ export function useMiniPay() {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
   const [balance, setBalance] = useState("0");
   const [isMiniPay, setIsMiniPay] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const publicClient = createPublicClient({
     chain: celo,
@@ -45,7 +45,7 @@ export function useMiniPay() {
       chain: celo,
       transport: custom(window.ethereum)
     });
-    const [addr] = await client.getAddresses();
+    const [addr] = await client.requestAddresses();
     setAddress(addr);
     return addr;
   }, []);
@@ -65,23 +65,30 @@ export function useMiniPay() {
       const mp = window.ethereum.isMiniPay === true;
       setIsMiniPay(mp);
 
-      if (mp) {
-        try {
-          const client = createWalletClient({
-            chain: celo,
-            transport: custom(window.ethereum)
-          });
-          const [addr] = await client.getAddresses();
-          setAddress(addr);
-        } catch {
-          setAddress(null);
-        }
+      if (!mp) {
+        setIsLoading(false);
+        return;
       }
 
-      setIsLoading(false);
+      setIsLoading(true);
+      try {
+        const client = createWalletClient({
+          chain: celo,
+          transport: custom(window.ethereum)
+        });
+        const timeout = new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error("MiniPay init timed out")), 5000);
+        });
+        const [addr] = await Promise.race([client.getAddresses(), timeout]);
+        setAddress(addr);
+      } catch {
+        setAddress(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    init();
+    void init();
   }, []);
 
   useEffect(() => {

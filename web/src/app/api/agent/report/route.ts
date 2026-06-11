@@ -1,17 +1,19 @@
 import { runDashboardAnalysis } from "@/lib/agent/onfraServer";
-import { assertPayment } from "@/lib/agent/x402";
+import { insufficientBalanceError } from "@/lib/agent/apiErrors";
+import { assertPayment, getTierPriceUsdt } from "@/lib/agent/x402";
+import { assertSufficientUsdtBalance } from "@/lib/agent/usdtBalance";
 import { badRequest, isEvmAddress, parseJsonBody } from "@/lib/agent/validate";
 import { CELOSCAN_BASE_URL, getAppBaseUrl } from "@/lib/blockchain/constants";
 import {
   isReporterConfigured,
   publishFinancialReportOnchain
 } from "@/lib/blockchain/onchainReporter";
+import { saveAnalysisRun } from "@/lib/db/analysis";
+import { trackApiEvent } from "@/lib/db/events";
+import { saveReport } from "@/lib/db/reports";
 import type { Address } from "viem";
 
 export async function POST(req: Request) {
-  const paymentBlock = assertPayment(req, "report");
-  if (paymentBlock) return paymentBlock;
-
   const body = parseJsonBody<{ walletAddress?: string; buyerAddress?: string }>(
     await req.json().catch(() => null)
   );
@@ -31,15 +33,33 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error:
-          "Onchain reporter is not configured. Set REPORTER_PRIVATE_KEY and ONCHAIN_REPORTER_PROXY_ADDRESS."
+          "Onchain reporter is not configured. Set REPORTER_PRIVATE_KEY and ONCHAIN_REPORTER_PROXY_ADDRESS.",
+        code: "REPORTER_NOT_CONFIGURED"
       },
       { status: 503 }
     );
   }
 
+  const reportPrice = getTierPriceUsdt("report");
+  try {
+    const balanceCheck = await assertSufficientUsdtBalance(buyerAddress, reportPrice);
+    if (!balanceCheck.ok) {
+      return insufficientBalanceError(balanceCheck.balance, reportPrice);
+    }
+  } catch (error) {
+    console.warn("[report] USDT balance pre-check failed:", error);
+  }
+
+  const paymentBlock = await assertPayment(req, "report");
+  if (paymentBlock) return paymentBlock;
+
+  const started = Date.now();
+
   try {
     const walletData = await runDashboardAnalysis(walletAddress);
     const metrics = walletData.metrics;
+
+    await saveAnalysisRun(walletAddress, walletData);
 
     const onchain = await publishFinancialReportOnchain({
       wallet: walletAddress as Address,
@@ -51,6 +71,26 @@ export async function POST(req: Request) {
     });
 
     const reportId = `REP-${onchain.reportId.toString()}`;
+
+    await saveReport({
+      walletAddress,
+      buyerAddress,
+      onchainReportId: reportId,
+      reportHash: onchain.reportHash,
+      transactionHash: onchain.transactionHash,
+      financialHealthScore: metrics.financialHealth.score,
+      reputationScore: metrics.reputation.score,
+      loanCapacity: metrics.loanCapacity.range,
+      attestation: walletData.attestation.paragraph
+    });
+
+    await trackApiEvent({
+      endpoint: "report",
+      status: "success",
+      walletAddress,
+      durationMs: Date.now() - started,
+      metadata: { reportId }
+    });
 
     return Response.json({
       status: "completed" as const,
@@ -70,6 +110,15 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString()
     });
   } catch (error) {
+    await trackApiEvent({
+      endpoint: "report",
+      status: "error",
+      walletAddress,
+      durationMs: Date.now() - started,
+      metadata: {
+        message: error instanceof Error ? error.message : "Report publish failed."
+      }
+    });
     console.error("[report] Failed to publish onchain attestation:", error);
     return Response.json(
       {

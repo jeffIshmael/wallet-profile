@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Bot } from "lucide-react";
 import { HeroAnimationPanel } from "@/components/landing/design-4/hero/HeroAnimationPanel";
 import { LandingNav } from "@/components/landing/design-4/LandingNav";
-import { truncateAddress } from "@/lib/format";
+import type { StoredAnalysisStatus } from "@/hooks/useStoredAnalysis";
 
 const container = {
   hidden: {},
@@ -24,6 +24,7 @@ type HeroSectionProps = {
   authenticated: boolean;
   address: string | null;
   connecting?: boolean;
+  storedAnalysisStatus?: StoredAnalysisStatus;
 };
 
 export function HeroSection({
@@ -33,8 +34,13 @@ export function HeroSection({
   onTryChat,
   authenticated,
   address,
-  connecting
+  connecting,
+  storedAnalysisStatus = "unknown"
 }: HeroSectionProps) {
+  const ctaLoading =
+    connecting || (authenticated && Boolean(address) && storedAnalysisStatus === "unknown");
+  const hasStoredAnalysis = storedAnalysisStatus === "yes";
+
   function handleCta() {
     if (!authenticated) {
       onSignIn();
@@ -43,9 +49,15 @@ export function HeroSection({
     onAnalyze();
   }
 
+  function ctaLabel() {
+    if (ctaLoading) return "Loading...";
+    if (!authenticated || !address) return "Sign in";
+    if (hasStoredAnalysis) return "Go to Dashboard";
+    return "Analyse My Wallet";
+  }
+
   return (
     <section className="relative overflow-hidden bg-void px-6 pb-24 pt-24">
-      {/* Grid pattern */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
@@ -57,7 +69,6 @@ export function HeroSection({
       />
       <div className="pointer-events-none absolute -left-20 top-20 h-64 w-64 rounded-full bg-btc-orange/10 blur-[120px]" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-btc-gold/5 blur-[120px]" />
-
       <div className="pointer-events-none absolute left-1/2 top-0 z-0 h-64 w-[80%] -translate-x-1/2 bg-white/[0.04] blur-[100px]" />
 
       <LandingNav
@@ -72,7 +83,6 @@ export function HeroSection({
 
       <div className="relative z-10 mx-auto grid max-w-7xl gap-12 pt-12 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-16">
         <motion.div variants={container} initial="hidden" animate="show" className="text-center lg:text-left">
-
           <motion.h1 variants={item} className="mt-6 leading-tight">
             <span className="block font-roboto text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
               Your Wallet Is Your
@@ -91,27 +101,11 @@ export function HeroSection({
             <button
               type="button"
               onClick={handleCta}
-              disabled={connecting}
-              className="inline-flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full bg-btc-orange/80 px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105 disabled:cursor-wait disabled:opacity-70"
+              disabled={ctaLoading}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105 disabled:cursor-wait disabled:opacity-70"
             >
-              {connecting ? (
-                <span>Connecting...</span>
-              ) : authenticated && address ? (
-                <>
-                  <span className="inline-flex items-center gap-2">
-                    Analyse My Wallet
-                    <ArrowRight size={14} />
-                  </span>
-                  <span className="font-mono text-[10px] font-normal normal-case tracking-normal text-white/80">
-                    ({truncateAddress(address)})
-                  </span>
-                </>
-              ) : (
-                <span className="inline-flex items-center gap-2">
-                  Sign in
-                  <ArrowRight size={14} />
-                </span>
-              )}
+              <span>{ctaLabel()}</span>
+              {!ctaLoading && <ArrowRight size={14} />}
             </button>
             <a
               href="/chat"

@@ -1,8 +1,8 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { fetchOnchainData } from "./fetch_onchain_data.js";
 import { incomeStability } from "./income_stability.js";
 import { riskExposure } from "./risk_exposure.js";
+import { cachePortfolioSnapshot, getWalletAgeMonths } from "../lib/getWalletDetails.js";
 
 export interface LoanCapacityResult {
   safeLoanRange: string;
@@ -15,69 +15,81 @@ export const loanCapacity = tool(
   async ({ incomeStabilityJson, riskExposureJson, onchainDataJson, walletAddress }) => {
     let incomeData: any;
     let riskData: any;
-    let rawData: any;
+    let stableBalance = 0;
+    let walletAge = 12;
 
-    // Resolve rawData first if needed
-    if (onchainDataJson) {
-      rawData = JSON.parse(onchainDataJson);
-    } else if (walletAddress) {
-      const fetched = await fetchOnchainData.invoke({ walletAddress });
-      rawData = JSON.parse(fetched);
-    }
-
-    // Resolve incomeData
     if (incomeStabilityJson) {
       incomeData = JSON.parse(incomeStabilityJson);
     } else {
-      const input = rawData ? { onchainDataJson: JSON.stringify(rawData) } : { walletAddress };
+      const input = onchainDataJson
+        ? { onchainDataJson }
+        : { walletAddress };
       const res = await incomeStability.invoke(input);
       incomeData = JSON.parse(res);
     }
 
-    // Resolve riskData
     if (riskExposureJson) {
       riskData = JSON.parse(riskExposureJson);
     } else {
-      const input = rawData ? { onchainDataJson: JSON.stringify(rawData) } : { walletAddress };
+      const input = onchainDataJson
+        ? { onchainDataJson }
+        : { walletAddress };
       const res = await riskExposure.invoke(input);
       riskData = JSON.parse(res);
+    }
+
+    if (onchainDataJson) {
+      const rawData = JSON.parse(onchainDataJson);
+      stableBalance = rawData.stablecoinBalance || 0;
+      walletAge = rawData.walletAgeMonths || 12;
+    } else if (walletAddress) {
+      console.log("Fetching loan capacity inputs for wallet:", walletAddress.toLowerCase());
+      const [snapshot, ageMonths] = await Promise.all([
+        cachePortfolioSnapshot(walletAddress),
+        getWalletAgeMonths(walletAddress)
+      ]);
+      stableBalance = snapshot.stablecoinBalance;
+      walletAge = ageMonths;
     }
 
     const monthlyInflow = incomeData.monthlyIncomeEstimateUsd || 0;
     const consistency = incomeData.weeklyInflowConsistency || 0;
     const riskCategory = riskData.riskCategory || "Medium";
-    
-    const stableBalance = rawData ? (rawData.stablecoinBalance || 0) : 0;
-    const walletAge = rawData ? (rawData.walletAgeMonths || 0) : 12;
 
-    // Capacity calculation
-    // Base is 30% of monthly income
     let baseCapacity = monthlyInflow * 0.3;
 
-    // Consistency multiplier
-    const consistencyMult = consistency / 100; // 0 to 1
-    baseCapacity *= (0.5 + 0.5 * consistencyMult); // from 0.5x to 1.0x
+    const consistencyMult = consistency / 100;
+    baseCapacity *= 0.5 + 0.5 * consistencyMult;
 
-    // Risk multiplier
     let riskMult = 0.8;
     if (riskCategory === "Low") riskMult = 1.2;
     if (riskCategory === "High") riskMult = 0.4;
     baseCapacity *= riskMult;
 
-    // Balance booster: add 10% of stablecoin balances
     baseCapacity += stableBalance * 0.1;
 
-    // Rounding and bounds
     const capacity = Math.max(0, Math.round(baseCapacity));
-    const minLoanUsd = Math.round(capacity * 0.7);
-    const maxLoanUsd = Math.round(capacity * 1.3);
+    let minLoanUsd = 0;
+    let maxLoanUsd = 0;
+
+    if (capacity >= 100) {
+      minLoanUsd = Math.round(capacity * 0.7);
+      maxLoanUsd = Math.round(capacity * 1.3);
+    } else if (capacity > 0) {
+      minLoanUsd = capacity;
+      maxLoanUsd = capacity;
+    }
 
     let safeLoanRange = "0 USD (Ineligible)";
     if (maxLoanUsd > 0) {
-      safeLoanRange = `${minLoanUsd}-${maxLoanUsd} USD`;
+      const spread = maxLoanUsd - minLoanUsd;
+      const threshold = Math.max(50, maxLoanUsd * 0.05);
+      safeLoanRange =
+        spread <= threshold
+          ? `~$${capacity.toLocaleString()} USD`
+          : `$${minLoanUsd.toLocaleString()} – $${maxLoanUsd.toLocaleString()} USD`;
     }
 
-    // Confidence mapping
     let confidence: "Low" | "Medium" | "High" = "Medium";
     if (walletAge > 24 && consistency > 80) {
       confidence = "High";

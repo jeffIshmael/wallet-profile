@@ -74,7 +74,7 @@ export function PhoneChatMockup({ id, size = "default" }: PhoneChatMockupProps) 
   );
   const stepRef = useRef(0);
   const timersRef = useRef<number[]>([]);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   function clearTimers() {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
@@ -161,8 +161,11 @@ export function PhoneChatMockup({ id, size = "default" }: PhoneChatMockupProps) 
   }, []);
 
   useEffect(() => {
+    const container = chatScrollRef.current;
+    if (!container) return;
+
     const scrollToBottom = () => {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      container.scrollTop = container.scrollHeight;
     };
 
     scrollToBottom();
@@ -213,6 +216,7 @@ export function PhoneChatMockup({ id, size = "default" }: PhoneChatMockupProps) 
             className={`relative overflow-hidden bg-gradient-to-b from-black/20 to-black/50 ${s.chat}`}
           >
             <div
+              ref={chatScrollRef}
               className={`no-scrollbar flex h-full flex-col overflow-y-auto bg-gradient-to-b from-black/20 to-black/50 ${s.chatScroll}`}
             >
               <AnimatePresence initial={false}>
@@ -244,7 +248,7 @@ export function PhoneChatMockup({ id, size = "default" }: PhoneChatMockupProps) 
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-stardust [animation-delay:300ms]" />
                 </motion.div>
               )}
-              <div ref={chatEndRef} className="h-px shrink-0" aria-hidden />
+              <div className="h-px shrink-0" aria-hidden />
             </div>
 
             <AnimatePresence>

@@ -11,7 +11,7 @@ export const AGENT_CHAT_SUGGESTIONS = [
   "Why is my financial health low?",
   "How do I raise my loan limit?",
   "What's my safe borrowing range?",
-  "Check an external wallet"
+  `What's the monthly income of "${MOCKUP_EXTERNAL_WALLET_SHORT}"?`
 ] as const;
 
 export const AGENT_CHAT_CAPABILITIES_CLAUDE = [

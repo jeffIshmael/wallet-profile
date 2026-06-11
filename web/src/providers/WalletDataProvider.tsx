@@ -1,56 +1,144 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode
+} from "react";
 import {
   clearAnalysisSession,
-  loadWalletData,
+  loadWalletPayload,
   markAnalysisComplete,
   saveWalletData
 } from "@/lib/dashboardSession";
 import type { WalletData } from "@/types/walletData";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 
+type AnalyzeOptions = {
+  force?: boolean;
+  silent?: boolean;
+};
+
 type WalletDataContextValue = {
   walletData: WalletData | null;
   isAnalyzing: boolean;
+  isHydrating: boolean;
+  isRefreshing: boolean;
+  lastFetchedAt: string | null;
   error: string | null;
-  analyzeWallet: (walletAddress?: string) => Promise<void>;
+  analyzeWallet: (walletAddress?: string, options?: AnalyzeOptions) => Promise<void>;
+  refreshWallet: () => Promise<void>;
+  loadStoredWallet: (walletAddress?: string) => Promise<boolean>;
   clearWallet: () => void;
 };
 
 const WalletDataContext = createContext<WalletDataContextValue | null>(null);
 
+type StoredAnalysisRecord = {
+  walletData: WalletData;
+  fetchedAt: string;
+};
+
+async function fetchStoredAnalysisRecord(address: string): Promise<StoredAnalysisRecord | null> {
+  try {
+    const response = await fetch(`/api/wallet/${encodeURIComponent(address)}/analysis`);
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      walletData?: WalletData | null;
+      fetchedAt?: string;
+    };
+    if (!payload.walletData) return null;
+    return {
+      walletData: payload.walletData,
+      fetchedAt: payload.fetchedAt ?? new Date().toISOString()
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function WalletDataProvider({ children }: { children: ReactNode }) {
   const { address } = useWalletAuth();
   const [walletData, setWalletData] = useState<WalletData | null>(null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const silentRefreshKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!address) {
       setWalletData(null);
+      setLastFetchedAt(null);
+      setIsHydrating(false);
+      silentRefreshKey.current = null;
       return;
     }
-    const cached = loadWalletData(address);
-    if (cached) setWalletData(cached);
+
+    const normalized = address.toLowerCase();
+    let cancelled = false;
+    silentRefreshKey.current = null;
+    setIsHydrating(true);
+
+    async function hydrate() {
+      const sessionPayload = loadWalletPayload(normalized);
+      if (sessionPayload && !cancelled) {
+        setWalletData(sessionPayload.data);
+        setLastFetchedAt(sessionPayload.fetchedAt);
+        setIsHydrating(false);
+      }
+
+      const stored = await fetchStoredAnalysisRecord(normalized);
+      if (cancelled) return;
+
+      if (stored) {
+        setWalletData(stored.walletData);
+        setLastFetchedAt(stored.fetchedAt);
+        saveWalletData(normalized, stored.walletData, stored.fetchedAt);
+        markAnalysisComplete();
+      } else if (!sessionPayload) {
+        setWalletData(null);
+        setLastFetchedAt(null);
+      }
+
+      setIsHydrating(false);
+    }
+
+    void hydrate();
+    return () => {
+      cancelled = true;
+    };
   }, [address]);
 
   const analyzeWallet = useCallback(
-    async (walletAddress?: string) => {
+    async (walletAddress?: string, options?: AnalyzeOptions) => {
       const target = (walletAddress || address)?.toLowerCase();
       if (!target) {
         setError("Connect a wallet before analyzing.");
         return;
       }
 
-      setIsAnalyzing(true);
+      const silent = options?.silent ?? false;
+      const force = options?.force ?? false;
+
+      if (silent) {
+        setIsRefreshing(true);
+      } else {
+        setIsAnalyzing(true);
+      }
       setError(null);
 
       try {
         const response = await fetch("/api/agent/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletAddress: target })
+          body: JSON.stringify({ walletAddress: target, force })
         });
 
         if (!response.ok) {
@@ -58,24 +146,70 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
           throw new Error(message || "Analysis failed.");
         }
 
-        const payload = (await response.json()) as { walletData: WalletData };
+        const payload = (await response.json()) as {
+          walletData: WalletData;
+          createdAt?: string;
+        };
+        const fetchedAt = payload.createdAt ?? new Date().toISOString();
+
         setWalletData(payload.walletData);
-        saveWalletData(target, payload.walletData);
+        setLastFetchedAt(fetchedAt);
+        saveWalletData(target, payload.walletData, fetchedAt);
         markAnalysisComplete();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Analysis failed.";
-        setError(message);
-        throw err;
+        if (!silent) {
+          setError(message);
+          throw err;
+        }
+        console.warn("[WalletDataProvider] Silent refresh failed:", message);
       } finally {
-        setIsAnalyzing(false);
+        if (silent) {
+          setIsRefreshing(false);
+        } else {
+          setIsAnalyzing(false);
+        }
       }
     },
     [address]
   );
 
+  const refreshWallet = useCallback(async () => {
+    await analyzeWallet(undefined, { force: true });
+  }, [analyzeWallet]);
+
+  const loadStoredWallet = useCallback(
+    async (walletAddress?: string) => {
+      const target = (walletAddress || address)?.toLowerCase();
+      if (!target) return false;
+
+      const stored = await fetchStoredAnalysisRecord(target);
+      if (!stored) return false;
+
+      setWalletData(stored.walletData);
+      setLastFetchedAt(stored.fetchedAt);
+      saveWalletData(target, stored.walletData, stored.fetchedAt);
+      markAnalysisComplete();
+      return true;
+    },
+    [address]
+  );
+
+  useEffect(() => {
+    if (!address || isHydrating || !walletData) return;
+
+    const key = address.toLowerCase();
+    if (silentRefreshKey.current === key) return;
+    silentRefreshKey.current = key;
+
+    void analyzeWallet(key, { silent: true });
+  }, [address, isHydrating, walletData, analyzeWallet]);
+
   const clearWallet = useCallback(() => {
     setWalletData(null);
+    setLastFetchedAt(null);
     setError(null);
+    silentRefreshKey.current = null;
     clearAnalysisSession();
   }, []);
 
@@ -83,11 +217,27 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
     () => ({
       walletData,
       isAnalyzing,
+      isHydrating,
+      isRefreshing,
+      lastFetchedAt,
       error,
       analyzeWallet,
+      refreshWallet,
+      loadStoredWallet,
       clearWallet
     }),
-    [walletData, isAnalyzing, error, analyzeWallet, clearWallet]
+    [
+      walletData,
+      isAnalyzing,
+      isHydrating,
+      isRefreshing,
+      lastFetchedAt,
+      error,
+      analyzeWallet,
+      refreshWallet,
+      loadStoredWallet,
+      clearWallet
+    ]
   );
 
   return <WalletDataContext.Provider value={value}>{children}</WalletDataContext.Provider>;

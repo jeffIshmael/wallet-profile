@@ -1,8 +1,5 @@
-const links = [
-  { label: "Privacy", href: "#" },
-  { label: "Terms", href: "#" },
-  { label: "Contact", href: "#" }
-];
+import Link from "next/link";
+import { footerLinks } from "@/lib/siteLinks";
 
 export function FooterSection() {
   const year = new Date().getFullYear();
@@ -16,15 +13,25 @@ export function FooterSection() {
         </div>
 
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {links.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="font-mono text-xs text-stardust transition hover:text-white"
-            >
-              {link.label}
-            </a>
-          ))}
+          {footerLinks.map((link) =>
+            link.href.startsWith("/") ? (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="font-mono text-xs text-stardust transition hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.label}
+                href={link.href}
+                className="font-mono text-xs text-stardust transition hover:text-white"
+              >
+                {link.label}
+              </a>
+            )
+          )}
         </nav>
       </div>
     </footer>

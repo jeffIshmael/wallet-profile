@@ -1,9 +1,10 @@
 "use client";
 
-import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
-import { createContext, useContext, useMemo, useState } from "react";
+import { PrivyProvider, usePrivy, useWallets, type User } from "@privy-io/react-auth";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { EIP1193Provider } from "viem";
 import { celo } from "viem/chains";
-import { useMiniPay } from "@/hooks/useMiniPay";
+import { connectInjectedWallet, isMiniPay } from "@/lib/minipay";
 
 type AuthContextValue = {
   ready: boolean;
@@ -13,67 +14,134 @@ type AuthContextValue = {
   address: string | null;
   miniPay: boolean;
   connectingMiniPay: boolean;
+  /** EIP-1193 provider for the already-connected app wallet (Privy / MiniPay). */
+  getEthereumProvider: () => Promise<EIP1193Provider | undefined>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getInjectedProvider(): EIP1193Provider | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as Window & { ethereum?: EIP1193Provider }).ethereum;
+}
+
+function resolvePrivyWalletAddress(user: User | null, wallets: { address?: string }[]): string | null {
+  const connected = wallets.find((wallet) => wallet.address)?.address ?? null;
+  if (connected) return connected;
+  if (user?.wallet?.address) return user.wallet.address;
+
+  const linkedWallet = user?.linkedAccounts.find((account) => account.type === "wallet");
+  if (linkedWallet && "address" in linkedWallet && linkedWallet.address) {
+    return linkedWallet.address;
+  }
+
+  return null;
+}
+
 function MiniPayBridge({ children }: { children: React.ReactNode }) {
-  const { address: miniPayAddress, isMiniPay: miniPay, isLoading: connectingMiniPay, connect, disconnect } =
-    useMiniPay();
+  const [miniPay, setMiniPay] = useState(false);
+  const [miniPayAddress, setMiniPayAddress] = useState<string | null>(null);
+  const [connectingMiniPay, setConnectingMiniPay] = useState(false);
   const [demoSignedIn, setDemoSignedIn] = useState(false);
+
+  useEffect(() => {
+    if (!isMiniPay()) return;
+
+    setMiniPay(true);
+    setConnectingMiniPay(true);
+    connectInjectedWallet()
+      .then((address) => setMiniPayAddress(address))
+      .catch(() => setMiniPayAddress(null))
+      .finally(() => setConnectingMiniPay(false));
+  }, []);
+
+  const getEthereumProvider = useCallback(async () => getInjectedProvider(), []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      ready: !connectingMiniPay,
+      ready: true,
       authenticated: Boolean(miniPayAddress) || demoSignedIn,
       login: () => {
-        if (miniPay) {
-          void connect();
+        if (isMiniPay()) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((address) => setMiniPayAddress(address))
+            .finally(() => setConnectingMiniPay(false));
           return;
         }
         setDemoSignedIn(true);
       },
       logout: () => {
-        disconnect();
+        setMiniPayAddress(null);
         setDemoSignedIn(false);
       },
       address: miniPayAddress,
       miniPay,
-      connectingMiniPay
+      connectingMiniPay,
+      getEthereumProvider
     }),
-    [miniPay, miniPayAddress, connectingMiniPay, demoSignedIn, connect, disconnect]
+    [miniPay, miniPayAddress, connectingMiniPay, demoSignedIn, getEthereumProvider]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 function PrivyBridge({ children }: { children: React.ReactNode }) {
-  const { ready, authenticated, login: privyLogin, logout: privyLogout } = usePrivy();
+  const { ready, authenticated, login: privyLogin, logout: privyLogout, user } = usePrivy();
   const { wallets } = useWallets();
-  const { address: miniPayAddress, isMiniPay: miniPay, isLoading: connectingMiniPay, connect, disconnect } =
-    useMiniPay();
+  const [miniPay, setMiniPay] = useState(false);
+  const [miniPayAddress, setMiniPayAddress] = useState<string | null>(null);
+  const [connectingMiniPay, setConnectingMiniPay] = useState(false);
 
-  const privyAddress = wallets.find((wallet) => wallet.address)?.address ?? null;
+  useEffect(() => {
+    if (!isMiniPay()) return;
+
+    setMiniPay(true);
+    setConnectingMiniPay(true);
+    connectInjectedWallet()
+      .then((address) => setMiniPayAddress(address))
+      .catch(() => setMiniPayAddress(null))
+      .finally(() => setConnectingMiniPay(false));
+  }, []);
+
+  const privyAddress = resolvePrivyWalletAddress(user, wallets);
   const address = miniPayAddress ?? privyAddress;
+
+  const getEthereumProvider = useCallback(async () => {
+    const injected = getInjectedProvider();
+    if (injected) return injected;
+
+    const normalized = address?.toLowerCase();
+    const wallet =
+      wallets.find((item) => item.address?.toLowerCase() === normalized) ?? wallets[0];
+    if (!wallet) return undefined;
+
+    return (await wallet.getEthereumProvider()) as EIP1193Provider;
+  }, [address, wallets]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      ready: ready && !connectingMiniPay,
+      ready,
       authenticated: authenticated || Boolean(miniPayAddress),
       login: () => {
         if (miniPay) {
-          void connect();
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((nextAddress) => setMiniPayAddress(nextAddress))
+            .finally(() => setConnectingMiniPay(false));
           return;
         }
+        if (!ready) return;
         privyLogin();
       },
       logout: () => {
-        disconnect();
+        setMiniPayAddress(null);
         privyLogout();
       },
       address,
       miniPay,
-      connectingMiniPay
+      connectingMiniPay,
+      getEthereumProvider
     }),
     [
       ready,
@@ -84,8 +152,7 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       miniPay,
       miniPayAddress,
       connectingMiniPay,
-      connect,
-      disconnect
+      getEthereumProvider
     ]
   );
 

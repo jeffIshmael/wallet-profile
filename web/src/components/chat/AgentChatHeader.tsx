@@ -8,36 +8,41 @@ import { AGENT_LOGO_PATH } from "@/lib/blockchain/constants";
 
 export function AgentChatHeader({ compact = false }: { compact?: boolean }) {
   const [logoError, setLogoError] = useState(false);
+  const avatarSize = compact ? 36 : 40;
 
   return (
-    <div className={`flex items-center gap-3 ${compact ? "" : "border-b border-white/10 px-4 py-3"}`}>
-      <div
-        className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-btc-orange/30 bg-btc-orange/10 ${
-          compact ? "h-9 w-9" : "h-10 w-10"
-        }`}
-      >
-        {!logoError ? (
-          <Image
-            src={AGENT_LOGO_PATH}
-            alt={`${AGENT_CHAT_NAME} logo`}
-            width={compact ? 36 : 40}
-            height={compact ? 36 : 40}
-            className="h-full w-full object-cover"
-            onError={() => setLogoError(true)}
-          />
-        ) : (
-          <Bot size={compact ? 18 : 20} className="text-btc-orange" />
-        )}
+    <div
+      className={`flex items-center gap-3 pl-2 ${compact ? "py-2" : "border-b border-white/10 py-3 pl-2 pr-4"}`}
+    >
+      <div className="relative shrink-0">
+        <div
+          className="grid place-items-center overflow-hidden rounded-full border border-white/15 bg-black/70"
+          style={{ width: avatarSize, height: avatarSize }}
+        >
+          {!logoError ? (
+            <Image
+              src={AGENT_LOGO_PATH}
+              alt={`${AGENT_CHAT_NAME} logo`}
+              width={avatarSize - 8}
+              height={avatarSize - 8}
+              className="object-contain"
+              style={{ width: avatarSize - 10, height: avatarSize - 10 }}
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <Bot size={compact ? 16 : 18} className="text-btc-orange" />
+          )}
+        </div>
+        <span
+          className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-void bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+          aria-hidden
+        />
       </div>
 
       <div className="min-w-0">
         <p className={`truncate font-sora font-bold text-white ${compact ? "text-sm" : "text-base"}`}>
           {AGENT_CHAT_NAME}
         </p>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-          <span className="text-[11px] text-stardust">Online</span>
-        </div>
       </div>
     </div>
   );

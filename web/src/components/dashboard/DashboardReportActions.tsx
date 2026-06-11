@@ -17,7 +17,7 @@ export function DashboardReportActions({ className, variant = "header" }: Dashbo
 
   return (
     <>
-      <div className={clsx("flex items-stretch gap-2", isMobile && "w-full", className)}>
+      <div className={clsx("flex items-stretch", isMobile ? "w-full gap-3" : "gap-1.5", className)}>
         <button
           type="button"
           onClick={() => setReportOpen(true)}

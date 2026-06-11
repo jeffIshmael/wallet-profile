@@ -1,13 +1,36 @@
 "use client";
 
-import { Send } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Send, Square } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { AgentChatHeader } from "@/components/chat/AgentChatHeader";
 import { AgentChatPinnedNotice } from "@/components/chat/AgentChatPinnedNotice";
+import { AgentRatingModal } from "@/components/chat/AgentRatingModal";
+import { ChatMessageBody } from "@/components/chat/ChatMessageBody";
 import { AGENT_CHAT_SUGGESTIONS } from "@/components/chat/chatContent";
+import { CHAT_LOADING_STAGES } from "@/lib/agent/chatTypes";
+import { resolveChatQueryTarget } from "@/lib/agent/walletQuery";
+import { hasSubmittedFeedback } from "@/lib/blockchain/erc8004Feedback";
+import { useSubmitAgentFeedback } from "@/hooks/useSubmitAgentFeedback";
+import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { copyWithToast } from "@/lib/copyToClipboard";
+import { formatMessageTime } from "@/lib/formatMessageTime";
 
-type ChatMessage = { role: "user" | "ai"; text: string };
+type ChatMessage = { role: "user" | "ai"; text: string; isError?: boolean; createdAt?: string };
+
+const RATING_PROMPT_AFTER_MESSAGES = 5;
+
+function formatApiError(payload: {
+  error?: string;
+  code?: string;
+  response?: string;
+  topUpHint?: string;
+}): string {
+  if (payload.response) return payload.response;
+  const parts = [payload.error ?? "Something went wrong."];
+  if (payload.topUpHint) parts.push(payload.topUpHint);
+  return parts.join(" ");
+}
 
 export function ChatSidebar({
   overlay = false,
@@ -20,17 +43,144 @@ export function ChatSidebar({
   onClose?: () => void;
 }) {
   const { address } = useWalletAuth();
+  const chatFetch = usePaidApiFetch();
+  const submitFeedback = useSubmitAgentFeedback(address);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [userMessageCount, setUserMessageCount] = useState(0);
+  const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!address) {
+      setMessages([]);
+      setSessionId(null);
+      setUserMessageCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadHistory() {
+      if (!address) return;
+      setLoadingHistory(true);
+      try {
+        const response = await fetch(
+          `/api/agent/chat?walletAddress=${encodeURIComponent(address)}`
+        );
+        if (!response.ok || cancelled) return;
+
+        const payload = (await response.json()) as {
+          sessionId?: string;
+          messages?: Array<{ role: "user" | "assistant"; content: string; createdAt?: string }>;
+        };
+
+        if (cancelled) return;
+        setSessionId(payload.sessionId ?? null);
+        const loaded = (payload.messages ?? []).map((message) => ({
+          role: message.role === "user" ? ("user" as const) : ("ai" as const),
+          text: message.content,
+          createdAt: message.createdAt
+        }));
+        setMessages(loaded);
+        setUserMessageCount(loaded.filter((message) => message.role === "user").length);
+      } catch {
+        if (!cancelled) {
+          setMessages([]);
+          setSessionId(null);
+          setUserMessageCount(0);
+        }
+      } finally {
+        if (!cancelled) setLoadingHistory(false);
+      }
+    }
+
+    void loadHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
+
+  useEffect(() => {
+    const container = messagesScrollRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages, sending, loadingStatus]);
+
+  function startLoadingStages() {
+    let index = 0;
+    setLoadingStatus(CHAT_LOADING_STAGES[0]!);
+    stageTimerRef.current = setInterval(() => {
+      index = Math.min(index + 1, CHAT_LOADING_STAGES.length - 1);
+      setLoadingStatus(CHAT_LOADING_STAGES[index]!);
+    }, 2200);
+  }
+
+  function stopLoadingStages() {
+    if (stageTimerRef.current) {
+      clearInterval(stageTimerRef.current);
+      stageTimerRef.current = null;
+    }
+    setLoadingStatus(null);
+  }
+
+  function cancelRequest() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    stopLoadingStages();
+    setSending(false);
+  }
+
+  function maybePromptForRating(nextUserCount: number) {
+    if (!address || hasSubmittedFeedback(address)) return;
+    if (nextUserCount >= RATING_PROMPT_AFTER_MESSAGES) {
+      setRatingOpen(true);
+    }
+  }
+
+  function copyMessage(text: string) {
+    void copyWithToast(text, "Message copied");
+  }
+
+  function messageTimestamp() {
+    return new Date().toISOString();
+  }
 
   async function send(text = input) {
-    if (!text.trim() || sending) return;
+    if (!text.trim() || sending || !address) return;
 
     const userMessage = text.trim();
-    setMessages((current) => [...current, { role: "user", text: userMessage }]);
+
+    const earlyCheck = resolveChatQueryTarget(userMessage, address);
+    if (!earlyCheck.ok) {
+      setMessages((current) => [
+        ...current,
+        { role: "user", text: userMessage, createdAt: messageTimestamp() },
+        { role: "ai", text: earlyCheck.error, isError: true, createdAt: messageTimestamp() }
+      ]);
+      setInput("");
+      return;
+    }
+
+    setMessages((current) => [
+      ...current,
+      { role: "user", text: userMessage, createdAt: messageTimestamp() }
+    ]);
     setInput("");
     setSending(true);
+    startLoadingStages();
+    if (earlyCheck.target.isExternal) {
+      setLoadingStatus("Awaiting x402 payment approval (0.01 USDT)…");
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const history = messages
@@ -40,29 +190,75 @@ export function ChatSidebar({
           content: m.text
         }));
 
-      const response = await fetch("/api/agent/chat", {
+      const response = await chatFetch("/api/agent/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
           walletAddress: address,
-          history
-        })
+          history,
+          sessionId
+        }),
+        signal: controller.signal
       });
 
-      const payload = (await response.json()) as { response?: string; error?: string };
+      const payload = (await response.json()) as {
+        response?: string;
+        error?: string;
+        code?: string;
+        topUpHint?: string;
+        sessionId?: string;
+      };
+
+      if (!response.ok) {
+        const errorText =
+          payload.code === "PAYMENT_REQUIRED"
+            ? payload.error ??
+              "External wallet queries require 0.01 USDT via x402. Approve the payment prompt and try again."
+            : formatApiError(payload);
+        setMessages((current) => [
+          ...current,
+          {
+            role: "ai",
+            text: errorText,
+            isError: true,
+            createdAt: messageTimestamp()
+          }
+        ]);
+        return;
+      }
+
       const reply =
         payload.response ??
         payload.error ??
         "Wallet Profile AI could not respond right now. Please try again.";
 
-      setMessages((current) => [...current, { role: "ai", text: reply }]);
-    } catch {
+      if (payload.sessionId) setSessionId(payload.sessionId);
+      setMessages((current) => [...current, { role: "ai", text: reply, createdAt: messageTimestamp() }]);
+
+      const nextCount = userMessageCount + 1;
+      setUserMessageCount(nextCount);
+      maybePromptForRating(nextCount);
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setMessages((current) => [
+          ...current,
+          { role: "ai", text: "Request cancelled.", isError: true, createdAt: messageTimestamp() }
+        ]);
+        return;
+      }
       setMessages((current) => [
         ...current,
-        { role: "ai", text: "Network error while contacting Wallet Profile AI." }
+        {
+          role: "ai",
+          text: "Network error while contacting Wallet Profile AI.",
+          isError: true,
+          createdAt: messageTimestamp()
+        }
       ]);
     } finally {
+      abortRef.current = null;
+      stopLoadingStages();
       setSending(false);
     }
   }
@@ -70,87 +266,149 @@ export function ChatSidebar({
   const showHeader = fullPage;
 
   return (
-    <div
-      className={`flex h-full flex-col ${
-        fullPage ? "bg-void" : overlay ? "" : "glass-panel rounded-2xl p-4"
-      }`}
-    >
-      {showHeader && <AgentChatHeader />}
+    <>
+      <div
+        className={`flex h-full flex-col ${
+          fullPage ? "bg-void" : overlay ? "" : "glass-panel rounded-2xl p-4"
+        }`}
+      >
+        {showHeader && <AgentChatHeader />}
 
-      {!overlay && !fullPage && (
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-sora text-base font-bold text-white">Wallet Profile AI</h2>
-        </div>
-      )}
-
-      <div className={`flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto ${fullPage ? "px-4 py-3" : ""}`}>
-        <AgentChatPinnedNotice />
-
-        {messages.length === 0 && (
-          <p className="text-xs leading-5 text-stardust">
-            Ask about your financial health, reputation, loan capacity, or portfolio risk.
-          </p>
+        {!overlay && !fullPage && (
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-sora text-base font-bold text-white">Wallet Profile AI</h2>
+          </div>
         )}
 
-        {messages.map((message, index) => (
-          <div
-            key={`${message.role}-${index}`}
-            className={
-              message.role === "user"
-                ? "ml-auto max-w-[90%] rounded-lg bg-btc-orange px-3 py-2 text-xs font-medium text-white"
-                : "mr-auto max-w-[95%] rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs leading-5 text-stardust"
-            }
-          >
-            {message.text}
-          </div>
-        ))}
-      </div>
-
-      <div className={`flex flex-wrap gap-1.5 ${fullPage ? "px-4" : ""}`}>
-        {AGENT_CHAT_SUGGESTIONS.map((prompt) => (
-          <button
-            key={prompt}
-            type="button"
-            onClick={() => send(prompt)}
-            disabled={!address || sending}
-            className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-stardust transition hover:border-btc-orange/40 hover:text-white disabled:opacity-50"
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
-
-      <form
-        className={`mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2 ${
-          fullPage ? "mx-4 mb-4" : ""
-        }`}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void send();
-        }}
-      >
-        <input
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder={address ? "Ask OnFRA about your wallet..." : "Connect wallet to chat"}
-          disabled={!address || sending}
-          className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white outline-none placeholder:text-stardust"
-        />
-        <button
-          type="submit"
-          disabled={!address || sending || !input.trim()}
-          className="grid h-8 w-8 place-items-center rounded-lg bg-btc-orange text-white transition hover:bg-btc-orange/90 disabled:opacity-50"
-          aria-label="Send message"
+        <div
+          ref={messagesScrollRef}
+          className={`flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto ${fullPage ? "px-4 py-3" : ""}`}
         >
-          <Send size={14} />
-        </button>
-      </form>
+          <AgentChatPinnedNotice />
 
-      {overlay && onClose && (
-        <button type="button" onClick={onClose} className="sr-only">
-          Close chat
-        </button>
-      )}
-    </div>
+          {loadingHistory && (
+            <div className="mr-auto flex max-w-[95%] items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-stardust">
+              <Loader2 size={12} className="animate-spin text-btc-orange" />
+              <span>Loading previous messages…</span>
+            </div>
+          )}
+
+          {messages.length === 0 && !loadingHistory && (
+            <p className="text-xs leading-5 text-stardust">
+              Ask about your financial health, reputation, loan capacity, or portfolio risk.
+            </p>
+          )}
+
+          {messages.map((message, index) => (
+            <div
+              key={`${message.role}-${index}`}
+              className={`flex max-w-[95%] flex-col gap-1 ${message.role === "user" ? "ml-auto items-end" : "mr-auto items-start"}`}
+            >
+              <button
+                type="button"
+                onClick={() => copyMessage(message.text)}
+                title="Click to copy"
+                className={
+                  message.role === "user"
+                    ? "rounded-lg bg-btc-orange px-3 py-2 text-left text-xs font-medium text-white break-words [overflow-wrap:anywhere] transition hover:bg-btc-orange/90"
+                    : message.isError
+                      ? "rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-left text-xs leading-5 text-danger break-words [overflow-wrap:anywhere]"
+                      : "rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-left text-xs leading-5 text-stardust break-words [overflow-wrap:anywhere] transition hover:border-white/20"
+                }
+              >
+                {message.role === "user" || message.isError ? (
+                  message.text
+                ) : (
+                  <ChatMessageBody text={message.text} />
+                )}
+              </button>
+              {message.createdAt && (
+                <time
+                  dateTime={message.createdAt}
+                  className="px-1 text-[10px] text-stardust/60"
+                >
+                  {formatMessageTime(message.createdAt)}
+                </time>
+              )}
+            </div>
+          ))}
+
+          {sending && loadingStatus && (
+            <div className="mr-auto flex max-w-[95%] items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-stardust">
+              <Loader2 size={12} className="animate-spin text-btc-orange" />
+              <span>{loadingStatus}</span>
+            </div>
+          )}
+        </div>
+
+        {messages.length === 0 && (
+          <div className={`flex flex-wrap gap-1.5 ${fullPage ? "px-4" : ""}`}>
+            {AGENT_CHAT_SUGGESTIONS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => send(prompt)}
+                disabled={!address || sending}
+                className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-stardust transition hover:border-btc-orange/40 hover:text-white disabled:opacity-50"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <form
+          className={`mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2 ${
+            fullPage ? "mx-4 mb-4" : ""
+          }`}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (sending) {
+              cancelRequest();
+              return;
+            }
+            void send();
+          }}
+        >
+          <input
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder={address ? "Ask OnFRA about your wallet..." : "Connect wallet to chat"}
+            disabled={!address || sending}
+            className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white outline-none placeholder:text-stardust"
+          />
+          {sending ? (
+            <button
+              type="submit"
+              className="grid h-8 w-8 place-items-center rounded-lg border border-white/15 bg-white/5 text-stardust transition hover:border-danger/40 hover:bg-danger/10 hover:text-danger"
+              aria-label="Stop request"
+            >
+              <Square size={14} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!address || !input.trim()}
+              className="grid h-8 w-8 place-items-center rounded-lg bg-btc-orange text-white transition hover:bg-btc-orange/90 disabled:opacity-50"
+              aria-label="Send message"
+            >
+              <Send size={14} />
+            </button>
+          )}
+        </form>
+
+        {overlay && onClose && (
+          <button type="button" onClick={onClose} className="sr-only">
+            Close chat
+          </button>
+        )}
+      </div>
+
+      <AgentRatingModal
+        open={ratingOpen}
+        onClose={() => setRatingOpen(false)}
+        onSubmit={submitFeedback}
+      />
+    </>
   );
 }

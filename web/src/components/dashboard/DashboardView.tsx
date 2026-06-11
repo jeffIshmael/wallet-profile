@@ -12,6 +12,7 @@ import {
   ReputationScoreCard
 } from "@/components/scores/ScoreCards";
 import { RiskExposureCard } from "@/components/portfolio/RiskExposureCard";
+import { DashboardRefreshAnalysis } from "@/components/dashboard/DashboardRefreshAnalysis";
 import { DashboardReportActions } from "@/components/dashboard/DashboardReportActions";
 import { WalletMetaCard } from "@/components/wallet/WalletMetaCard";
 
@@ -25,9 +26,12 @@ export function DashboardView({ chatOpen, onChatOpenChange }: DashboardViewProps
     <DashboardShell chatOpen={chatOpen} onChatOpenChange={onChatOpenChange} hideChatFab scrollable>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-3">
         <div className="flex flex-col gap-2.5 sm:col-span-2 lg:col-span-3">
-          <div className="md:hidden">
-            <DashboardReportActions variant="mobile" />
-          </div>
+      <div className="md:hidden">
+        <DashboardReportActions variant="mobile" className="mt-2" />
+        <div className="mt-2">
+          <DashboardRefreshAnalysis compact />
+        </div>
+      </div>
           <WalletMetaCard />
         </div>
 

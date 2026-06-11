@@ -1,7 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { fetchOnchainData, fetchWalletTransactions, OnchainData } from "./fetch_onchain_data.js";
-import { fullOnchainDataCache } from "../lib/getWalletDetails.js";
+import { OnchainData } from "./fetch_onchain_data.js";
+import { cacheWalletTransactions, fullOnchainDataCache } from "../lib/getWalletDetails.js";
 
 export interface IncomeStabilityResult {
   incomeLabel: "Stable Earner" | "Growing Wallet" | "Seasonal Earner" | "Volatile Income" | "Whale Activity" | "Dormant Wallet";
@@ -13,34 +13,30 @@ export interface IncomeStabilityResult {
 
 export const incomeStability = tool(
   async ({ onchainDataJson, walletAddress }) => {
-    let data: OnchainData;
+    let data: Partial<OnchainData> = {};
+    let transactions: any[] = [];
 
     if (onchainDataJson) {
       data = JSON.parse(onchainDataJson);
+      const address = (walletAddress || data.walletAddress || "").toLowerCase();
+      const cachedData = fullOnchainDataCache.get(address);
+      transactions = cachedData?.transactions || (data as any).transactions || [];
     } else if (walletAddress) {
-      const fetched = await fetchOnchainData.invoke({ walletAddress });
-      data = JSON.parse(fetched);
+      const address = walletAddress.toLowerCase();
+      console.log("Fetching income transactions for wallet:", address);
+      transactions = await cacheWalletTransactions(address, 3);
+      data = { walletAddress: address };
     } else {
       throw new Error("Either onchainDataJson or walletAddress must be provided.");
     }
 
     const address = (walletAddress || data.walletAddress || "").toLowerCase();
     const cachedData = fullOnchainDataCache.get(address);
-    let transactions = cachedData?.transactions || (data as any).transactions || [];
-
-    // Fallback: If no transactions are found, fetch 3-month statement on-demand
-    if (transactions.length === 0 && address) {
-      try {
-        const txJson = await fetchWalletTransactions.invoke({ walletAddress: address, months: 3 });
-        const txData = JSON.parse(txJson);
-        const cached = fullOnchainDataCache.get(address);
-        transactions = cached?.transactions || txData.transactions || [];
-      } catch (err) {
-        console.warn("Failed to fetch transactions on-demand for income stability score:", err);
-      }
+    if (transactions.length === 0) {
+      transactions = cachedData?.transactions || (data as any).transactions || [];
     }
 
-    const { stablecoinBalance, volatileBalance } = cachedData || data;
+    const { stablecoinBalance = 0, volatileBalance = 0 } = cachedData || data;
 
     const inflows = transactions.filter((t: any) => t.type === "inflow");
     const numInflows = inflows.length;
@@ -59,7 +55,6 @@ export const incomeStability = tool(
     const totalInflow = inflows.reduce((sum: number, t: any) => sum + t.amountUsd, 0);
     const averageInflowSizeUsd = parseFloat((totalInflow / numInflows).toFixed(2));
 
-    // Calculate dates
     const timestamps = inflows.map((t: any) => new Date(t.timestamp).getTime()).sort((a: number, b: number) => a - b);
     const minTime = timestamps[0];
     const maxTime = timestamps[timestamps.length - 1];
@@ -70,12 +65,9 @@ export const incomeStability = tool(
 
     const monthlyIncomeEstimateUsd = parseFloat((totalInflow / rangeMonths).toFixed(2));
 
-    // Weekly consistency
-    // Count how many distinct weeks had at least one inflow
     const weekIds = new Set<string>();
     inflows.forEach((t: any) => {
       const date = new Date(t.timestamp);
-      // Simple week identifier (Year-WeekNumber)
       const oneJan = new Date(date.getFullYear(), 0, 1);
       const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
       const week = Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
@@ -86,7 +78,6 @@ export const incomeStability = tool(
     const totalPossibleWeeks = Math.ceil(rangeWeeks);
     const weeklyInflowConsistency = Math.min(100, Math.round((activeWeeksWithInflows / totalPossibleWeeks) * 100));
 
-    // Fun Label classification
     let incomeLabel: IncomeStabilityResult["incomeLabel"] = "Volatile Income";
     const totalBalance = stablecoinBalance + volatileBalance;
 
@@ -95,7 +86,6 @@ export const incomeStability = tool(
     } else if (weeklyInflowConsistency >= 75) {
       incomeLabel = "Stable Earner";
     } else if (rangeMonths >= 3 && numInflows >= 6) {
-      // Check if second half average is higher than first half
       const halfIndex = Math.floor(inflows.length / 2);
       const firstHalf = inflows.slice(0, halfIndex);
       const secondHalf = inflows.slice(halfIndex);
@@ -110,8 +100,6 @@ export const incomeStability = tool(
       incomeLabel = "Dormant Wallet";
     }
 
-    // Recurring Sender patterns
-    // (In mock data, we flag true if it's "isSalaryLike" which is represented by having stable matching inflow sizes)
     const inflowSizes = inflows.map((t: any) => Math.round(t.amountUsd / 10) * 10);
     const sizeCounts: Record<number, number> = {};
     let maxSameSize = 0;

@@ -42,3 +42,8 @@ coverage/
 
 # Misc local artifacts
 *.zip
+
+# Prisma
+web/generated/
+web/prisma/*.db
+web/prisma/*.db-journal

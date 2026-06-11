@@ -20,9 +20,24 @@ From the repo root: `npm run dev` (npm workspaces).
 |----------|---------|
 | `NEXT_PUBLIC_PRIVY_APP_ID` | Privy wallet authentication |
 | `NEXT_PUBLIC_APP_URL` | Public base URL for manifests and verification links |
-| `REPORTER_PRIVATE_KEY` | Backend signer with `REPORTER_ROLE` on `OnchainReporter` |
+| `REPORTER_PRIVATE_KEY` | Backend signer with `REPORTER_ROLE` on `OnchainReporter`; also used to submit ERC-8004 reputation feedback (must not be the agent owner wallet) |
 | `ONCHAIN_REPORTER_PROXY_ADDRESS` | UUPS proxy on Celo (default: mainnet deployment) |
-| `X402_ENFORCE` + `THIRDWEB_SECRET_KEY` | Enable x402 micropayment enforcement |
+| `CELO_RPC_URL` | Optional Celo RPC (default: `https://forno.celo.org`) |
+| `GEMINI_API_KEY` | Google Gemini API key for OnFRA chat and AI summaries (`GOOGLE_API_KEY` alias supported) |
+| `THIRDWEB_SECRET_KEY` | Thirdweb secret key for x402 payment settlement |
+| `THIRDWEB_CLIENT_ID` | Thirdweb client ID (used with the secret key) |
+| `X402_PAY_TO` | Optional treasury wallet for x402 USDT; defaults to `REPORTER_PRIVATE_KEY` address |
+| `X402_ENFORCE` + Thirdweb vars | Enable x402 micropayment enforcement on analyze/chat/report |
+
+### ERC-8004 reputation feedback
+
+Submit a positive `starred` rating for OnFRA (agent `#9219`) on Celo mainnet:
+
+```bash
+npm run feedback:erc8004
+```
+
+Optional env overrides: `FEEDBACK_SCORE` (default `95`), `FEEDBACK_TAG` (default `starred`), `AGENT_ID` (default `9219`).
 
 ## Structure
 
@@ -49,8 +64,9 @@ public/
 
 | Route | Method | Description |
 |-------|--------|-------------|
-| `/api/agent/analyze` | POST | Full wallet analysis (0.05 USDT) |
-| `/api/agent/chat` | POST | AI chat about a wallet (0.05 USDT) |
+| `/api/agent/analyze` | POST | Full wallet analysis (own wallet free; external 0.01 USDT) |
+| `/api/agent/chat` | POST | AI chat about a wallet (own wallet free; external 0.01 USDT) |
+| `/api/agent/report` | POST | Verified report (0.10 USDT) |
 | `/api/agent/report` | POST | Verified report + onchain attestation (0.10 USDT) |
 | `/api/agent/verify/{id}` | GET | Verify `REP-{id}` or onchain hash |
 

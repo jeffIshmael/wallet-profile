@@ -2,6 +2,7 @@
 
 import { Copy, ExternalLink, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useWalletData } from "@/hooks/useWalletData";
 import { CELOSCAN_BASE_URL } from "@/lib/blockchain/constants";
@@ -23,6 +24,7 @@ type PurchaseState =
 export function AttestationModal({ onClose }: { onClose: () => void }) {
   const { walletData } = useWalletData();
   const { address } = useWalletAuth();
+  const paidFetch = usePaidApiFetch();
   const [purchase, setPurchase] = useState<PurchaseState>({ status: "idle" });
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
       setPurchase({ status: "loading" });
 
       try {
-        const response = await fetch("/api/agent/report", {
+        const response = await paidFetch("/api/agent/report", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -76,7 +78,7 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [address, walletData]);
+  }, [address, paidFetch, walletData?.walletAddress]);
 
   if (!walletData) return null;
 

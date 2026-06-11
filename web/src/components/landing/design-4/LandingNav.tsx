@@ -12,7 +12,7 @@ type LandingNavProps = {
   authenticated: boolean;
   address: string | null;
   connecting?: boolean;
-  active?: "home" | "verify";
+  active?: "home" | "verify" | "stats" | "dashboard";
 };
 
 function navLinkClass(isActive: boolean) {
@@ -82,8 +82,14 @@ export function LandingNav({
               New
             </span>
           </button>
+          <Link href="/dashboard" className={navLinkClass(active === "dashboard")}>
+            Dashboard
+          </Link>
           <Link href="/verify" className={navLinkClass(active === "verify")}>
             Verify
+          </Link>
+          <Link href="/stats" className={navLinkClass(active === "stats")}>
+            Stats
           </Link>
         </div>
 

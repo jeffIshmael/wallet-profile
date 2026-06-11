@@ -8,10 +8,13 @@ import { FooterSection } from "@/components/landing/design-4/sections/FooterSect
 import { SolutionSection } from "@/components/landing/design-4/sections/SolutionSection";
 import { SupportedChainsSection } from "@/components/landing/design-4/sections/SupportedChainsSection";
 import { UsersSection } from "@/components/landing/design-4/sections/UsersSection";
+import type { StoredAnalysisStatus } from "@/hooks/useStoredAnalysis";
+
 type Design4LandingPageProps = {
   authenticated: boolean;
   address: string | null;
   connecting?: boolean;
+  storedAnalysisStatus?: StoredAnalysisStatus;
   onSignIn: () => void;
   onDisconnect: () => void;
   onAnalyseWallet: () => void;
@@ -22,6 +25,7 @@ export function Design4LandingPage({
   authenticated,
   address,
   connecting,
+  storedAnalysisStatus = "unknown",
   onSignIn,
   onDisconnect,
   onAnalyseWallet,
@@ -45,6 +49,7 @@ export function Design4LandingPage({
         authenticated={authenticated}
         address={address}
         connecting={connecting}
+        storedAnalysisStatus={storedAnalysisStatus}
       />
       <ProblemSection />
       <SolutionSection />

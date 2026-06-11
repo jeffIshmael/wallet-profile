@@ -11,15 +11,15 @@
     "paymentHeader": "X-PAYMENT",
     "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
     "pricing": {
-      "external_wallet_analysis": "0.05 USDT",
-      "chat_query": "0.05 USDT",
+      "own_wallet_query": "free",
+      "external_wallet_query": "0.01 USDT",
       "verified_financial_reputation_report": "0.10 USDT"
     }
   },
   "tools": [
     {
       "name": "analyze_wallet",
-      "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. External queries cost 0.05 USDT via x402.",
+      "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. Own wallet is free; external queries cost 0.01 USDT via x402.",
       "inputSchema": {
         "type": "object",
         "required": ["walletAddress"],
@@ -45,7 +45,7 @@
     },
     {
       "name": "chat_query",
-      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Costs 0.05 USDT via x402 when enforcement is enabled.",
+      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Own wallet is free; external queries cost 0.01 USDT via x402 when enforcement is enabled.",
       "inputSchema": {
         "type": "object",
         "required": ["message"],
@@ -165,7 +165,7 @@
     }
   ],
   "integration": {
-    "note": "Wallet Profile platform: https://wallet-profile-orpin.vercel.app · External wallet analysis: 0.05 USDT · Verified Financial Reputation Report: 0.10 USDT · REST: analyze_wallet → POST /api/agent/analyze · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
+    "note": "Wallet Profile platform: https://wallet-profile-orpin.vercel.app · Own wallet: free · External wallet query: 0.01 USDT · Verified Financial Reputation Report: 0.10 USDT · REST: analyze_wallet → POST /api/agent/analyze · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
     "routes": {
       "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },
       "chat_query": { "method": "POST", "path": "/api/agent/chat" },

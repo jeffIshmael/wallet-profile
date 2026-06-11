@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, LogOut, ReceiptText,  } from "lucide-react";
+import { Home, LayoutDashboard, LogOut, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -9,6 +9,7 @@ import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useWalletData } from "@/hooks/useWalletData";
 
 const items = [
+  { href: "/", label: "Home", icon: Home },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/statements", label: "Transaction Statements", icon: ReceiptText }
 ];
@@ -35,10 +36,13 @@ export function DashboardNav({ compact = false }: { compact?: boolean }) {
     >
       <div className={compact ? "flex gap-1" : "flex flex-col items-center gap-1.5"}>
         {items.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+          const active =
+            href === "/"
+              ? false
+              : pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
           return (
-            <Tooltip key={href} label={label}>
+            <Tooltip key={href} label={label} side="right">
               <Link
                 href={href}
                 className={clsx(
@@ -56,7 +60,7 @@ export function DashboardNav({ compact = false }: { compact?: boolean }) {
         })}
       </div>
 
-      <Tooltip label="Disconnect wallet">
+      <Tooltip label="Disconnect wallet" side="right">
         <button
           type="button"
           onClick={handleDisconnect}

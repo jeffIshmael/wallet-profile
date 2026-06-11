@@ -68,8 +68,72 @@ export const STABLECOINS: Record<string, StablecoinInfo> = {
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 const CELO_PRICE_TTL_MS = 5 * 60 * 1000;
 const MAX_DISCOVERED_TOKENS = 24;
+const DEFAULT_FETCH_TIMEOUT_MS = 20_000;
 
 type CacheEntry<T> = { data: T; timestamp: number };
+
+async function fetchJsonWithTimeout(url: string, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS): Promise<any> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Fetch and cache transaction history only — skips balances, ENS, NFT, etc. */
+export async function cacheWalletTransactions(
+  address: string,
+  months = 3
+): Promise<TransactionDetails[]> {
+  const key = address.toLowerCase();
+  const cached = fullOnchainDataCache.get(key);
+  if (cached?.transactions?.length) {
+    return filterTransactionsByMonths(cached.transactions, months);
+  }
+
+  const celoPrice = cached?.celoPrice ?? (await getCeloPrice());
+  const transactions = await getWalletTransactions(key, celoPrice, months);
+  fullOnchainDataCache.set(key, { ...cached, walletAddress: key, transactions, celoPrice });
+  return transactions;
+}
+
+/** Fetch balances + NFT exposure only — for risk/loan tools without full wallet scan. */
+export async function cachePortfolioSnapshot(address: string) {
+  const key = address.toLowerCase();
+  const cached = fullOnchainDataCache.get(key);
+  if (
+    cached?.stablecoinBalance !== undefined &&
+    cached?.volatileBalance !== undefined &&
+    cached?.defiExposure !== undefined &&
+    cached?.nftCount !== undefined
+  ) {
+    return {
+      walletAddress: key,
+      stablecoinBalance: cached.stablecoinBalance,
+      volatileBalance: cached.volatileBalance,
+      defiExposure: cached.defiExposure,
+      nftExposure: cached.nftExposure ?? 0,
+      nftCount: cached.nftCount ?? 0,
+      celoPrice: cached.celoPrice ?? (await getCeloPrice())
+    };
+  }
+
+  const [balances, nft] = await Promise.all([getWalletBalances(key), getNftExposure(key)]);
+  const snapshot = {
+    walletAddress: key,
+    stablecoinBalance: balances.stablecoinBalance,
+    volatileBalance: balances.volatileBalance,
+    defiExposure: balances.defiExposure,
+    nftExposure: nft.nftExposure,
+    nftCount: nft.nftCount,
+    celoPrice: balances.celoPrice
+  };
+  fullOnchainDataCache.set(key, { ...cached, ...snapshot });
+  return snapshot;
+}
 
 const celoPriceCache: CacheEntry<number> = { data: 0, timestamp: 0 };
 const balanceCache = new Map<string, CacheEntry<Awaited<ReturnType<typeof fetchWalletBalancesUncached>>>>();
@@ -398,8 +462,9 @@ async function fetchWalletTransactionsUncached(address: string, celoPrice: numbe
 
   // 1. Fetch normal transactions
   try {
-    const res = await fetch(`https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&offset=100`);
-    const json: any = await res.json();
+    const json: any = await fetchJsonWithTimeout(
+      `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&offset=100`
+    );
     if (json && json.status === "1" && Array.isArray(json.result)) {
       for (const tx of json.result) {
         if (parseInt(tx.timeStamp) < monthsAgoSec) {
@@ -430,8 +495,9 @@ async function fetchWalletTransactionsUncached(address: string, celoPrice: numbe
 
   // 2. Fetch token transfers
   try {
-    const res = await fetch(`https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&offset=100`);
-    const json: any = await res.json();
+    const json: any = await fetchJsonWithTimeout(
+      `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&offset=100`
+    );
     if (json && json.status === "1" && Array.isArray(json.result)) {
       for (const tx of json.result) {
         if (parseInt(tx.timeStamp) < monthsAgoSec) {
@@ -496,9 +562,8 @@ export async function getWalletTransactions(address: string, celoPrice: number, 
     return filterTransactionsByMonths(cached.data, months);
   }
 
-  const fetchMonths = Math.max(months, 12);
   const transactions = await dedupe(`transactions:${key}`, () =>
-    fetchWalletTransactionsUncached(key, celoPrice, fetchMonths)
+    fetchWalletTransactionsUncached(key, celoPrice, months)
   );
   transactionCache.set(key, { data: transactions, timestamp: Date.now() });
   return filterTransactionsByMonths(transactions, months);

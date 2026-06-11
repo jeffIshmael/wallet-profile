@@ -1,6 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { fetchOnchainData, OnchainData } from "./fetch_onchain_data.js";
+import { OnchainData } from "./fetch_onchain_data.js";
+import { cachePortfolioSnapshot } from "../lib/getWalletDetails.js";
 
 export interface RiskExposureResult {
   riskCategory: "Low" | "Medium" | "High";
@@ -42,13 +43,15 @@ function allocateFungiblePercentages(
 
 export const riskExposure = tool(
   async ({ onchainDataJson, walletAddress }) => {
-    let data: OnchainData;
+    let data: Pick<OnchainData, "stablecoinBalance" | "volatileBalance" | "defiExposure" | "nftCount">;
 
     if (onchainDataJson) {
-      data = JSON.parse(onchainDataJson);
+      const parsed = JSON.parse(onchainDataJson) as OnchainData;
+      data = parsed;
     } else if (walletAddress) {
-      const fetched = await fetchOnchainData.invoke({ walletAddress });
-      data = JSON.parse(fetched);
+      console.log("Fetching portfolio snapshot for risk analysis:", walletAddress.toLowerCase());
+      const snapshot = await cachePortfolioSnapshot(walletAddress);
+      data = snapshot;
     } else {
       throw new Error("Either onchainDataJson or walletAddress must be provided.");
     }
@@ -60,8 +63,6 @@ export const riskExposure = tool(
       defiExposure
     );
 
-    // Fungible holdings drive the allocation bars (they sum to 100%).
-    // NFTs are tracked separately because we only have a rough count, not reliable USD value.
     let nftExposurePct = 0;
     if (fungibleTotal <= 0 && nftCount > 0) {
       nftExposurePct = 100;

@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
+import { getWalletDataForChat } from "@/lib/agent/chatCache";
+import { getGeminiApiKey } from "@/lib/agent/env";
+import type { ChatAgentContext, ChatAgentResult, ChatStatusCallback } from "@/lib/agent/chatTypes";
 import { mapBundleToWalletData } from "@/lib/agent/mapWalletData";
 import type { WalletData } from "@/types/walletData";
 
@@ -21,7 +24,6 @@ function resolveAgentDist(): string {
   );
 }
 
-/** Webpack rewrites static/dynamic imports — use a runtime import for external ESM agent code. */
 function importExternalModule<T>(absolutePath: string): Promise<T> {
   const moduleUrl = pathToFileURL(absolutePath).href;
   const runtimeImport = new Function(
@@ -37,6 +39,17 @@ async function loadAgentModule<T>(relativePath: string): Promise<T> {
   return importExternalModule<T>(absolutePath);
 }
 
+function toCachedDashboard(data: WalletData) {
+  return {
+    walletAddress: data.walletAddress,
+    ens: data.ens,
+    metrics: data.metrics,
+    onfraAssessment: data.onfraAssessment,
+    portfolio: data.portfolio,
+    transactions: data.transactions
+  };
+}
+
 export async function runDashboardAnalysis(walletAddress: string): Promise<WalletData> {
   const { runDashboardBundle } = await loadAgentModule<{
     runDashboardBundle: (address: string) => Promise<Parameters<typeof mapBundleToWalletData>[0]>;
@@ -47,11 +60,35 @@ export async function runDashboardAnalysis(walletAddress: string): Promise<Walle
 }
 
 export async function runAgentChat(
-  history: Array<{ role: "user" | "assistant" | "system"; content: string }>
-): Promise<string> {
+  history: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+  context: ChatAgentContext,
+  onStatus?: ChatStatusCallback
+): Promise<ChatAgentResult> {
   const { runChatAgent } = await loadAgentModule<{
-    runChatAgent: (messages: typeof history) => Promise<string>;
+    runChatAgent: (
+      messages: typeof history,
+      options: {
+        apiKey?: string;
+        context: ChatAgentContext & { cachedDashboard?: ReturnType<typeof toCachedDashboard> | null };
+        onStatus?: ChatStatusCallback;
+      }
+    ) => Promise<ChatAgentResult>;
   }>("chains/chat_agent.js");
 
-  return runChatAgent(history);
+  onStatus?.("Validating query…");
+
+  let cachedDashboard = null;
+  if (context.isOwnWallet) {
+    const cached = await getWalletDataForChat(context.targetWallet);
+    if (cached) {
+      cachedDashboard = toCachedDashboard(cached.walletData);
+      onStatus?.(cached.stale ? "Using saved dashboard (may be slightly outdated)…" : "Using your cached dashboard…");
+    }
+  }
+
+  return runChatAgent(history, {
+    apiKey: getGeminiApiKey(),
+    context: { ...context, cachedDashboard },
+    onStatus
+  });
 }

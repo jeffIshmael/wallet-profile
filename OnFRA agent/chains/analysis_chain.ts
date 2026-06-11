@@ -138,7 +138,7 @@ export async function runAnalysisChain(walletAddress: string, blockHeight?: numb
     try {
       console.log(`[AnalysisChain] Generating AI summary using ChatGoogle...`);
       const model = new ChatGoogle({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         apiKey: apiKey,
         temperature: 0.2,
       });

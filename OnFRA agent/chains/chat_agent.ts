@@ -1,116 +1,186 @@
-import { createAgent } from "langchain";
 import { ChatGoogle } from "@langchain/google";
-import { fetchWalletTransactions, fetchWalletProtocols, fetchOnchainData } from "../tools/fetch_onchain_data.js";
-import { fetchOnchainBalances as fetchWalletBalances } from "../tools/fetch_onchain_balances.js";
 import { computeFinancialHealth } from "../tools/compute_financial_health.js";
 import { computeReputationScore } from "../tools/compute_reputation_score.js";
 import { riskExposure } from "../tools/risk_exposure.js";
 import { incomeStability } from "../tools/income_stability.js";
 import { loanCapacity } from "../tools/loan_capacity.js";
-import { wrapWithX402, deductUser, getUserBalance, getActiveUserWallet, InsufficientBalanceError } from "../middleware/x402_billing.js";
-import { SYSTEM_PROMPT } from "../prompts/system_prompt.js";
-import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
+import { fullOnchainDataCache } from "../lib/getWalletDetails.js";
+import {
+  answerFromCachedDashboard,
+  classifyQuery,
+  INTENT_TOOL,
+  type CachedDashboard,
+  type QueryIntent
+} from "./chat_router.js";
 
-// Wrap all tools with X402 microbilling (costing 0.05 USDT per query)
-const BILLING_COST = 0.05;
+export type ChatAgentContext = {
+  callerWallet: string;
+  targetWallet: string;
+  isOwnWallet: boolean;
+  cachedDashboard?: CachedDashboard | null;
+};
 
-const tools = [
-  wrapWithX402(fetchWalletBalances, BILLING_COST),
-  wrapWithX402(fetchWalletTransactions, BILLING_COST),
-  wrapWithX402(fetchWalletProtocols, BILLING_COST),
-  wrapWithX402(computeFinancialHealth, BILLING_COST),
-  wrapWithX402(computeReputationScore, BILLING_COST),
-  wrapWithX402(riskExposure, BILLING_COST),
-  wrapWithX402(incomeStability, BILLING_COST),
-  wrapWithX402(loanCapacity, BILLING_COST),
-];
+export type ChatAgentResult = {
+  text: string;
+  toolsUsed: string[];
+  source: "cache" | "tool" | "gemini";
+};
 
-export function getChatAgent(apiKey?: string) {
-  const actualApiKey = apiKey || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+export type ChatStatusCallback = (status: string) => void;
 
-  if (!actualApiKey) {
-    console.warn("[ChatAgent] No GOOGLE_API_KEY or GEMINI_API_KEY found. Chat Agent will run in mock simulation mode.");
-    return null;
+const TOOL_STATUS: Record<string, string> = {
+  compute_financial_health: "Calculating financial health…",
+  compute_reputation_score: "Calculating reputation score…",
+  income_stability_analysis: "Calculating income metrics…",
+  risk_exposure_breakdown: "Analyzing portfolio risk…",
+  loan_capacity_estimator: "Estimating loan capacity…"
+};
+
+const TOOL_RUNNERS: Record<
+  Exclude<QueryIntent, "general">,
+  { tool: { invoke: (input: Record<string, string>) => Promise<string> }; format: (data: Record<string, unknown>, address: string) => string }
+> = {
+  financial_health: {
+    tool: computeFinancialHealth,
+    format: (d, address) =>
+      `Financial health for ${address} is ${d.financialHealthScore}/100. Weakest areas: income stability ${(d.breakdown as Record<string, number>).incomeStability}, savings ${(d.breakdown as Record<string, number>).savingsDiscipline}, portfolio risk ${(d.breakdown as Record<string, number>).portfolioRisk}.`
+  },
+  income: {
+    tool: incomeStability,
+    format: (d, address) =>
+      `Average monthly income for ${address} is ~$${Number(d.monthlyIncomeEstimateUsd).toLocaleString()}, classified as "${d.incomeLabel}". Weekly inflow consistency: ${d.weeklyInflowConsistency}%. Average inflow size: $${Number(d.averageInflowSizeUsd).toLocaleString()}.`
+  },
+  loan_capacity: {
+    tool: loanCapacity,
+    format: (d, address) =>
+      `Safe borrowing range for ${address} is ${d.safeLoanRange} (${d.confidence} confidence).`
+  },
+  reputation: {
+    tool: computeReputationScore,
+    format: (d, address) =>
+      `Reputation for ${address} is ${d.reputationScore}/100 (${d.trustCategory}). ${d.rationale}`
+  },
+  risk: {
+    tool: riskExposure,
+    format: (d, address) => {
+      const b = d.breakdown as Record<string, number> | undefined;
+      return `Portfolio risk for ${address} is "${d.riskCategory}". Stablecoin ${b?.stablecoinPct ?? "—"}%, volatile ${b?.volatileAssetPct ?? "—"}%, DeFi ${b?.defiExposurePct ?? "—"}%.`;
+    }
   }
+};
+
+function seedCacheFromDashboard(dashboard: CachedDashboard & { transactions?: unknown[] }) {
+  const address = dashboard.walletAddress.toLowerCase();
+  const existing = fullOnchainDataCache.get(address) ?? {};
+  fullOnchainDataCache.set(address, {
+    ...existing,
+    walletAddress: address,
+    ens: dashboard.ens,
+    stablecoinBalance: dashboard.portfolio.stablecoinBalance,
+    volatileBalance: dashboard.portfolio.volatileBalance,
+    transactions: (dashboard as { transactions?: unknown[] }).transactions ?? existing.transactions ?? []
+  });
+}
+
+async function runSingleTool(
+  intent: Exclude<QueryIntent, "general">,
+  walletAddress: string,
+  onStatus?: ChatStatusCallback
+): Promise<{ text: string; toolsUsed: string[] }> {
+  const runner = TOOL_RUNNERS[intent];
+  const toolName = INTENT_TOOL[intent];
+  onStatus?.(TOOL_STATUS[toolName] ?? "Calculating…");
+
+  const raw = await runner.tool.invoke({ walletAddress });
+  const data = JSON.parse(raw) as Record<string, unknown>;
+  return {
+    text: runner.format(data, walletAddress),
+    toolsUsed: [toolName]
+  };
+}
+
+async function maybePolishWithGemini(
+  draft: string,
+  userMessage: string,
+  apiKey: string | undefined,
+  timeoutMs = 12_000
+): Promise<string | null> {
+  if (!apiKey) return null;
 
   const model = new ChatGoogle({
-    model: "gemini-1.5-flash",
-    apiKey: actualApiKey,
-    temperature: 0.3,
+    model: "gemini-2.5-flash",
+    apiKey,
+    temperature: 0.2
   });
 
-  return createAgent({
-    model,
-    tools,
-    systemPrompt: SYSTEM_PROMPT,
-  });
+  try {
+    const result = await Promise.race([
+      model.invoke(
+        `Rewrite this wallet analysis answer to be concise and friendly. Plain text only — no markdown, no asterisks, no bold. Use one item per line with "• " for bullet lists or "1. " for numbered steps. Keep all numbers exactly as given.\n\nUser question: ${userMessage}\n\nDraft answer:\n${draft}`
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Gemini timeout")), timeoutMs)
+      )
+    ]);
+    const text = String((result as { content?: unknown }).content ?? "").trim();
+    return text.length > 0 ? text : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function runChatAgent(
   history: Array<{ role: "user" | "assistant" | "system"; content: string }>,
-  apiKey?: string
-): Promise<string> {
-  const agent = getChatAgent(apiKey);
-  
-  // Format history to LangChain messages
-  const messages = history.map(h => {
-    if (h.role === "assistant") return new AIMessage(h.content);
-    if (h.role === "system") return new SystemMessage(h.content);
-    return new HumanMessage(h.content);
-  });
+  options: {
+    apiKey?: string;
+    context: ChatAgentContext;
+    onStatus?: ChatStatusCallback;
+  }
+): Promise<ChatAgentResult> {
+  const { apiKey, context, onStatus } = options;
+  const actualApiKey = apiKey || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+  const lastUserQuery = history.filter((h) => h.role === "user").pop()?.content?.trim() ?? "";
+  const intent = classifyQuery(lastUserQuery);
+  const target = context.targetWallet.toLowerCase();
 
-  if (!agent) {
-    // Return a mock chat simulation if no API key is set
-    console.log("[ChatAgent] Simulating chat response (mock mode)...");
-    const lastUserQuery = history.filter(h => h.role === "user").pop()?.content || "";
-    
-    // Simulate what the agent would do
-    // 1. Run fetchOnchainData mock
-    // 2. Formulate response based on user query keywords
-    let response = "";
-    const lowerQuery = lastUserQuery.toLowerCase();
-    
-    // Default mock address
-    const mockAddress = "0x742d35cc6634c0532925a3b844bc454e4438f44e";
-    const addressMatch = lastUserQuery.match(/0x[a-fA-F0-9]{40}/);
-    const targetAddress = addressMatch ? addressMatch[0] : mockAddress;
-
-    // Charge user for query
-    const userWallet = getActiveUserWallet();
-    console.log(`[X402 Billing] Attempting to charge ${BILLING_COST} USDT from wallet ${userWallet} for mock chat query...`);
-    const success = deductUser(userWallet, BILLING_COST);
-    if (!success) {
-      const bal = getUserBalance(userWallet);
-      throw new InsufficientBalanceError(
-        `Insufficient balance. Chat query costs ${BILLING_COST} USDT. Your balance is ${bal} USDT. Please top up.`
-      );
-    }
-    console.log(`[X402 Billing] Successfully charged ${BILLING_COST} USDT. Remaining balance: ${getUserBalance(userWallet)} USDT.`);
-
-    // Run tools for billing check side effects
-    await fetchOnchainData.invoke({ walletAddress: targetAddress });
-
-    if (lowerQuery.includes("spend") || lowerQuery.includes("loan") || lowerQuery.includes("borrow")) {
-      const capJson = await loanCapacity.invoke({ walletAddress: targetAddress });
-      const cap = JSON.parse(capJson);
-      response = `According to our loan capacity analysis for ${targetAddress}, your safe borrowing range is estimated at ${cap.safeLoanRange} with a ${cap.confidence} confidence level. Spending or borrowing beyond this may stress your liquidity ratios.`;
-    } else if (lowerQuery.includes("health") || lowerQuery.includes("score")) {
-      const healthJson = await computeFinancialHealth.invoke({ walletAddress: targetAddress });
-      const health = JSON.parse(healthJson);
-      response = `Your wallet's financial health score is currently ${health.financialHealthScore}%. This is supported by an income stability rating of ${health.breakdown.incomeStability}/100 and savings discipline of ${health.breakdown.savingsDiscipline}/100. Let me know if you'd like suggestions on how to improve this.`;
-    } else if (lowerQuery.includes("reputation") || lowerQuery.includes("trust")) {
-      const repJson = await computeReputationScore.invoke({ walletAddress: targetAddress });
-      const rep = JSON.parse(repJson);
-      response = `The wallet reputation score for ${targetAddress} is ${rep.reputationScore}/100, placing it in the "${rep.trustCategory}" category. ${rep.rationale}`;
-    } else {
-      response = `Hello! I am Wallet Profile AI, your onchain financial reputation analyst. I can inspect wallets and tell you about their financial health, loan capacity, and trust ratings. Try asking "What is the financial health for my wallet?" or "Can I trust ${mockAddress}?".`;
-    }
-
-    return response;
+  if (context.cachedDashboard) {
+    seedCacheFromDashboard(context.cachedDashboard);
   }
 
-  // Run the actual ReAct Agent
-  const result = await agent.invoke({ messages });
-  const finalMessage = result.messages[result.messages.length - 1];
-  return String((finalMessage as { content?: unknown }).content ?? "");
+  // Own wallet + cached dashboard → instant answer, no RPC or agent loop
+  if (context.isOwnWallet && context.cachedDashboard) {
+    onStatus?.("Using your cached dashboard…");
+    const cachedAnswer = answerFromCachedDashboard(lastUserQuery, intent, context.cachedDashboard);
+    if (cachedAnswer) {
+      return { text: cachedAnswer, toolsUsed: [], source: "cache" };
+    }
+    if (context.cachedDashboard.onfraAssessment.narrative) {
+      return {
+        text: context.cachedDashboard.onfraAssessment.narrative,
+        toolsUsed: [],
+        source: "cache"
+      };
+    }
+  }
+
+  // Targeted tool only (one RPC pass, no ReAct loop)
+  if (intent !== "general") {
+    const { text, toolsUsed } = await runSingleTool(intent, target, onStatus);
+    const polished = await maybePolishWithGemini(text, lastUserQuery, actualApiKey);
+    return {
+      text: polished ?? text,
+      toolsUsed,
+      source: polished ? "gemini" : "tool"
+    };
+  }
+
+  // General external/uncached — pick financial health as default overview tool
+  onStatus?.("Fetching wallet summary…");
+  const { text, toolsUsed } = await runSingleTool("financial_health", target, onStatus);
+  const polished = await maybePolishWithGemini(text, lastUserQuery, actualApiKey);
+  return {
+    text: polished ?? text,
+    toolsUsed,
+    source: polished ? "gemini" : "tool"
+  };
 }

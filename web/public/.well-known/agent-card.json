@@ -27,7 +27,7 @@
       "currencySymbol": "USDT",
       "paymentHeader": "X-PAYMENT",
       "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
-      "enforcement": "External wallet queries and premium reports require x402 USDT payment on Celo."
+      "enforcement": "Own-wallet queries are free. External wallet queries cost 0.01 USDT. Verified reports cost 0.10 USDT via x402 on Celo."
     }
   },
   "payments": {
@@ -38,11 +38,12 @@
       "chainId": 42220,
       "tokenAddress": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
       "pricing": {
-        "external_wallet_analysis": "0.05 USDT",
+        "own_wallet_query": "free",
+        "external_wallet_query": "0.01 USDT",
         "verified_financial_reputation_report": "0.10 USDT",
         "minimum": "0.01 USDT"
       },
-      "freeEndpoints": ["/api/agent/verify"]
+      "freeEndpoints": ["/api/agent/verify", "/api/agent/chat?ownWallet=true"]
     }
   },
   "tee": {

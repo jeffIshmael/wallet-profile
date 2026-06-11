@@ -18,6 +18,11 @@ async function main() {
 
   const sampleUserWallet = "0x4821ced48Fb4456055c86E42587f61c1F39c6315";
   const sampleTargetWallet = "0x4821ced48Fb4456055c86E42587f61c1F39c6315";
+  const chatContext = {
+    callerWallet: sampleUserWallet,
+    targetWallet: sampleTargetWallet,
+    isOwnWallet: true
+  };
 
   // Seeding the user wallet address
   setActiveUserWallet(sampleUserWallet);
@@ -55,14 +60,14 @@ async function main() {
     let chatHistory: Array<{ role: "user" | "assistant" | "system"; content: string }> = [
       { role: "user", content: `What's hurting my financial health for ${sampleTargetWallet}?` }
     ];
-    let response = await runChatAgent(chatHistory);
-    console.log(`\n[Agent Response]:\n${response}\n`);
+    let result = await runChatAgent(chatHistory, { context: chatContext });
+    console.log(`\n[Agent Response]:\n${result.text}\n`);
 
     console.log(`User asks: "Can I safely borrow 500 USD?"`);
-    chatHistory.push({ role: "assistant", content: response });
+    chatHistory.push({ role: "assistant", content: result.text });
     chatHistory.push({ role: "user", content: `Can I safely borrow 500 USD for ${sampleTargetWallet}?` });
-    response = await runChatAgent(chatHistory);
-    console.log(`\n[Agent Response]:\n${response}\n`);
+    result = await runChatAgent(chatHistory, { context: chatContext });
+    console.log(`\n[Agent Response]:\n${result.text}\n`);
 
     console.log(`User Wallet Balance after chat queries: ${getUserBalance(sampleUserWallet)} USDT`);
   } catch (error) {
@@ -98,8 +103,10 @@ async function main() {
     console.log(`New Wallet: ${emptyWallet}`);
     console.log(`Balance:    ${getUserBalance(emptyWallet)} USDT`);
 
-    console.log(`\nAttempting to ask a chat query costing 0.05 USDT...`);
-    await runChatAgent([{ role: "user", content: "What is my reputation score?" }]);
+    console.log(`\nAttempting to ask a chat query...`);
+    await runChatAgent([{ role: "user", content: "What is my reputation score?" }], {
+      context: { callerWallet: emptyWallet, targetWallet: emptyWallet, isOwnWallet: true }
+    });
   } catch (error) {
     if (error instanceof InsufficientBalanceError) {
       console.log(`\n[Success] Caught Expected Error: ${error.message}`);
@@ -109,8 +116,10 @@ async function main() {
       console.log(`New Balance: ${getUserBalance(getActiveUserWallet())} USDT`);
 
       console.log(`\nRetrying chat query after top up...`);
-      const response = await runChatAgent([{ role: "user", content: "What is my reputation score?" }]);
-      console.log(`\n[Agent Response]:\n${response}`);
+      const retry = await runChatAgent([{ role: "user", content: "What is my reputation score?" }], {
+        context: { callerWallet: getActiveUserWallet(), targetWallet: getActiveUserWallet(), isOwnWallet: true }
+      });
+      console.log(`\n[Agent Response]:\n${retry.text}`);
       console.log(`\nFinal Wallet Balance: ${getUserBalance(getActiveUserWallet())} USDT`);
     } else {
       console.error("Unexpected error:", error);
