@@ -114,7 +114,7 @@ export function HeroSection({
               )}
             </button>
             <a
-              href="#how-it-works"
+              href="/chat"
               className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border-2 border-btc-orange/20 px-6 py-3 font-mono text-xs uppercase tracking-wider text-white transition hover:border-white hover:bg-white/10"
             >
               Ask Agent Chat

@@ -1,34 +1,26 @@
 "use client";
 
-import { Send, Sparkles } from "lucide-react";
+import { Send } from "lucide-react";
 import { useState } from "react";
+import { AgentChatHeader } from "@/components/chat/AgentChatHeader";
+import { AgentChatPinnedNotice } from "@/components/chat/AgentChatPinnedNotice";
+import { AGENT_CHAT_SUGGESTIONS } from "@/components/chat/chatContent";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
-
-const suggested = [
-  "What is my financial health score?",
-  "Why is my reputation score what it is?",
-  "Explain my portfolio risk",
-  "What is my safe loan range?",
-  "Summarize my wallet for a lender"
-];
 
 type ChatMessage = { role: "user" | "ai"; text: string };
 
 export function ChatSidebar({
   overlay = false,
+  fullPage = false,
   onClose
 }: {
   compact?: boolean;
   overlay?: boolean;
+  fullPage?: boolean;
   onClose?: () => void;
 }) {
   const { address } = useWalletAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "ai",
-      text: "Ask me about your Wallet Profile signals, loan capacity, or portfolio risk."
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -75,15 +67,31 @@ export function ChatSidebar({
     }
   }
 
+  const showHeader = fullPage;
+
   return (
-    <div className={`flex h-full flex-col ${overlay ? "" : "glass-panel rounded-2xl p-4"}`}>
-      {!overlay && (
+    <div
+      className={`flex h-full flex-col ${
+        fullPage ? "bg-void" : overlay ? "" : "glass-panel rounded-2xl p-4"
+      }`}
+    >
+      {showHeader && <AgentChatHeader />}
+
+      {!overlay && !fullPage && (
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-sora text-base font-bold text-white">Wallet Profile AI</h2>
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div className={`flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto ${fullPage ? "px-4 py-3" : ""}`}>
+        <AgentChatPinnedNotice />
+
+        {messages.length === 0 && (
+          <p className="text-xs leading-5 text-stardust">
+            Ask about your financial health, reputation, loan capacity, or portfolio risk.
+          </p>
+        )}
+
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
@@ -98,13 +106,14 @@ export function ChatSidebar({
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {suggested.map((prompt) => (
+      <div className={`flex flex-wrap gap-1.5 ${fullPage ? "px-4" : ""}`}>
+        {AGENT_CHAT_SUGGESTIONS.map((prompt) => (
           <button
             key={prompt}
             type="button"
             onClick={() => send(prompt)}
-            className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-stardust transition hover:border-btc-orange/40 hover:text-white"
+            disabled={!address || sending}
+            className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-stardust transition hover:border-btc-orange/40 hover:text-white disabled:opacity-50"
           >
             {prompt}
           </button>
@@ -112,19 +121,20 @@ export function ChatSidebar({
       </div>
 
       <form
-        className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2"
+        className={`mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2 ${
+          fullPage ? "mx-4 mb-4" : ""
+        }`}
         onSubmit={(event) => {
           event.preventDefault();
           void send();
         }}
       >
-        <Sparkles size={14} className="shrink-0 text-btc-orange" />
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={address ? "Ask OnFRA about your wallet..." : "Connect wallet to chat"}
           disabled={!address || sending}
-          className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-stardust"
+          className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white outline-none placeholder:text-stardust"
         />
         <button
           type="submit"

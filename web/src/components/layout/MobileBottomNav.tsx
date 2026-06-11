@@ -2,7 +2,7 @@
 
 import { Bot, Home, LayoutDashboard, ReceiptText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { Fragment } from "react";
 
@@ -10,20 +10,20 @@ const NAV_ITEMS = [
   { id: "home", label: "Home", href: "/", icon: Home },
   { id: "verify", label: "Verify", href: "/verify", icon: ShieldCheck },
   { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, featured: true },
-  { id: "chat", label: "Agent chat", href: "/dashboard?chat=1", icon: Bot, badge: "New" },
+  { id: "chat", label: "Agent chat", href: "/chat", icon: Bot, badge: "New" },
   { id: "statements", label: "Statements", href: "/dashboard/statements", icon: ReceiptText }
 ] as const;
 
-function isActive(id: (typeof NAV_ITEMS)[number]["id"], pathname: string, chatOpen: boolean): boolean {
+function isActive(id: (typeof NAV_ITEMS)[number]["id"], pathname: string): boolean {
   switch (id) {
     case "home":
       return pathname === "/";
     case "verify":
       return pathname === "/verify";
     case "dashboard":
-      return pathname === "/dashboard" && !chatOpen;
+      return pathname === "/dashboard";
     case "chat":
-      return pathname.startsWith("/dashboard") && chatOpen;
+      return pathname === "/chat";
     case "statements":
       return pathname.startsWith("/dashboard/statements");
     default:
@@ -108,8 +108,6 @@ function FeaturedDashboardLink({ active }: { active: boolean }) {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const chatOpen = searchParams.get("chat") === "1";
 
   return (
     <nav
@@ -119,7 +117,7 @@ export function MobileBottomNav() {
     >
       <div className="mx-auto flex max-w-lg items-end px-2 pt-2">
         {NAV_ITEMS.map((item, index) => {
-          const active = isActive(item.id, pathname, chatOpen);
+          const active = isActive(item.id, pathname);
 
           return (
             <Fragment key={item.id}>

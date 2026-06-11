@@ -12,11 +12,7 @@ export default function VerifyPage() {
   const { ready, authenticated, login, logout, address, connectingMiniPay } = useWalletAuth();
 
   function handleTryChat() {
-    if (!authenticated) {
-      login();
-      return;
-    }
-    router.push("/dashboard?chat=1");
+    router.push("/chat");
   }
 
   return (

@@ -14,11 +14,7 @@ export default function HomePage() {
   }
 
   function handleTryChat() {
-    if (!authenticated) {
-      login();
-      return;
-    }
-    router.push("/dashboard?chat=1");
+    router.push("/chat");
   }
 
   return (

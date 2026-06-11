@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { MessageCircle, Sparkles, X } from "lucide-react";
 import { type ReactNode } from "react";
+import { AgentChatHeader } from "@/components/chat/AgentChatHeader";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Header } from "@/components/layout/Header";
@@ -84,10 +85,9 @@ export function DashboardShell({
               aria-label="Close chat overlay"
             />
             <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] flex-col border-l border-white/10 bg-void-surface shadow-[-8px_0_32px_rgba(0,0,0,0.5)]">
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-btc-orange" />
-                  <span className="font-sora text-sm font-bold">Wallet Profile AI</span>
+              <div className="flex items-center justify-between border-b border-white/10 pr-2">
+                <div className="min-w-0 flex-1">
+                  <AgentChatHeader compact />
                 </div>
                 <button
                   type="button"
