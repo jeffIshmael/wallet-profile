@@ -45,7 +45,7 @@ cd ../../web && npm run feedback:erc8004
 ## Pre-registration checklist
 
 1. Deploy the web app so all `/.well-known/*` URLs resolve publicly.
-2. Set `NEXT_PUBLIC_APP_URL=https://wallet-profile-orpin.vercel.app` (or your deployment URL).
+2. Set `NEXT_PUBLIC_APP_URL=https://www.chainalyse.xyz` (or your deployment URL).
 3. Validate JSON (no trailing commas):
    - `GET /.well-known/agent.json`
    - `GET /.well-known/agent-card.json`

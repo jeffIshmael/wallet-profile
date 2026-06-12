@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wallet-profile-orpin.vercel.app/schemas/reportRequest.schema.json",
+  "$id": "https://www.chainalyse.xyz/schemas/reportRequest.schema.json",
   "title": "ReportRequest",
   "description": "Request a signed premium financial attestation report (x402-gated).",
   "type": "object",

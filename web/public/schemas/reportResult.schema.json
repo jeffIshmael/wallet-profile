@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wallet-profile-orpin.vercel.app/schemas/reportResult.schema.json",
+  "$id": "https://www.chainalyse.xyz/schemas/reportResult.schema.json",
   "title": "ReportResult",
   "description": "Premium attestation report metadata and verification references.",
   "type": "object",
