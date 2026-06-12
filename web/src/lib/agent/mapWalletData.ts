@@ -245,8 +245,10 @@ export function mapBundleToWalletData(bundle: DashboardBundle): WalletData {
     }))
   );
 
-  const monthly6 = groupMonthlyFlows(bundle.transactions, 6);
+  const monthly1 = groupMonthlyFlows(bundle.transactions, 1);
   const monthly3 = groupMonthlyFlows(bundle.transactions, 3);
+  const monthly6 = groupMonthlyFlows(bundle.transactions, 6);
+  const monthly12 = groupMonthlyFlows(bundle.transactions, 12);
   const inflows6 = monthly6.reduce((s, m) => s + m.inflow, 0);
   const outflows6 = monthly6.reduce((s, m) => s + m.outflow, 0);
   const monthlyIncomeHistory = monthly6.map((m) => m.inflow);
@@ -286,11 +288,13 @@ export function mapBundleToWalletData(bundle: DashboardBundle): WalletData {
     tokens,
     incomeByPeriod: bundle.incomeByPeriod,
     statementMonthlyFlow: {
+      "1M": monthly1,
       "3M": monthly3,
-      "6M": monthly6
+      "6M": monthly6,
+      "12M": monthly12
     },
     tokenFlows: aggregateTokenFlows(bundle.transactions),
-    transactions: bundle.transactions.slice(0, 50).map((tx) => ({
+    transactions: bundle.transactions.map((tx) => ({
       timestamp: tx.timestamp,
       token: normalizeSymbol(tx.token),
       amount: tx.amountUsd,

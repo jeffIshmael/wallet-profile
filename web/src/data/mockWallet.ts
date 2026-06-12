@@ -31,12 +31,29 @@ export const mockWallet = {
     "12M": { inflow: [12000, 13000, 14000, 15000], outflow: [7600, 7800, 8000, 8160], net: [4400, 5200, 6000, 6840] }
   },
   statementMonthlyFlow: {
+    "1M": [
+      { month: "May", inflow: 1250, outflow: 680 }
+    ],
     "3M": [
       { month: "Mar", inflow: 1100, outflow: 650 },
       { month: "Apr", inflow: 1250, outflow: 720 },
       { month: "May", inflow: 1400, outflow: 670 }
     ],
     "6M": [
+      { month: "Dec", inflow: 1200, outflow: 900 },
+      { month: "Jan", inflow: 1350, outflow: 980 },
+      { month: "Feb", inflow: 1100, outflow: 1050 },
+      { month: "Mar", inflow: 1450, outflow: 1100 },
+      { month: "Apr", inflow: 1600, outflow: 1170 },
+      { month: "May", inflow: 1700, outflow: 1000 }
+    ],
+    "12M": [
+      { month: "Jun", inflow: 1100, outflow: 700 },
+      { month: "Jul", inflow: 1200, outflow: 750 },
+      { month: "Aug", inflow: 1300, outflow: 800 },
+      { month: "Sep", inflow: 1250, outflow: 820 },
+      { month: "Oct", inflow: 1400, outflow: 900 },
+      { month: "Nov", inflow: 1500, outflow: 950 },
       { month: "Dec", inflow: 1200, outflow: 900 },
       { month: "Jan", inflow: 1350, outflow: 980 },
       { month: "Feb", inflow: 1100, outflow: 1050 },

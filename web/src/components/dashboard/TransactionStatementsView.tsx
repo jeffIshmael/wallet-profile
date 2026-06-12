@@ -27,8 +27,16 @@ import {
   moneyPrecise,
   truncateAddress
 } from "@/lib/format";
+import { exportStatementPdf } from "@/lib/statements/exportStatementPdf";
+import {
+  aggregateTokenFlowsForPeriod,
+  filterTransactionsByPeriod,
+  formatStatementPeriodRange,
+  PERIOD_LABELS,
+  type StatementPeriod
+} from "@/lib/statements/periodUtils";
 
-type Period = "1M" | "3M" | "6M" | "12M";
+type Period = StatementPeriod;
 type SortKey = "timestamp" | "amount" | "token";
 type SortDir = "asc" | "desc";
 type DirectionFilter = "All" | "Incoming" | "Outgoing";
@@ -40,6 +48,8 @@ const periods: { key: Period; label: string }[] = [
   { key: "6M", label: "6M" },
   { key: "12M", label: "12M" }
 ];
+
+const periodDescriptions: Record<Period, string> = PERIOD_LABELS;
 
 const TOKEN_COLORS: Record<string, string> = {
   USDT: "#26a17b",
@@ -72,10 +82,20 @@ export function TransactionStatementsView() {
   const [pageSize, setPageSize] = useState(10);
   const [expandedHash, setExpandedHash] = useState<string | null>(null);
 
+  const periodTransactions = useMemo(() => {
+    if (!walletData) return [];
+    return filterTransactionsByPeriod(walletData.transactions, period);
+  }, [walletData, period]);
+
+  const periodTokenFlows = useMemo(() => {
+    if (!walletData) return [];
+    return aggregateTokenFlowsForPeriod(walletData.transactions, period);
+  }, [walletData, period]);
+
   const filtered = useMemo(() => {
     if (!walletData) return [];
     const q = search.trim().toLowerCase();
-    let rows = [...walletData.transactions];
+    let rows = [...periodTransactions];
 
     if (directionFilter !== "All") {
       rows = rows.filter((tx) => tx.direction === directionFilter);
@@ -102,15 +122,14 @@ export function TransactionStatementsView() {
     });
 
     return rows;
-  }, [walletData, search, directionFilter, tokenFilter, sortKey, sortDir]);
+  }, [walletData, periodTransactions, search, directionFilter, tokenFilter, sortKey, sortDir]);
 
   if (!walletData) return null;
 
-  const current = walletData.incomeByPeriod[period];
+  const data = walletData;
+  const current = data.incomeByPeriod[period];
   const savingsRate = current.inbound > 0 ? ((current.net / current.inbound) * 100).toFixed(1) : "0";
-  const monthlyFlow =
-    walletData.statementMonthlyFlow[period as keyof typeof walletData.statementMonthlyFlow] ??
-    walletData.statementMonthlyFlow["3M"];
+  const monthlyFlow = data.statementMonthlyFlow[period] ?? [];
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -123,9 +142,24 @@ export function TransactionStatementsView() {
     }
   }
 
+  function exportPdf() {
+    void exportStatementPdf({
+      walletAddress: data.walletAddress,
+      ens: data.ens,
+      period,
+      summary: {
+        inbound: current.inbound,
+        outbound: current.outbound,
+        net: current.net,
+        transactionCount: periodTransactions.length
+      },
+      transactions: periodTransactions
+    });
+  }
+
   function exportCsv() {
     const header = "Timestamp,Token,Amount,Direction,Recipient,Hash\n";
-    const body = filtered
+    const body = periodTransactions
       .map((tx) =>
         [tx.timestamp, tx.token, tx.amount, tx.direction, tx.recipient, tx.hash].join(",")
       )
@@ -134,7 +168,7 @@ export function TransactionStatementsView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `walletanalyst-statements-${period}.csv`;
+    a.download = `walletanalyst-statements-${period}-${formatStatementPeriodRange(period).replace(/\//g, "-").replace(/ /g, "_")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -152,22 +186,28 @@ export function TransactionStatementsView() {
               lenderRelevance: "Lenders use transaction statements to verify income sources and spending patterns."
             }}
           />
-          <div className="flex gap-1.5">
-            <button
-              type="button"
-              onClick={exportCsv}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-stardust hover:text-white"
-            >
-              <Download size={12} />
-              Export CSV
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-stardust hover:text-white"
-            >
-              <FileText size={12} />
-              Export PDF
-            </button>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-stardust hover:text-white"
+              >
+                <Download size={12} />
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={exportPdf}
+                className="inline-flex items-center gap-1 rounded-lg border border-btc-orange/30 bg-btc-orange/10 px-2.5 py-1.5 text-[10px] font-semibold text-btc-orange hover:bg-btc-orange/20"
+              >
+                <FileText size={12} />
+                Export PDF
+              </button>
+            </div>
+            <p className="text-[9px] text-stardust">
+              {periodDescriptions[period]} · {formatStatementPeriodRange(period)}
+            </p>
           </div>
         </div>
 
@@ -274,7 +314,7 @@ export function TransactionStatementsView() {
             <thead>
               <tr className="border-b border-white/10 text-stardust">
                 <th className="px-3 py-2 font-semibold uppercase tracking-wide">By Token</th>
-                {walletData.tokenFlows.map(({ symbol }) => (
+                {periodTokenFlows.map(({ symbol }) => (
                   <th key={symbol} className="px-3 py-2 font-semibold">
                     <button
                       type="button"
@@ -294,7 +334,7 @@ export function TransactionStatementsView() {
             <tbody>
               <tr className="border-b border-white/5">
                 <td className="px-3 py-2 text-stardust">Inflow</td>
-                {walletData.tokenFlows.map(({ symbol, inflow }) => (
+                {periodTokenFlows.map(({ symbol, inflow }) => (
                   <td key={symbol} className="px-3 py-2 font-mono font-semibold text-white">
                     {inflow > 0 ? moneyPrecise(inflow) : "—"}
                   </td>
@@ -302,7 +342,7 @@ export function TransactionStatementsView() {
               </tr>
               <tr>
                 <td className="px-3 py-2 text-stardust">Outflow</td>
-                {walletData.tokenFlows.map(({ symbol, outflow }) => (
+                {periodTokenFlows.map(({ symbol, outflow }) => (
                   <td key={symbol} className="px-3 py-2 font-mono font-semibold text-white">
                     {outflow > 0 ? moneyPrecise(outflow) : "—"}
                   </td>
