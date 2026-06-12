@@ -35,5 +35,5 @@ export async function createPaidFetch(
     await wallet.connect({ client, chain: celo });
   }
 
-  return wrapFetchWithPayment(fetch, client, wallet);
+  return wrapFetchWithPayment(fetch, client, wallet) as PaidFetchFn;
 }

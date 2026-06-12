@@ -5,10 +5,18 @@
   "workspaces": [
     "web"
   ],
+  "overrides": {
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7"
+  },
   "scripts": {
     "dev": "npm run dev --workspace=web",
     "build": "npm run build --workspace=web",
     "start": "npm run start --workspace=web",
     "lint": "npm run lint --workspace=web"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7"
   }
 }
