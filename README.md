@@ -1,6 +1,6 @@
-# Wallet Analyst (OnFRA)
+# Chainalyse (OnFRA)
 
-Wallet Analyst is an onchain financial reputation platform for the Celo ecosystem. Users connect a wallet, receive AI-powered financial intelligence (health scores, income stability, loan capacity), purchase verified attestations, and verify reports onchain.
+Chainalyse is an onchain financial reputation platform for the Celo ecosystem. Users connect a wallet, receive AI-powered financial intelligence (health scores, income stability, loan capacity), purchase verified attestations, and verify reports onchain.
 
 The repository is organized into three packages:
 

@@ -1,6 +1,6 @@
 # OnFRA Agent
 
-**Onchain Financial Reputation Agent** — the LangChain/TypeScript backend that powers Wallet Analyst. It ingests Celo wallet activity, computes financial scores, generates AI summaries, and compiles verified report attestations.
+**Onchain Financial Reputation Agent** — the LangChain/TypeScript backend that powers Chainalyse. It ingests Celo wallet activity, computes financial scores, generates AI summaries, and compiles verified report attestations.
 
 The web app loads this package at runtime from `dist/` (built automatically before `npm run dev` / `npm run build` in `web/`).
 

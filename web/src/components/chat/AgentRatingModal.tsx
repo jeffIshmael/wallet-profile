@@ -53,7 +53,7 @@ export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalPr
         <div className="flex items-start justify-between gap-3">
           <div>
             <p id="rating-title" className="font-sora text-base font-bold text-white">
-              How was Wallet Analyst AI?
+              How was Chainalyse AI?
             </p>
             <p className="mt-1 text-xs leading-5 text-stardust">
               Pick what stood out — your onchain feedback helps others discover OnFRA.

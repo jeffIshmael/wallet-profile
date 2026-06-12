@@ -1,6 +1,6 @@
-# Wallet Analyst Web
+# Chainalyse Web
 
-Next.js 14 application for Wallet Analyst — landing page, financial dashboard, transaction statements, AI chat, and REST API routes that expose the OnFRA agent.
+Next.js 14 application for Chainalyse — landing page, financial dashboard, transaction statements, AI chat, and REST API routes that expose the OnFRA agent.
 
 ## Setup
 

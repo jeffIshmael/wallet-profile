@@ -1,11 +1,11 @@
 {
-  "name": "OnFRA — Wallet Analyst Financial Intelligence Agent",
-  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. It evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to produce Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI financial summaries, and borrowing capacity recommendations. Solves proof-of-income for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Available on Wallet Analyst (https://wallet-profile-orpin.vercel.app). Celo-first; additional EVM chains planned.",
+  "name": "OnFRA — Chainalyse Financial Intelligence Agent",
+  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. It evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to produce Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI financial summaries, and borrowing capacity recommendations. Solves proof-of-income for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Available on Chainalyse (https://wallet-profile-orpin.vercel.app). Celo-first; additional EVM chains planned.",
   "url": "https://wallet-profile-orpin.vercel.app",
   "version": "1.0.0",
   "protocolVersion": "0.3.0",
   "provider": {
-    "name": "Wallet Analyst",
+    "name": "Chainalyse",
     "url": "https://wallet-profile-orpin.vercel.app"
   },
   "iconUrl": "https://wallet-profile-orpin.vercel.app/agent_logo.png",

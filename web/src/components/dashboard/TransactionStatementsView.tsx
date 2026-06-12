@@ -168,7 +168,7 @@ export function TransactionStatementsView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `walletanalyst-statements-${period}-${formatStatementPeriodRange(period).replace(/\//g, "-").replace(/ /g, "_")}.csv`;
+    a.download = `chainalyse-statements-${period}-${formatStatementPeriodRange(period).replace(/\//g, "-").replace(/ /g, "_")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

@@ -303,10 +303,10 @@ export function getSampleOfficialReport(): OfficialReportInput {
 }
 
 export function buildSampleReportFilename(): string {
-  return "WalletAnalyst_Sample_Financial_Passport.pdf";
+  return "Chainalyse_Sample_Financial_Passport.pdf";
 }
 
 export function buildOfficialReportFilename(reportId: string, walletAddress: string): string {
   const short = walletAddress.slice(2, 10);
-  return `WalletAnalyst_Report_${reportId}_${short}.pdf`;
+  return `Chainalyse_Report_${reportId}_${short}.pdf`;
 }

@@ -98,7 +98,7 @@ export function DashboardShell({
             aria-label="Open AI chat"
           >
             <Sparkles size={16} className="text-btc-orange" />
-            <span className="hidden sm:inline">Wallet Analyst AI</span>
+            <span className="hidden sm:inline">Chainalyse AI</span>
             <MessageCircle size={16} className="text-btc-orange sm:hidden" />
           </button>
         )}

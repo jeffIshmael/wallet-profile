@@ -50,7 +50,7 @@ function buildFeedbackPayload(
     tag: FEEDBACK_TAG,
     tags,
     tagLabels,
-    comment: `Wallet Analyst AI chat feedback: ${tagLabels.join(", ")}.`,
+    comment: `Chainalyse AI chat feedback: ${tagLabels.join(", ")}.`,
     reviewer: reviewerAddress,
     servicesUsed: ["chat_query"],
     platform: getAppBaseUrl(),
@@ -118,9 +118,9 @@ export async function submitErc8004Feedback(
 
 export function hasSubmittedFeedback(address: string): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem(`walletanalyst-feedback:${address.toLowerCase()}`) === "1";
+  return localStorage.getItem(`chainalyse-feedback:${address.toLowerCase()}`) === "1";
 }
 
 export function markFeedbackSubmitted(address: string) {
-  localStorage.setItem(`walletanalyst-feedback:${address.toLowerCase()}`, "1");
+  localStorage.setItem(`chainalyse-feedback:${address.toLowerCase()}`, "1");
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@walletanalyst/erc8004-agent",
+  "name": "@chainalyse/erc8004-agent",
   "version": "0.1.0",
   "private": true,
   "type": "module",

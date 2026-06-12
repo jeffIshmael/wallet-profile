@@ -16,7 +16,7 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-void font-inter text-white">
+    <div className="flex min-h-screen flex-col bg-void font-inter text-white">
       <LandingNav
         onSignIn={login}
         onDisconnect={() => {
@@ -29,7 +29,7 @@ export default function VerifyPage() {
         connecting={connectingMiniPay || !ready}
         active="verify"
       />
-      <main className="pt-24">
+      <main className="flex flex-1 flex-col pt-24">
         <VerifySection />
       </main>
       <FooterSection />

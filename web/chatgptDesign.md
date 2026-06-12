@@ -1,364 +1,94 @@
-# Agent Chat Section Redesign Specification
+# UI Implementation Task: Verification Code Zoom Callout Component
 
-## Goal
+## Context & Objective
+We need to enhance the verification route (`/verify`) in our Next.js codebase. The objective is to guide users visually on where to find their "Verification Code" on the Chainalyse Financial Passport Report. We will implement an interactive or static visual callout overlay that highlights and magnifies the specific top-left metadata section of the document.
 
-Redesign the current "Agent Chat" section to feel like a premium AI fintech product instead of a simple marketing block.
-
-The current version is functional, but it feels like:
-
-- Text on the left
-- Phone on the right
-- Generic AI section
-
-We want it to feel like:
-
-> "This is the financial intelligence layer of the platform."
-
-The user should immediately understand:
-
-1. OnFRA is an AI financial analyst.
-2. It can explain scores and reputation.
-3. It can investigate wallets.
-4. It can generate lender-friendly insights.
-5. It feels powerful and interactive.
-
-Do NOT change the existing color palette.
-
-Keep:
-- btc-orange
-- teal
-- black / void backgrounds
-- existing typography system
+The component should display the document, dim the overall background slightly, and display a high-visibility, magnified "lens" focused directly on the **Verification Code** text row.
 
 ---
 
-# New Section Structure
+## Component Specifications (Next.js & Tailwind CSS)
 
-Instead of:
+### 1. Component File
+Create a new component at `@/components/VerificationGuide.tsx` (or your preferred components directory).
 
-------------------------------------------------
-| Text                                   Phone |
-------------------------------------------------
+```tsx
+import React from 'react';
+import Image from 'next/image';
 
-Use:
+interface VerificationGuideProps {
+  imageSrc: string; // Path or URL to the Chainalyse report image
+}
 
-------------------------------------------------
-|               SECTION HEADER                |
-------------------------------------------------
-|                                              |
-|     AI CHAT PANEL     |     PHONE MOCKUP     |
-|                                              |
-------------------------------------------------
+export const VerificationGuide: React.FC<VerificationGuideProps> = ({ imageSrc }) => {
+  return (
+    <div className="relative w-full max-w-[650px] mx-auto overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      
+      {/* Wrapper containing the baseline image and overlays */}
+      <div className="relative w-full overflow-hidden rounded-lg">
+        
+        {/* Base Document Image */}
+        <div className="relative w-full aspect-[1/1.41]">
+          <Image
+            src={imageSrc}
+            alt="Chainalyse Passport Report Guide"
+            fill
+            sizes="(max-width: 650px) 100vw, 650px"
+            priority
+            className="object-contain"
+          />
+        </div>
 
-The chat panel should feel like a terminal/dashboard.
+        {/* Dimming overlay layer to draw focus to the callout */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none transition-opacity duration-300" />
 
----
+        {/* Zoom Callout Container (Positioned absolutely over the target area) */}
+        <div className="absolute top-[21%] left-[32%] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+          
+          {/* Zoom Cutout Lens */}
+          <div className="w-[280px] h-[75px] border-[3px] border-[#ff9900] rounded-lg overflow-hidden bg-white shadow-2xl ring-4 ring-orange-500/20">
+            
+            {/* Magnified Duplicate Image */}
+            <div className="relative w-[340%] h-[340%] origin-top-left">
+              <Image
+                src={imageSrc}
+                alt="Zoomed Detail"
+                fill
+                sizes="1000px"
+                className="object-contain absolute"
+                style={{
+                  // Fine-tune these pixel percentage/pixel transformations based on final asset aspect ratios
+                  top: '-13%', 
+                  left: '-5%',
+                }}
+              />
+            </div>
+          </div>
 
-# Header
+          {/* Visual Indicator Arrow & Label */}
+          <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-[#ff9900] mt-1" />
+          
+          <span className="mt-1 inline-flex items-center px-3 py-1 rounded bg-[#ff9900] text-xs font-bold text-white uppercase tracking-wider shadow-md">
+            Find Your Code Here
+          </span>
+        </div>
 
-Replace:
+      </div>
+      
+      <p className="mt-3 text-center text-sm text-gray-500 font-medium">
+        Your Verification Code is located near the top left of the document wrapper.
+      </p>
+    </div>
+  );
+};
 
-"Talk to OnFRA about your wallet"
-
-With:
-
-## Heading
-
-Talk to your onchain financial analyst
-
-## Subtitle
-
-OnFRA explains your wallet like a human financial advisor.
-
-Ask questions about income stability, reputation, portfolio risk, financial health, and borrowing capacity.
-
-Get lender-friendly insights in seconds.
-
----
-
-# AI Agent Capabilities
-
-Replace bullet list with capability cards.
-
-Instead of:
-
-• Ask about financial health
-• Ask about reputation
-
-Create 4 mini cards.
-
-Layout:
-
-Desktop:
-2 × 2 grid
-
-Mobile:
-1 column
-
-Each card contains:
-
-### Financial Health
-
-Understand how healthy your wallet is and what affects your score.
-
----
-
-### Reputation Analysis
-
-See how lenders and institutions may evaluate your wallet.
-
----
-
-### Loan Capacity
-
-Discover a safe borrowing range based on your activity.
+export default VerificationGuide;
+```
 
 ---
 
-### Wallet Investigations
-
-Analyze external wallets before sending funds or extending credit.
-
----
-
-# Add Suggested Prompts
-
-Below capability cards.
-
-Title:
-
-### Try asking OnFRA
-
-Render suggestion chips.
-
-Examples:
-
-"Why is my reputation score low?"
-
-"What loan can I safely afford?"
-
-"How stable is my income?"
-
-"Analyze this wallet"
-
-"What affects my financial health?"
-
-"Summarize my last 6 months"
-
-Hover effect:
-
-- subtle orange glow
-- slightly lift
-
-These should feel clickable.
-
----
-
-# Pricing Box Upgrade
-
-Current pricing notice is too plain.
-
-Replace with a pricing card.
-
-Title:
-
-### Usage Pricing
-
-Inside:
-
-🟢 Your wallet analysis
-Free
-
-🟠 External wallet analysis
-0.005 USDT
-
-🟠 Official Financial Passport
-0.10 USDT
-
-Small footer:
-
-Payments are processed instantly through x402.
-
-Style:
-
-- glass card
-- orange border
-- subtle glow
-
----
-
-# Phone Mockup Improvements
-
-Current conversation is too generic.
-
-The AI should showcase actual platform value.
-
-Replace conversation with:
-
-User:
-Why is my reputation score only 72?
-
-OnFRA:
-Your score is reduced by limited wallet age and irregular inflows. However, your transaction history shows strong stablecoin activity and no suspicious behavior.
-
----
-
-User:
-What loan range can I safely afford?
-
-OnFRA:
-Based on your last 6 months of income, a sustainable borrowing range is between $1,800 and $2,400.
-
----
-
-User:
-How can I improve my score?
-
-OnFRA:
-Maintain recurring inflows, grow your savings balance, and reduce portfolio concentration in volatile assets.
-
-This immediately demonstrates the product.
-
----
-
-# Add Floating Insights Around Phone
-
-Around the phone mockup add floating stat cards.
-
-Examples:
-
-Financial Health
-86%
-
-Income Stability
-Stable Earner 🐝
-
-Loan Capacity
-$1,800-$2,400
-
-Portfolio Risk
-Low
-
-Wallet Reputation
-78/100
-
-Animate them gently.
-
-Effects:
-
-- float
-- drift
-- subtle glow
-
-Do not overdo animations.
-
----
-
-# Section Background Enhancement
-
-Keep black background.
-
-Add:
-
-- large blurred btc-orange glow behind phone
-- small teal glow on opposite side
-- subtle grid pattern at 3% opacity
-
-This makes the section feel premium.
-
----
-
-# CTA Upgrade
-
-Current CTA:
-
-"Ask Agent"
-
-Replace with:
-
-If authenticated:
-
-"Open OnFRA"
-
-If not authenticated:
-
-"Connect Wallet"
-
-Add secondary button:
-
-"View Sample Report"
-
-This opens a demo PDF preview.
-
-Layout:
-
-[ Open OnFRA ]
-[ View Sample Report ]
-
-Desktop:
-side-by-side
-
-Mobile:
-stacked
-
----
-
-# Trust Indicator Row
-
-Add below CTA.
-
-Small horizontal row:
-
-✓ Wallet analysis
-
-✓ AI explanations
-
-✓ Reputation insights
-
-✓ Loan assessments
-
-✓ x402 payments
-
-Use muted styling.
-
-This creates confidence.
-
----
-
-# Visual Hierarchy
-
-Order:
-
-1. Section label
-2. Headline
-3. Subtitle
-4. Capability cards
-5. Suggested prompts
-6. Pricing card
-7. CTA buttons
-8. Trust indicators
-
-Right side:
-
-1. Phone mockup
-2. Floating financial insight cards
-
----
-
-# Desired Feeling
-
-The section should feel like:
-
-- Perplexity for financial reputation
-- ChatGPT for onchain credit
-- Bloomberg Terminal meets Web3
-- Premium fintech product
-
-Not:
-
-- Generic chatbot section
-- Landing page filler content
-
-When users reach this section they should immediately think:
-
-"I want to ask this thing questions about my wallet."
+## Implementation Instructions for the Agent
+
+1. **Verify Asset Configuration:** Ensure the target image asset is stored locally within the `public/` directory (e.g., `public/images/wallet-report-sample.jpg`) or fetched via a trusted remote domain configured inside `next.config.js`.
+2. **Coordinate Tuning:** Depending on the exact margin cuts and dimensions of the finalized passport asset file, tweak the absolute top/left coordinates (`top-[21%] left-[32%]`) as well as the sub-image relative positioning (`top: '-13%', left: '-5%'`) to ensure the text `Verification Code: REP-SAMPLE-000001` falls square in the center of the zoom viewport frame.
+3. **Integration:** Mount `<VerificationGuide imageSrc="/images/wallet-report-sample.jpg" />` directly adjacent to or natively embedded inside the token lookup input form on the verification page file layout (`app/verify/page.tsx` or `pages/verify.tsx`).

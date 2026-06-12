@@ -56,7 +56,7 @@ function drawReportHeader(
   doc.setTextColor(REPORT_THEME.text[0], REPORT_THEME.text[1], REPORT_THEME.text[2]);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
-  doc.text("WalletAnalyst", textX, 14);
+  doc.text("Chainalyse", textX, 14);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -101,7 +101,7 @@ function drawReportHeader(
   }
   doc.setFont("helvetica", "bold");
   doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
-  doc.text("Verify at walletanalyst.xyz/verify", pageWidth - margin - 4, y + 11, { align: "right" });
+  doc.text("Verify at chainalyse.xyz/verify", pageWidth - margin - 4, y + 11, { align: "right" });
 
   y += verificationBoxHeight + 6;
   doc.setFont("helvetica", "normal");
@@ -433,18 +433,18 @@ function drawReportFooter(doc: jsPDF, input: OfficialReportInput, margin: number
     doc.setFontSize(6.5);
     doc.setTextColor(110, 110, 120);
     doc.text(
-      "This report is generated from verified onchain transfer events on Celo Mainnet and published by WalletAnalyst.",
+      "This report is generated from verified onchain transfer events on Celo Mainnet and published by Chainalyse.",
       margin,
       footerY
     );
     doc.setFont("helvetica", "normal");
     const footerMeta = input.ipfsCid
-      ? `Verification Code: ${input.verificationCode} · IPFS: ${formatIpfsUri(input.ipfsCid)} · walletanalyst.xyz/verify`
-      : `Verification Code: ${input.verificationCode} · walletanalyst.xyz/verify`;
+      ? `Verification Code: ${input.verificationCode} · IPFS: ${formatIpfsUri(input.ipfsCid)} · chainalyse.xyz/verify`
+      : `Verification Code: ${input.verificationCode} · chainalyse.xyz/verify`;
     doc.text(footerMeta, margin, footerY + 3.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
-    doc.text("WalletAnalyst", pageWidth - margin, footerY, { align: "right" });
+    doc.text("Chainalyse", pageWidth - margin, footerY, { align: "right" });
     doc.setFont("helvetica", "normal");
     doc.setTextColor(110, 110, 120);
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, footerY + 3.5, { align: "right" });

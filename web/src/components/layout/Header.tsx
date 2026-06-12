@@ -2,7 +2,7 @@
 
 import { Copy, Wallet } from "lucide-react";
 import { DashboardHeaderActions } from "@/components/layout/DashboardHeaderActions";
-import { WalletAnalystBrand } from "@/components/layout/WalletAnalystBrand";
+import { ChainalyseBrand } from "@/components/layout/ChainalyseBrand";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ThemeToggleButton } from "@/providers/ThemeProvider";
@@ -25,7 +25,7 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
       <div
         className={`relative mx-auto flex w-full items-center gap-6 px-4 sm:gap-8 sm:px-5 ${compact ? "h-12" : "h-14"}`}
       >
-        <WalletAnalystBrand size={compact ? "sm" : "md"} />
+        <ChainalyseBrand size={compact ? "sm" : "md"} />
 
         {dashboardActions && <DashboardHeaderActions onChatOpen={dashboardActions.onChatOpen} />}
 

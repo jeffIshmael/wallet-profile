@@ -227,9 +227,9 @@ export function answerFromCachedDashboard(
       return lines.join("\n");
     }
     case "general":
-      if (/\b(who are you|what are you|onfra|wallet analyst)\b/i.test(message)) {
+      if (/\b(who are you|what are you|onfra|chainalyse|wallet analyst)\b/i.test(message)) {
         return [
-          "I'm OnFRA — your OnChain Financial Reputation Agent on Wallet Analyst.",
+          "I'm OnFRA — your OnChain Financial Reputation Agent on Chainalyse.",
           "",
           "I read your Celo wallet activity and explain:",
           "• Financial health and what's dragging your score",

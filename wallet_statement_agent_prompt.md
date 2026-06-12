@@ -1,8 +1,8 @@
-# AI Agent Prompt: Enhanced WalletAnalyst Transaction Statement
+# AI Agent Prompt: Enhanced Chainalyse Transaction Statement
 
 ## Context
 
-You are generating an enhanced onchain transaction statement for **WalletAnalyst** — a platform that bridges onchain earnings and traditional finance by transforming raw wallet activity into verifiable financial intelligence.
+You are generating an enhanced onchain transaction statement for **Chainalyse** — a platform that bridges onchain earnings and traditional finance by transforming raw wallet activity into verifiable financial intelligence.
 
 The statement should be suitable for use by lenders, DeFi protocols, or any party that needs to assess a wallet's financial reputation and credibility.
 
@@ -32,7 +32,7 @@ Produce a **single, well-structured PDF-ready statement** with the following sec
 
 ### 1. Header / Identity Block
 
-- Platform name: **WalletAnalyst**
+- Platform name: **Chainalyse**
 - Subtitle: *Onchain Transaction Statement · Celo Mainnet*
 - Badge: `VERIFIED ONCHAIN ACTIVITY`
 - Wallet address (full)
@@ -163,7 +163,7 @@ For the sample data, expected output:
 - Text: *"This statement is generated from verified onchain transfer events on Celo Mainnet."*
 - Verification note: *"Transaction data can be independently verified on [celoscan.io](https://celoscan.io)."*
 - Page number (if multi-page)
-- WalletAnalyst branding
+- Chainalyse branding
 
 ---
 
@@ -171,7 +171,7 @@ For the sample data, expected output:
 
 Generate the statement in **one of the following formats** depending on the task:
 
-- **PDF** — For formal lending or financial verification use. Use a clean, professional layout with the WalletAnalyst dark-gold color scheme (`#1a1a1a` background, `#f5a623` accent, `#ffffff` text).
+- **PDF** — For formal lending or financial verification use. Use a clean, professional layout with the Chainalyse dark-gold color scheme (`#1a1a1a` background, `#f5a623` accent, `#ffffff` text).
 - **HTML** — For web preview or email delivery. Fully self-contained single file with inline CSS.
 - **Markdown** — For raw data export or developer use.
 
@@ -190,7 +190,7 @@ Generate the statement in **one of the following formats** depending on the task
 ## Example Agent Invocation
 
 ```
-Generate an enhanced WalletAnalyst transaction statement for:
+Generate an enhanced Chainalyse transaction statement for:
 - Wallet: 0xb10f1c8df7b25ceeedb5244f8bbef99a5af1200d
 - Period: 14 Mar 2026 to 12 Jun 2026
 - Format: PDF
@@ -202,4 +202,4 @@ Monthly Breakdown, Full Ledger, Behavioral Flags, and Verification Footer.
 
 ---
 
-*Prompt version: 1.0 · WalletAnalyst · Jun 2026*
+*Prompt version: 1.0 · Chainalyse · Jun 2026*

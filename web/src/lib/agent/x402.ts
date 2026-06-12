@@ -132,7 +132,7 @@ export async function assertPayment(
     price: tierPrice(tier),
     facilitator: twFacilitator,
     routeConfig: {
-      description: `Wallet Analyst ${tier}`,
+      description: `Chainalyse ${tier}`,
       mimeType: "application/json"
     }
   });

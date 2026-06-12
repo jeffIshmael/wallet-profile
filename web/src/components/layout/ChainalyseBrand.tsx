@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "@/providers/ThemeProvider";
 
-type WalletAnalystBrandProps = {
+type ChainalyseBrandProps = {
   size?: "sm" | "md" | "lg";
   href?: string;
   /** Pin logo variant; default follows dashboard theme toggle. */
@@ -20,12 +20,12 @@ const TEXT_CLASS = {
   lg: "text-2xl md:text-3xl"
 } as const;
 
-export function WalletAnalystBrand({
+export function ChainalyseBrand({
   size = "md",
   href,
   theme = "auto",
   className = ""
-}: WalletAnalystBrandProps) {
+}: ChainalyseBrandProps) {
   const { theme: activeTheme } = useTheme();
   const resolvedTheme = theme === "auto" ? activeTheme : theme;
   const logoSrc = resolvedTheme === "light" ? "/logo_light.png" : "/logo_dark.png";
@@ -43,7 +43,7 @@ export function WalletAnalystBrand({
         aria-hidden
       />
       <span className={`font-dancing font-semibold text-white ${TEXT_CLASS[size]}`}>
-        Wallet<span className="text-btc-orange">Analyst</span>
+        Chain<span className="">alyse</span>
       </span>
     </span>
   );

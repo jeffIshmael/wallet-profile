@@ -231,7 +231,7 @@ export function ChatSidebar({
       const reply =
         payload.response ??
         payload.error ??
-        "Wallet Analyst AI could not respond right now. Please try again.";
+        "Chainalyse AI could not respond right now. Please try again.";
 
       if (payload.sessionId) setSessionId(payload.sessionId);
       setMessages((current) => [...current, { role: "ai", text: reply, createdAt: messageTimestamp() }]);
@@ -251,7 +251,7 @@ export function ChatSidebar({
         ...current,
         {
           role: "ai",
-          text: "Network error while contacting Wallet Analyst AI.",
+          text: "Network error while contacting Chainalyse AI.",
           isError: true,
           createdAt: messageTimestamp()
         }
@@ -276,7 +276,7 @@ export function ChatSidebar({
 
         {!overlay && !fullPage && (
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-sora text-base font-bold text-white">Wallet Analyst AI</h2>
+            <h2 className="font-sora text-base font-bold text-white">Chainalyse AI</h2>
           </div>
         )}
 

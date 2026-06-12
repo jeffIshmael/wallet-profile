@@ -94,7 +94,7 @@ function drawHeader(
   doc.setTextColor(THEME.text[0], THEME.text[1], THEME.text[2]);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
-  doc.text("WalletAnalyst", textX, 14);
+  doc.text("Chainalyse", textX, 14);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -227,7 +227,7 @@ function drawFooter(doc: jsPDF, margin: number, pageWidth: number) {
     doc.text("Transaction data can be independently verified on celoscan.io.", margin, footerY + 3.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(THEME.accent[0], THEME.accent[1], THEME.accent[2]);
-    doc.text("WalletAnalyst", pageWidth - margin, footerY, { align: "right" });
+    doc.text("Chainalyse", pageWidth - margin, footerY, { align: "right" });
     doc.setFont("helvetica", "normal");
     doc.setTextColor(110, 110, 120);
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, footerY + 3.5, { align: "right" });
@@ -238,7 +238,7 @@ export function buildStatementFilename(walletAddress: string, period: StatementP
   const { start, end } = getPeriodDateRange(period);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   const masked = maskWalletAddress(walletAddress);
-  return `WalletAnalyst_Statement_${fmt(end)}_to_${fmt(start)}_${masked}.pdf`;
+  return `Chainalyse_Statement_${fmt(end)}_to_${fmt(start)}_${masked}.pdf`;
 }
 
 export async function exportStatementPdf(input: StatementExportInput): Promise<void> {
