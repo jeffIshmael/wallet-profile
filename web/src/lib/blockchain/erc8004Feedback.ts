@@ -18,13 +18,39 @@ import { identityRegistryAbi, reputationRegistryAbi } from "@/lib/blockchain/abi
 
 const FEEDBACK_TAG = "starred";
 
-function buildFeedbackPayload(agentId: number, score: number, reviewerAddress: string) {
+export const AGENT_FEEDBACK_TAG_OPTIONS = [
+  { id: "helpful", label: "Helpful" },
+  { id: "fast-response", label: "Fast response" },
+  { id: "accurate", label: "Accurate" },
+  { id: "clear", label: "Clear answers" },
+  { id: "insightful", label: "Great insights" }
+] as const;
+
+export type AgentFeedbackTagId = (typeof AGENT_FEEDBACK_TAG_OPTIONS)[number]["id"];
+
+function scoreFromTags(tags: AgentFeedbackTagId[]): number {
+  if (tags.length === 0) return 90;
+  return Math.min(100, 90 + tags.length * 2);
+}
+
+function buildFeedbackPayload(
+  agentId: number,
+  score: number,
+  reviewerAddress: string,
+  tags: AgentFeedbackTagId[]
+) {
+  const tagLabels = tags.map(
+    (id) => AGENT_FEEDBACK_TAG_OPTIONS.find((option) => option.id === id)?.label ?? id
+  );
+
   return {
     type: "https://eips.ethereum.org/EIPS/eip-8004#feedback-v1",
     agentId,
     rating: score,
     tag: FEEDBACK_TAG,
-    comment: "Wallet Analyst AI chat feedback submitted from the dashboard.",
+    tags,
+    tagLabels,
+    comment: `Wallet Analyst AI chat feedback: ${tagLabels.join(", ")}.`,
     reviewer: reviewerAddress,
     servicesUsed: ["chat_query"],
     platform: getAppBaseUrl(),
@@ -35,9 +61,9 @@ function buildFeedbackPayload(agentId: number, score: number, reviewerAddress: s
 export async function submitErc8004Feedback(
   provider: EIP1193Provider,
   reviewerAddress: `0x${string}`,
-  stars: number
-): Promise<{ hash: `0x${string}` }> {
-  const score = Math.min(100, Math.max(0, Math.round(stars * 20)));
+  tags: AgentFeedbackTagId[]
+): Promise<{ hash: `0x${string}`; score: number }> {
+  const score = scoreFromTags(tags);
 
   const publicClient = createPublicClient({
     chain: celo,
@@ -61,7 +87,7 @@ export async function submitErc8004Feedback(
   }
 
   const feedbackJson = JSON.stringify(
-    buildFeedbackPayload(ERC8004_AGENT_ID, score, reviewerAddress),
+    buildFeedbackPayload(ERC8004_AGENT_ID, score, reviewerAddress, tags),
     null,
     2
   );
@@ -87,7 +113,7 @@ export async function submitErc8004Feedback(
   });
 
   await publicClient.waitForTransactionReceipt({ hash });
-  return { hash };
+  return { hash, score };
 }
 
 export function hasSubmittedFeedback(address: string): boolean {

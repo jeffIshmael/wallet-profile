@@ -1,30 +1,35 @@
 "use client";
 
-import { Loader2, Star, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useState } from "react";
+import { AGENT_FEEDBACK_TAG_OPTIONS, type AgentFeedbackTagId } from "@/lib/blockchain/erc8004Feedback";
 
 type AgentRatingModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (stars: number) => Promise<void>;
+  onSubmit: (tags: AgentFeedbackTagId[]) => Promise<void>;
 };
 
 export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalProps) {
-  const [stars, setStars] = useState(0);
-  const [hovered, setHovered] = useState(0);
+  const [selected, setSelected] = useState<AgentFeedbackTagId[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!open) return null;
 
-  const active = hovered || stars;
+  function toggleTag(tag: AgentFeedbackTagId) {
+    setSelected((current) =>
+      current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]
+    );
+  }
 
   async function handleSubmit() {
-    if (stars < 1 || submitting) return;
+    if (selected.length === 0 || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(stars);
+      await onSubmit(selected);
+      setSelected([]);
       onClose();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not submit rating.";
@@ -48,10 +53,10 @@ export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalPr
         <div className="flex items-start justify-between gap-3">
           <div>
             <p id="rating-title" className="font-sora text-base font-bold text-white">
-              Rate Wallet Analyst AI
+              How was Wallet Analyst AI?
             </p>
             <p className="mt-1 text-xs leading-5 text-stardust">
-              Your onchain rating helps other users discover OnFRA on the ERC-8004 reputation registry.
+              Pick what stood out — your onchain feedback helps others discover OnFRA.
             </p>
           </div>
           <button
@@ -65,33 +70,28 @@ export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalPr
           </button>
         </div>
 
-        <div className="mt-5 flex justify-center gap-1.5">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              type="button"
-              disabled={submitting}
-              onMouseEnter={() => setHovered(value)}
-              onMouseLeave={() => setHovered(0)}
-              onClick={() => setStars(value)}
-              className="rounded-lg p-1 transition hover:scale-110 disabled:opacity-50"
-              aria-label={`Rate ${value} stars`}
-            >
-              <Star
-                size={28}
-                className={
-                  value <= active
-                    ? "fill-btc-orange text-btc-orange"
-                    : "text-white/20"
-                }
-              />
-            </button>
-          ))}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {AGENT_FEEDBACK_TAG_OPTIONS.map(({ id, label }) => {
+            const active = selected.includes(id);
+            return (
+              <button
+                key={id}
+                type="button"
+                disabled={submitting}
+                onClick={() => toggleTag(id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+                  active
+                    ? "border-btc-orange/50 bg-btc-orange/15 text-btc-orange"
+                    : "border-white/10 bg-black/30 text-stardust hover:border-white/20 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
-        {error && (
-          <p className="mt-3 text-center text-xs text-danger">{error}</p>
-        )}
+        {error && <p className="mt-3 text-center text-xs text-danger">{error}</p>}
 
         <div className="mt-5 flex gap-2">
           <button
@@ -105,7 +105,7 @@ export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalPr
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            disabled={stars < 1 || submitting}
+            disabled={selected.length === 0 || submitting}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-btc-orange px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-btc-orange/90 disabled:opacity-50"
           >
             {submitting ? (

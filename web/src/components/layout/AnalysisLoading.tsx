@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
 
 const STEPS = [
@@ -33,7 +34,7 @@ export function AnalysisLoading({ step }: { step: number }) {
         className="relative z-10 w-full max-w-md px-6 text-center"
       >
         <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(247,147,26,0.5)]">
-          <span className="font-dancing text-2xl text-btc-orange">CS</span>
+          <Image src="/logo_dark.png" alt="" width={36} height={36} className="rounded-md" aria-hidden />
         </div>
 
         <h1 className="font-space text-2xl font-bold">Analysing your wallet</h1>

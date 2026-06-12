@@ -67,7 +67,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isHydrating, setIsHydrating] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const silentRefreshKey = useRef<string | null>(null);
@@ -91,7 +91,6 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
       if (sessionPayload && !cancelled) {
         setWalletData(sessionPayload.data);
         setLastFetchedAt(sessionPayload.fetchedAt);
-        setIsHydrating(false);
       }
 
       const stored = await fetchStoredAnalysisRecord(normalized);

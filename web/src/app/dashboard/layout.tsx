@@ -4,15 +4,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AnalysisLoading } from "@/components/layout/AnalysisLoading";
 import { AnalyzeWalletPrompt } from "@/components/layout/AnalyzeWalletPrompt";
+import { DashboardBootLoading } from "@/components/layout/DashboardBootLoading";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useStoredAnalysis } from "@/hooks/useStoredAnalysis";
 import { useWalletData } from "@/hooks/useWalletData";
-import { loadWalletPayload } from "@/lib/dashboardSession";
+import { hasCompletedAnalysis, loadWalletPayload } from "@/lib/dashboardSession";
 import { WalletDataProvider } from "@/providers/WalletDataProvider";
 
 const ANALYSIS_STEP_MS = 1400;
 
-type DashboardPhase = "prompt" | "loading" | "ready";
+type DashboardPhase = "boot" | "prompt" | "loading" | "ready";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -23,13 +24,25 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const sessionCache = address ? loadWalletPayload(address) : null;
   const storedStatus = useStoredAnalysis(address);
   const { analyzeWallet, isAnalyzing, walletData, isHydrating, loadStoredWallet } = useWalletData();
-  const [phase, setPhase] = useState<DashboardPhase>("prompt");
+  const [phase, setPhase] = useState<DashboardPhase>("boot");
   const [analysisStep, setAnalysisStep] = useState(0);
   const autoAnalyzeStarted = useRef(false);
+  const autoLoadStarted = useRef(false);
 
   useEffect(() => {
     autoAnalyzeStarted.current = false;
+    autoLoadStarted.current = false;
+    setPhase("boot");
   }, [address]);
+
+  const hasCachedAnalysis =
+    Boolean(walletData || sessionCache) ||
+    storedStatus === "yes" ||
+    (address ? hasCompletedAnalysis() : false);
+
+  const isBooting =
+    Boolean(address) &&
+    (isHydrating || (storedStatus === "unknown" && !sessionCache && !walletData));
 
   const startAnalysis = useCallback(async () => {
     if (!address) return;
@@ -45,7 +58,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const goToDashboard = useCallback(async () => {
     if (!address) return;
     if (!walletData) {
-      setPhase("loading");
+      setPhase("boot");
       const loaded = await loadStoredWallet(address);
       if (!loaded) {
         setPhase("prompt");
@@ -62,10 +75,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const hasCachedAnalysis =
-      Boolean(walletData || sessionCache) || storedStatus === "yes";
-
-    if (isHydrating && !hasCachedAnalysis) return;
+    if (isBooting) {
+      setPhase("boot");
+      return;
+    }
 
     if (walletData) {
       setPhase("ready");
@@ -75,9 +88,15 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (chatRequested && hasCachedAnalysis) {
+    if (hasCachedAnalysis && !autoLoadStarted.current) {
+      autoLoadStarted.current = true;
+      if (sessionCache) {
+        setPhase("ready");
+        return;
+      }
+      setPhase("boot");
       void loadStoredWallet(address).then((loaded) => {
-        if (loaded || sessionCache) setPhase("ready");
+        setPhase(loaded ? "ready" : "prompt");
       });
       return;
     }
@@ -89,7 +108,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setPhase("prompt");
+    if (!hasCachedAnalysis) {
+      setPhase("prompt");
+    }
   }, [
     address,
     analyzeRequested,
@@ -97,9 +118,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     router,
     startAnalysis,
     walletData,
-    isHydrating,
+    isBooting,
+    hasCachedAnalysis,
     sessionCache,
-    storedStatus,
     loadStoredWallet
   ]);
 
@@ -116,18 +137,15 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     };
   }, [phase]);
 
-  const hasCachedAnalysis =
-    Boolean(walletData || sessionCache) || storedStatus === "yes";
-
-  if (isHydrating && !(chatRequested && hasCachedAnalysis)) {
-    return <AnalysisLoading step={0} />;
+  if (phase === "boot" || isBooting) {
+    return <DashboardBootLoading />;
   }
 
-  if (phase === "prompt" && !isAnalyzing && !(chatRequested && hasCachedAnalysis)) {
+  if (phase === "prompt" && !isAnalyzing) {
     return (
       <AnalyzeWalletPrompt
         address={address}
-        hasStoredAnalysis={storedStatus === "yes"}
+        hasStoredAnalysis={hasCachedAnalysis}
         onAnalyze={startAnalysis}
         onGoToDashboard={goToDashboard}
       />
@@ -144,7 +162,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <WalletDataProvider>
-      <Suspense fallback={<AnalysisLoading step={0} />}>
+      <Suspense fallback={<DashboardBootLoading />}>
         <DashboardLayoutInner>{children}</DashboardLayoutInner>
       </Suspense>
     </WalletDataProvider>
