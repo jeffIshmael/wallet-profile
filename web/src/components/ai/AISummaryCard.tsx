@@ -20,7 +20,7 @@ export function AISummaryCard() {
           compact
           title="OnFRA Assessment"
           help={{
-            meaning: "AI-generated lender assessment powered by OnFRA analysis of your wallet profile.",
+            meaning: "AI-generated lender assessment powered by OnFRA analysis of your wallet analysis.",
             calculation: "Synthesized from transaction patterns, portfolio composition, and scoring signals.",
             lenderRelevance: "Provides a concise, lender-ready narrative and actionable findings."
           }}

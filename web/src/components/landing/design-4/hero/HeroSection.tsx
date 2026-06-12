@@ -93,7 +93,7 @@ export function HeroSection({
           </motion.h1>
 
           <motion.p variants={item} className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-stardust md:text-lg lg:mx-0">
-            Bridge onchain earnings and traditional finance. Wallet Profile transforms raw wallet activity into verifiable
+            Bridge onchain earnings and traditional finance. Wallet Analyst transforms raw wallet activity into verifiable
             financial intelligence lenders trust.
           </motion.p>
 

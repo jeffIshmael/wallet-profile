@@ -24,7 +24,7 @@ function buildFeedbackPayload(agentId: number, score: number, reviewerAddress: s
     agentId,
     rating: score,
     tag: FEEDBACK_TAG,
-    comment: "Wallet Profile AI chat feedback submitted from the dashboard.",
+    comment: "Wallet Analyst AI chat feedback submitted from the dashboard.",
     reviewer: reviewerAddress,
     servicesUsed: ["chat_query"],
     platform: getAppBaseUrl(),
@@ -92,9 +92,9 @@ export async function submitErc8004Feedback(
 
 export function hasSubmittedFeedback(address: string): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem(`walletprofile-feedback:${address.toLowerCase()}`) === "1";
+  return localStorage.getItem(`walletanalyst-feedback:${address.toLowerCase()}`) === "1";
 }
 
 export function markFeedbackSubmitted(address: string) {
-  localStorage.setItem(`walletprofile-feedback:${address.toLowerCase()}`, "1");
+  localStorage.setItem(`walletanalyst-feedback:${address.toLowerCase()}`, "1");
 }

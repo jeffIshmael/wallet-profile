@@ -37,7 +37,7 @@ export function AnalysisLoading({ step }: { step: number }) {
         </div>
 
         <h1 className="font-space text-2xl font-bold">Analysing your wallet</h1>
-        <p className="mt-2 text-sm text-stardust">Reading Celo activity and building your wallet profile</p>
+        <p className="mt-2 text-sm text-stardust">Reading Celo activity and building your wallet analysis</p>
 
         <div className="mt-8 space-y-3 text-left">
           {STEPS.map((label, index) => {

@@ -1,6 +1,6 @@
-# Wallet Profile AI — Scoring & Reputation Methodology
+# Wallet Analyst AI — Scoring & Reputation Methodology
 
-This document provides a detailed breakdown of the mathematical formulas, rules, weights, and logic used by the Wallet Profile AI agent to calculate a wallet's financial profile. These metrics form the basis of the user dashboard, the conversational chat agent, and the premium attestation reports.
+This document provides a detailed breakdown of the mathematical formulas, rules, weights, and logic used by the Wallet Analyst AI agent to calculate a wallet's financial profile. These metrics form the basis of the user dashboard, the conversational chat agent, and the premium attestation reports.
 
 ---
 

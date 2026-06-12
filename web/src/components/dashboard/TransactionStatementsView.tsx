@@ -134,7 +134,7 @@ export function TransactionStatementsView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `walletprofile-statements-${period}.csv`;
+    a.download = `walletanalyst-statements-${period}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

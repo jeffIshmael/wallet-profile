@@ -112,7 +112,7 @@ function buildFeedbackPayload(agentId, score) {
     tag: "starred",
     comment:
       "OnFRA provides accurate Celo wallet financial health analysis, clear loan capacity guidance, and lender-ready explanations. Reliable agent APIs and well-structured ERC-8004 discovery metadata.",
-    reviewer: "Wallet Profile",
+    reviewer: "Wallet Analyst",
     servicesUsed: ["analyze_wallet", "chat_query", "generate_report", "verify_report"],
     platform: APP_BASE_URL,
     reviewedAt: new Date().toISOString().slice(0, 10)

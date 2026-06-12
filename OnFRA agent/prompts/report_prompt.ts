@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-export const REPORT_PROMPT = ChatPromptTemplate.fromTemplate(`You are Wallet Profile AI, compiling a formal financial report for wallet: {wallet_address}.
+export const REPORT_PROMPT = ChatPromptTemplate.fromTemplate(`You are Wallet Analyst AI, compiling a formal financial report for wallet: {wallet_address}.
 
 We have computed the following detailed metrics:
 - Financial Health Score: {financial_health_score}%

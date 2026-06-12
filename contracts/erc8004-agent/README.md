@@ -1,4 +1,4 @@
-# ERC-8004 Agent Registration — Wallet Profile / OnFRA
+# ERC-8004 Agent Registration — Wallet Analyst / OnFRA
 
 This folder holds on-chain registration metadata and scripts for **OnFRA** (Onchain Financial Reputation Agent).
 

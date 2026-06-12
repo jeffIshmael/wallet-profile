@@ -1,6 +1,6 @@
 # Contracts
 
-Solidity contracts and onchain tooling for Wallet Profile, split into two packages:
+Solidity contracts and onchain tooling for Wallet Analyst, split into two packages:
 
 | Package | Stack | Purpose |
 |---------|-------|---------|

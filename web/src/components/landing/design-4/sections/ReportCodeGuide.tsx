@@ -12,7 +12,7 @@ export function ReportCodeGuide() {
       <p className="font-mono text-[10px] uppercase tracking-widest text-btc-orange">On your report</p>
       <h3 className="mt-2 font-space text-xl font-bold text-white md:text-2xl">Where to find your verification code</h3>
       <p className="mt-3 text-sm leading-6 text-stardust">
-        Open your Wallet Profile financial passport and look for the verification code near the bottom of the report.
+        Open your Wallet Analyst financial passport and look for the verification code near the bottom of the report.
       </p>
 
       <div className="relative mt-6 overflow-hidden rounded-2xl border border-btc-orange/30 bg-black/50 shadow-[0_0_40px_-12px_rgba(247,147,26,0.25)]">
@@ -31,7 +31,7 @@ export function ReportCodeGuide() {
             <div className="relative overflow-hidden rounded-xl border border-white/10 bg-void-surface">
               <Image
                 src="/report-verification-guide.png"
-                alt="Screenshot showing where the verification code appears on a Wallet Profile report"
+                alt="Screenshot showing where the verification code appears on a Wallet Analyst report"
                 width={640}
                 height={480}
                 className="h-auto w-full object-cover"
@@ -45,7 +45,7 @@ export function ReportCodeGuide() {
           ) : (
             <div className="overflow-hidden rounded-xl border border-white/10 bg-void-surface p-5">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <p className="font-dancing text-lg text-btc-orange">Wallet Profile</p>
+                <p className="font-dancing text-lg text-btc-orange">Wallet Analyst</p>
                 <span className="rounded-full border border-btc-gold/40 bg-btc-gold/10 px-2 py-0.5 font-mono text-[9px] text-btc-gold">
                   Verified
                 </span>

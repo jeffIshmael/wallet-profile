@@ -38,10 +38,10 @@ export function VerifySection() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] uppercase tracking-widest text-btc-orange">Verify report</p>
           <h2 className="mt-3 font-space text-3xl font-bold text-white md:text-4xl">
-            Confirm a Wallet Profile financial passport
+            Confirm a Wallet Analyst financial passport
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-stardust md:text-base">
-            Paste the verification code printed on your report to confirm it was issued by Wallet Profile.
+            Paste the verification code printed on your report to confirm it was issued by Wallet Analyst.
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export function VerifySection() {
                   <div>
                     <p className="flex items-center gap-2 font-space text-base font-semibold text-white">
                       <BadgeCheck size={16} className="text-btc-gold" />
-                      Legitimate Wallet Profile report
+                      Legitimate Wallet Analyst report
                     </p>
                     <p className="mt-2 text-sm leading-6 text-stardust">
                       This verification code is authentic. The report belongs to wallet{" "}

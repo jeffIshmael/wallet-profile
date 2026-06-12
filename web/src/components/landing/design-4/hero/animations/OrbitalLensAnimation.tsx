@@ -140,7 +140,7 @@ export function OrbitalLensAnimation() {
             <span className="text-center font-dancing text-sm font-semibold leading-tight text-btc-orange">
               Wallet
               <br />
-              Profile
+              Analyst
             </span>
           </motion.div>
 
@@ -187,7 +187,7 @@ export function OrbitalLensAnimation() {
       </div>
 
       <div className="border-t border-white/5 px-4 py-2.5 text-center font-mono text-[8px] uppercase tracking-widest text-stardust/50">
-        Wallet → Wallet Profile → Intelligence
+        Wallet → Wallet Analyst → Intelligence
       </div>
     </div>
   );

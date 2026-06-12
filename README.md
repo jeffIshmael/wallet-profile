@@ -1,6 +1,6 @@
-# Wallet Profile (OnFRA)
+# Wallet Analyst (OnFRA)
 
-Wallet Profile is an onchain financial reputation platform for the Celo ecosystem. Users connect a wallet, receive AI-powered financial intelligence (health scores, income stability, loan capacity), purchase verified attestations, and verify reports onchain.
+Wallet Analyst is an onchain financial reputation platform for the Celo ecosystem. Users connect a wallet, receive AI-powered financial intelligence (health scores, income stability, loan capacity), purchase verified attestations, and verify reports onchain.
 
 The repository is organized into three packages:
 

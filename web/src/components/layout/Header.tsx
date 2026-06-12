@@ -26,7 +26,7 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
       >
         <div className="flex min-w-0 shrink-0 items-center">
           <span className={`font-dancing text-white ${compact ? "text-lg" : "text-xl md:text-2xl"}`}>
-            Wallet<span className="text-btc-orange">Profile</span>
+            Wallet<span className="text-btc-orange">Analyst</span>
           </span>
         </div>
 

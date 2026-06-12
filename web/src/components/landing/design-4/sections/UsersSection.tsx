@@ -12,7 +12,7 @@ export function UsersSection() {
     <section id="users" className="border-t border-white/10 bg-void-surface px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <p className="text-center font-mono text-[10px] uppercase tracking-widest text-btc-orange">
-          Who Wallet Profile Helps
+          Who Wallet Analyst Helps
         </p>
         <h2 className="mt-3 text-center font-space text-3xl font-bold text-white md:text-4xl">
           Built for the onchain economy

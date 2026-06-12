@@ -23,7 +23,7 @@ export function FinancialPassportPreviewSection() {
           A report lenders can actually understand
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-7 text-stardust md:text-base">
-          Instead of asking for payslips and bank statements, Wallet Profile generates a professional financial passport
+          Instead of asking for payslips and bank statements, Wallet Analyst generates a professional financial passport
           powered by blockchain activity.
         </p>
 
@@ -31,7 +31,7 @@ export function FinancialPassportPreviewSection() {
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-void-surface shadow-[0_0_60px_-15px_rgba(247,147,26,0.2)]">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 md:px-8">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">Wallet Profile Report</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">Wallet Analyst Report</p>
                 <p className="mt-1 font-mono text-sm text-btc-orange">0x7A3...91F</p>
               </div>
               <div className="flex items-center gap-2 rounded-full border border-btc-gold/30 bg-btc-gold/10 px-3 py-1.5">

@@ -7,7 +7,7 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 /// @title OnchainReporter
-/// @notice OnFRA financial attestation registry for verified Wallet Profile reports.
+/// @notice OnFRA financial attestation registry for verified Wallet Analyst reports.
 /// @dev Upgradeable (UUPS). Only authorized reporters can publish after backend payment verification.
 contract OnchainReporter is
     Initializable,

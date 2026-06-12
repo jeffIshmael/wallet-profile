@@ -28,7 +28,7 @@ export function GenerateReportCard() {
           subtitle="Lender-ready verified report"
           help={{
             meaning: "An official, verifiable financial report you can share with lenders or partners.",
-            calculation: "Combines all Wallet Profile metrics into a signed attestation document for the selected period.",
+            calculation: "Combines all Wallet Analyst metrics into a signed attestation document for the selected period.",
             lenderRelevance: "Provides standardized proof of income and creditworthiness for underwriting."
           }}
         />
