@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:agent": "npm ci --prefix \"../OnFRA agent\" && npm run build --prefix \"../OnFRA agent\"",
+    "build:agent": "npm ci --prefix \"../OnFRA agent\" && npm run build --prefix \"../OnFRA agent\" && node scripts/bundle-onfra.mjs",
     "predev": "npm run build:agent",
     "prebuild": "npm run build:agent",
     "dev": "next dev",
@@ -59,6 +59,7 @@
     "@types/react-dom": "^18.3.7",
     "@types/three": "^0.184.1",
     "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.12",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.33",
     "postcss": "^8.5.6",

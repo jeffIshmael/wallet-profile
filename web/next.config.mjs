@@ -7,6 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
+    outputFileTracingRoot: __dirname,
+    outputFileTracingIncludes: {
+      "/api/agent/analyze": ["./src/lib/agent/onfra-dist/**/*"],
+      "/api/agent/report": ["./src/lib/agent/onfra-dist/**/*"],
+      "/api/agent/chat": ["./src/lib/agent/onfra-dist/**/*"]
+    },
     serverComponentsExternalPackages: [
       "@langchain/core",
       "@langchain/google",

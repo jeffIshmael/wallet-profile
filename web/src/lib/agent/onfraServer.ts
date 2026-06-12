@@ -1,42 +1,49 @@
-import fs from "fs";
-import path from "path";
-import { pathToFileURL } from "url";
 import { getWalletDataForChat } from "@/lib/agent/chatCache";
 import { getGeminiApiKey } from "@/lib/agent/env";
 import type { ChatAgentContext, ChatAgentResult, ChatStatusCallback } from "@/lib/agent/chatTypes";
 import { mapBundleToWalletData } from "@/lib/agent/mapWalletData";
 import type { WalletData } from "@/types/walletData";
 
-function resolveAgentDist(): string {
-  const candidates = [
-    path.join(process.cwd(), "..", "OnFRA agent", "dist"),
-    path.join(process.cwd(), "OnFRA agent", "dist")
-  ];
+type DashboardBundleModule = {
+  runDashboardBundle: (
+    address: string,
+    options?: { force?: boolean }
+  ) => Promise<Parameters<typeof mapBundleToWalletData>[0]>;
+};
 
-  for (const candidate of candidates) {
-    if (fs.existsSync(path.join(candidate, "chains", "dashboard_bundle.js"))) {
-      return candidate;
+type ChatAgentModule = {
+  runChatAgent: (
+    messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+    options: {
+      apiKey?: string;
+      context: ChatAgentContext & {
+        cachedDashboard?: ReturnType<typeof toCachedDashboard> | null;
+      };
+      onStatus?: ChatStatusCallback;
     }
+  ) => Promise<ChatAgentResult>;
+};
+
+async function loadDashboardBundleModule(): Promise<DashboardBundleModule> {
+  try {
+    return (await import("@/lib/agent/onfra-dist/dashboard_bundle.js")) as DashboardBundleModule;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `OnFRA bundled agent not found (${message}). Run \`npm run build:agent\` from the web folder.`
+    );
   }
-
-  throw new Error(
-    "OnFRA agent build not found. Run `npm run build:agent` from the web folder."
-  );
 }
 
-function importExternalModule<T>(absolutePath: string): Promise<T> {
-  const moduleUrl = pathToFileURL(absolutePath).href;
-  const runtimeImport = new Function(
-    "specifier",
-    "return import(specifier)"
-  ) as (specifier: string) => Promise<T>;
-  return runtimeImport(moduleUrl);
-}
-
-async function loadAgentModule<T>(relativePath: string): Promise<T> {
-  const agentDist = resolveAgentDist();
-  const absolutePath = path.join(agentDist, relativePath);
-  return importExternalModule<T>(absolutePath);
+async function loadChatAgentModule(): Promise<ChatAgentModule> {
+  try {
+    return (await import("@/lib/agent/onfra-dist/chat_agent.js")) as ChatAgentModule;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `OnFRA bundled agent not found (${message}). Run \`npm run build:agent\` from the web folder.`
+    );
+  }
 }
 
 function toCachedDashboard(data: WalletData) {
@@ -58,13 +65,7 @@ export async function runDashboardAnalysis(
   walletAddress: string,
   options?: { force?: boolean }
 ): Promise<WalletData> {
-  const { runDashboardBundle } = await loadAgentModule<{
-    runDashboardBundle: (
-      address: string,
-      options?: { force?: boolean }
-    ) => Promise<Parameters<typeof mapBundleToWalletData>[0]>;
-  }>("chains/dashboard_bundle.js");
-
+  const { runDashboardBundle } = await loadDashboardBundleModule();
   const bundle = await runDashboardBundle(walletAddress, options);
   return mapBundleToWalletData(bundle);
 }
@@ -74,16 +75,7 @@ export async function runAgentChat(
   context: ChatAgentContext,
   onStatus?: ChatStatusCallback
 ): Promise<ChatAgentResult> {
-  const { runChatAgent } = await loadAgentModule<{
-    runChatAgent: (
-      messages: typeof history,
-      options: {
-        apiKey?: string;
-        context: ChatAgentContext & { cachedDashboard?: ReturnType<typeof toCachedDashboard> | null };
-        onStatus?: ChatStatusCallback;
-      }
-    ) => Promise<ChatAgentResult>;
-  }>("chains/chat_agent.js");
+  const { runChatAgent } = await loadChatAgentModule();
 
   onStatus?.("Validating query…");
 

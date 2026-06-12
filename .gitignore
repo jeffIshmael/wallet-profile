@@ -28,6 +28,7 @@ contracts/**/lib/
 
 # Agent generated output
 OnFRA agent/reports/
+web/src/lib/agent/onfra-dist/
 
 # OS / IDE
 .DS_Store

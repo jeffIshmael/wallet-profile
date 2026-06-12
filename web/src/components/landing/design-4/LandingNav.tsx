@@ -81,9 +81,11 @@ export function LandingNav({
               New
             </span>
           </button>
-          <Link href="/dashboard" className={navLinkClass(active === "dashboard")}>
-            Dashboard
-          </Link>
+          {active !== "home" && (
+            <Link href="/dashboard" className={navLinkClass(active === "dashboard")}>
+              Dashboard
+            </Link>
+          )}
           <Link href="/verify" className={navLinkClass(active === "verify")}>
             Verify
           </Link>
