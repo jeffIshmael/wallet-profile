@@ -3,9 +3,10 @@
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useWalletData } from "@/hooks/useWalletData";
-import { moneyPrecise } from "@/lib/format";
+import { coerceAmount, moneyPrecise } from "@/lib/format";
 
 function Sparkline({ values }: { values: number[] }) {
+  if (values.length < 2) return null;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
@@ -29,10 +30,10 @@ function Sparkline({ values }: { values: number[] }) {
 export function AverageMonthlyIncomeCard() {
   const { walletData } = useWalletData();
   if (!walletData) return null;
-  const amount = walletData.metrics.incomeProfile.averageInflowUsd;
+  const amount = coerceAmount(walletData.metrics.incomeProfile.averageInflowUsd);
   const stats = walletData.monthlyIncomeStats;
-  const history = [...walletData.monthlyIncomeHistory];
-  const changePositive = stats.changePct >= 0;
+  const history = walletData.monthlyIncomeHistory.map((value) => coerceAmount(value));
+  const changePositive = coerceAmount(stats?.changePct) >= 0;
 
   return (
     <Card compact className="flex h-full flex-col">
@@ -53,14 +54,14 @@ export function AverageMonthlyIncomeCard() {
             className={`mt-1 inline-block text-[10px] font-semibold ${changePositive ? "text-teal" : "text-danger"}`}
           >
             {changePositive ? "+" : ""}
-            {stats.changePct}% vs last month
+            {coerceAmount(stats?.changePct)}% vs last month
           </span>
         </div>
         <Sparkline values={history} />
       </div>
 
       <p className="mt-auto pt-2 text-[10px] text-stardust">
-        Highest: {moneyPrecise(stats.highest)} · Lowest: {moneyPrecise(stats.lowest)}
+        Highest: {moneyPrecise(stats?.highest)} · Lowest: {moneyPrecise(stats?.lowest)}
       </p>
     </Card>
   );

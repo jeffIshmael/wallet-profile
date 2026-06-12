@@ -13,17 +13,22 @@ export function formatUtc(timestamp: string) {
   return `${formatter.format(new Date(timestamp)).replace(",", "")} `;
 }
 
-export function money(value: number) {
+export function coerceAmount(value: number | null | undefined): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export function money(value: number | null | undefined) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(value);
+  }).format(coerceAmount(value));
 }
 
-export function moneyPrecise(value: number) {
-  return `$${value.toFixed(2)}`;
+export function moneyPrecise(value: number | null | undefined) {
+  return `$${coerceAmount(value).toFixed(2)}`;
 }
 
 export function daysSince(timestamp: string) {

@@ -37,7 +37,7 @@ const TOOL_STATUS: Record<string, string> = {
 };
 
 const TOOL_RUNNERS: Record<
-  Exclude<QueryIntent, "general">,
+  Exclude<QueryIntent, "general" | "tokens">,
   { tool: { invoke: (input: Record<string, string>) => Promise<string> }; format: (data: Record<string, unknown>, address: string) => string }
 > = {
   financial_health: {
@@ -83,7 +83,7 @@ function seedCacheFromDashboard(dashboard: CachedDashboard & { transactions?: un
 }
 
 async function runSingleTool(
-  intent: Exclude<QueryIntent, "general">,
+  intent: Exclude<QueryIntent, "general" | "tokens">,
   walletAddress: string,
   onStatus?: ChatStatusCallback
 ): Promise<{ text: string; toolsUsed: string[] }> {
@@ -154,13 +154,14 @@ export async function runChatAgent(
     if (cachedAnswer) {
       return { text: cachedAnswer, toolsUsed: [], source: "cache" };
     }
-    if (context.cachedDashboard.onfraAssessment.narrative) {
-      return {
-        text: context.cachedDashboard.onfraAssessment.narrative,
-        toolsUsed: [],
-        source: "cache"
-      };
-    }
+  }
+
+  if (intent === "tokens") {
+    return {
+      text: "I need your dashboard analysis to break down token flows. Run Analyse My Wallet first, then ask again.",
+      toolsUsed: [],
+      source: "cache"
+    };
   }
 
   // Targeted tool only (one RPC pass, no ReAct loop)

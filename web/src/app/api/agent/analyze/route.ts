@@ -100,7 +100,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const walletData = await runDashboardAnalysis(walletAddress);
+    const walletData = await runDashboardAnalysis(walletAddress, { force: body.force });
     await saveAnalysisRun(walletAddress, walletData);
 
     await trackApiEvent({

@@ -463,7 +463,7 @@ async function fetchWalletTransactionsUncached(address: string, celoPrice: numbe
   // 1. Fetch normal transactions
   try {
     const json: any = await fetchJsonWithTimeout(
-      `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&offset=100`
+      `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=desc&page=1&offset=100`
     );
     if (json && json.status === "1" && Array.isArray(json.result)) {
       for (const tx of json.result) {
@@ -496,7 +496,7 @@ async function fetchWalletTransactionsUncached(address: string, celoPrice: numbe
   // 2. Fetch token transfers
   try {
     const json: any = await fetchJsonWithTimeout(
-      `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&offset=100`
+      `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&sort=desc&page=1&offset=100`
     );
     if (json && json.status === "1" && Array.isArray(json.result)) {
       for (const tx of json.result) {
@@ -769,6 +769,19 @@ async function fetchNftExposureUncached(address: string): Promise<{ nftExposure:
     console.warn("Failed to get NFT exposure:", e);
   }
   return { nftExposure: 0, nftCount: 0 };
+}
+
+export function invalidateWalletOnchainCache(address: string): void {
+  const key = address.toLowerCase();
+  fullOnchainDataCache.delete(key);
+  balanceCache.delete(key);
+  transactionCache.delete(key);
+  nftCache.delete(key);
+  for (const inflightKey of inFlight.keys()) {
+    if (inflightKey.endsWith(`:${key}`)) {
+      inFlight.delete(inflightKey);
+    }
+  }
 }
 
 /** Pre-fetch and populate the shared cache used by analysis tools. */

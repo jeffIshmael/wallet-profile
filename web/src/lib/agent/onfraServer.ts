@@ -46,16 +46,26 @@ function toCachedDashboard(data: WalletData) {
     metrics: data.metrics,
     onfraAssessment: data.onfraAssessment,
     portfolio: data.portfolio,
-    transactions: data.transactions
+    transactions: data.transactions.map((tx) => ({
+      token: tx.token,
+      amount: tx.amount,
+      direction: tx.direction
+    }))
   };
 }
 
-export async function runDashboardAnalysis(walletAddress: string): Promise<WalletData> {
+export async function runDashboardAnalysis(
+  walletAddress: string,
+  options?: { force?: boolean }
+): Promise<WalletData> {
   const { runDashboardBundle } = await loadAgentModule<{
-    runDashboardBundle: (address: string) => Promise<Parameters<typeof mapBundleToWalletData>[0]>;
+    runDashboardBundle: (
+      address: string,
+      options?: { force?: boolean }
+    ) => Promise<Parameters<typeof mapBundleToWalletData>[0]>;
   }>("chains/dashboard_bundle.js");
 
-  const bundle = await runDashboardBundle(walletAddress);
+  const bundle = await runDashboardBundle(walletAddress, options);
   return mapBundleToWalletData(bundle);
 }
 

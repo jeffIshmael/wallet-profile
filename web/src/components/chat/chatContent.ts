@@ -9,8 +9,9 @@ export const AGENT_CHAT_PRICING_NOTICE =
 
 export const AGENT_CHAT_SUGGESTIONS = [
   "Why is my financial health low?",
-  "How do I raise my loan limit?",
-  "What's my safe borrowing range?",
+  "How do I improve my loan capacity?",
+  "Which token do I receive or spend more?",
+  "Who are you and how can you help me?",
   `What's the monthly income of "${MOCKUP_EXTERNAL_WALLET_SHORT}"?`
 ] as const;
 

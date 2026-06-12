@@ -45,6 +45,15 @@ class WalletCache {
   public clear(): void {
     this.cache.clear();
   }
+
+  public invalidate(walletAddress: string): void {
+    const prefix = `${walletAddress.toLowerCase()}:`;
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+      }
+    }
+  }
 }
 
 export const walletCache = new WalletCache();

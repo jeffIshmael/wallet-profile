@@ -2,9 +2,11 @@ import { runAnalysisChain, type DashboardOutput } from "./analysis_chain.js";
 import {
   computePeriodFlow,
   fullOnchainDataCache,
+  invalidateWalletOnchainCache,
   warmWalletDataCache,
   type TransactionDetails
 } from "../lib/getWalletDetails.js";
+import { walletCache } from "../memory/wallet_cache.js";
 
 export type PeriodFlow = {
   inbound: number;
@@ -37,16 +39,25 @@ function withTrend(current: PeriodFlow, previousNet: number): PeriodFlow & { tre
   return { ...current, trendPct };
 }
 
-export async function runDashboardBundle(walletAddress: string): Promise<DashboardBundle> {
+export async function runDashboardBundle(
+  walletAddress: string,
+  options?: { force?: boolean }
+): Promise<DashboardBundle> {
   const address = walletAddress.toLowerCase();
+  const force = options?.force ?? false;
 
-  // Prefetch once per process unless onchain data is already cached.
-  const existing = fullOnchainDataCache.get(address);
+  if (force) {
+    invalidateWalletOnchainCache(address);
+    walletCache.invalidate(address);
+  }
+
+  // Prefetch once per process unless onchain data is already cached (or force refresh).
+  const existing = force ? undefined : fullOnchainDataCache.get(address);
   const cached =
     existing?.transactions && existing?.tokens
       ? existing
       : await warmWalletDataCache(address, 12);
-  const analysis = await runAnalysisChain(walletAddress);
+  const analysis = await runAnalysisChain(walletAddress, undefined, { force });
 
   const rawData = JSON.parse(analysis.rawJson || "{}") as Record<string, unknown>;
   const loanData = JSON.parse(analysis.loanJson || "{}") as {

@@ -39,11 +39,20 @@ export interface DashboardOutput {
   loanJson?: string;
 }
 
-export async function runAnalysisChain(walletAddress: string, blockHeight?: number): Promise<DashboardOutput> {
+export async function runAnalysisChain(
+  walletAddress: string,
+  blockHeight?: number,
+  options?: { force?: boolean }
+): Promise<DashboardOutput> {
   const address = walletAddress.toLowerCase();
-  
+  const force = options?.force ?? false;
+
+  if (force) {
+    walletCache.invalidate(address);
+  }
+
   // 1. Check Cache
-  const cached = walletCache.get(address, blockHeight);
+  const cached = force ? null : walletCache.get(address, blockHeight);
   if (cached) {
     console.log(`[AnalysisChain] Cache HIT for wallet: ${address}`);
     return JSON.parse(cached);

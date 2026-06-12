@@ -5,13 +5,18 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useWalletData } from "@/hooks/useWalletData";
-import { moneyPrecise } from "@/lib/format";
+import { coerceAmount, moneyPrecise } from "@/lib/format";
 
 export function CashFlowCard() {
   const { walletData } = useWalletData();
   if (!walletData) return null;
   const flow = walletData.cashFlow;
-  const maxBar = Math.max(...flow.monthly.map((m) => Math.max(m.in, m.out)));
+  const monthly = (flow?.monthly ?? []).map((m) => ({
+    month: m.month,
+    in: coerceAmount(m.in),
+    out: coerceAmount(m.out)
+  }));
+  const maxBar = Math.max(...monthly.map((m) => Math.max(m.in, m.out)), 1);
 
   return (
     <Card compact className="flex h-full flex-col">
@@ -32,7 +37,7 @@ export function CashFlowCard() {
             Inflows
           </span>
           <span className="font-mono font-semibold text-white">
-            {moneyPrecise(flow.inflows)} / {flow.periodLabel}
+            {moneyPrecise(flow?.inflows)} / {flow?.periodLabel ?? "6mo"}
           </span>
         </div>
         <div className="flex items-center justify-between text-[11px]">
@@ -41,20 +46,20 @@ export function CashFlowCard() {
             Outflows
           </span>
           <span className="font-mono font-semibold text-white">
-            {moneyPrecise(flow.outflows)} / {flow.periodLabel}
+            {moneyPrecise(flow?.outflows)} / {flow?.periodLabel ?? "6mo"}
           </span>
         </div>
         <div className="flex items-center justify-between border-t border-white/10 pt-1.5 text-[11px]">
           <span className="text-stardust">Net</span>
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-teal">+{moneyPrecise(flow.net)}</span>
+            <span className="font-mono font-bold text-teal">+{moneyPrecise(flow?.net)}</span>
             <StatusBadge tone="green">Surplus</StatusBadge>
           </div>
         </div>
       </div>
 
       <div className="mt-auto flex items-end justify-between gap-1 pt-2">
-        {flow.monthly.map(({ month, in: inflow, out: outflow }) => (
+        {monthly.map(({ month, in: inflow, out: outflow }) => (
           <div key={month} className="flex flex-1 flex-col items-center gap-0.5">
             <div className="flex h-12 w-full items-end justify-center gap-0.5">
               <div
