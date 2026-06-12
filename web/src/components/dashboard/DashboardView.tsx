@@ -14,6 +14,7 @@ import {
 import { RiskExposureCard } from "@/components/portfolio/RiskExposureCard";
 import { DashboardRefreshAnalysis } from "@/components/dashboard/DashboardRefreshAnalysis";
 import { DashboardReportActions } from "@/components/dashboard/DashboardReportActions";
+import { MyReportsCard } from "@/components/dashboard/MyReportsCard";
 import { WalletMetaCard } from "@/components/wallet/WalletMetaCard";
 
 type DashboardViewProps = {
@@ -50,6 +51,9 @@ export function DashboardView({ chatOpen, onChatOpenChange }: DashboardViewProps
         </div>
         <div className="sm:col-span-2 lg:col-span-3">
           <AISummaryCard />
+        </div>
+        <div className="sm:col-span-2 lg:col-span-3">
+          <MyReportsCard />
         </div>
       </div>
     </DashboardShell>

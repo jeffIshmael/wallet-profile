@@ -51,14 +51,39 @@ async function main() {
   }
 
   const OnchainReporter = await ethers.getContractFactory("OnchainReporter");
-  const proxy = await upgradesApi.deployProxy(
-    OnchainReporter,
-    [deployer.address, reporterAddress],
-    {
-      initializer: "initialize",
-      kind: "uups"
+
+  const deployOptions: {
+    initializer: "initialize";
+    kind: "uups";
+    txOverrides?: { gasLimit: bigint };
+  } = {
+    initializer: "initialize",
+    kind: "uups"
+  };
+
+  const gasLimitOverride = process.env.DEPLOY_GAS_LIMIT?.trim();
+  if (gasLimitOverride) {
+    deployOptions.txOverrides = { gasLimit: BigInt(gasLimitOverride) };
+    console.log("Using DEPLOY_GAS_LIMIT:", gasLimitOverride);
+  }
+
+  let proxy;
+  try {
+    proxy = await upgradesApi.deployProxy(
+      OnchainReporter,
+      [deployer.address, reporterAddress],
+      deployOptions
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("insufficient funds")) {
+      console.error("\nDeployer wallet does not have enough CELO for gas.");
+      console.error("Proxy deploy sends 2 transactions (implementation + proxy).");
+      console.error("With ~1.26 CELO you should be fine if gas is auto-estimated.");
+      console.error("Do NOT set DEPLOY_GAS_LIMIT=8000000 — that reserves ~2 CELO per tx.\n");
     }
-  );
+    throw error;
+  }
 
   await proxy.waitForDeployment();
   const proxyAddress = await proxy.getAddress();

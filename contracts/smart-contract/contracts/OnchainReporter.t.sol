@@ -14,6 +14,8 @@ contract OnchainReporterTest is Test {
     address internal wallet = address(0x1234);
     address internal buyer = address(0x5678);
 
+    string internal constant REPORT_ID = "REP-ABC12XY9Z0";
+
     function setUp() public {
         implementation = new OnchainReporter();
         bytes memory initData = abi.encodeCall(OnchainReporter.initialize, (admin, relayer));
@@ -23,19 +25,19 @@ contract OnchainReporterTest is Test {
 
     function test_publishFinancialReport() public {
         vm.prank(relayer);
-        uint256 reportId = reporter.publishFinancialReport(
+        reporter.publishFinancialReport(
             wallet,
             buyer,
             86,
             82,
             "KES 45,000",
+            REPORT_ID,
             "QmExampleReportHash"
         );
 
-        assertEq(reportId, 1);
         assertEq(reporter.reportCount(), 1);
 
-        (bool exists, OnchainReporter.FinancialAttestation memory attestation) = reporter.verifyReport(reportId);
+        (bool exists, OnchainReporter.FinancialAttestation memory attestation) = reporter.verifyReport(REPORT_ID);
         assertTrue(exists);
         assertEq(attestation.wallet, wallet);
         assertEq(attestation.buyer, buyer);
@@ -47,8 +49,8 @@ contract OnchainReporterTest is Test {
 
     function test_getProfileReturnsLatestReport() public {
         vm.startPrank(relayer);
-        reporter.publishFinancialReport(wallet, buyer, 70, 68, "USD 1,000", "QmFirst");
-        reporter.publishFinancialReport(wallet, buyer, 86, 82, "KES 45,000", "QmSecond");
+        reporter.publishFinancialReport(wallet, buyer, 70, 68, "USD 1,000", "REP-FIRST00001", "QmFirst");
+        reporter.publishFinancialReport(wallet, buyer, 86, 82, "KES 45,000", "REP-SECOND0002", "QmSecond");
         vm.stopPrank();
 
         OnchainReporter.FinancialAttestation memory latest = reporter.getProfile(wallet);
@@ -58,20 +60,34 @@ contract OnchainReporterTest is Test {
 
     function test_verifyReportByHash() public {
         vm.prank(relayer);
-        reporter.publishFinancialReport(wallet, buyer, 75, 71, "USD 2,500", "QmVerifyMe");
+        reporter.publishFinancialReport(wallet, buyer, 75, 71, "USD 2,500", REPORT_ID, "QmVerifyMe");
 
-        (bool exists, uint256 reportId, OnchainReporter.FinancialAttestation memory attestation) =
+        (bool exists, string memory reportId, OnchainReporter.FinancialAttestation memory attestation) =
             reporter.verifyReportByHash("QmVerifyMe");
 
         assertTrue(exists);
-        assertEq(reportId, 1);
+        assertEq(reportId, REPORT_ID);
         assertEq(attestation.wallet, wallet);
     }
 
     function test_revertsWhenNonReporterPublishes() public {
         vm.prank(buyer);
         vm.expectRevert();
-        reporter.publishFinancialReport(wallet, buyer, 80, 80, "USD 500", "QmUnauthorized");
+        reporter.publishFinancialReport(wallet, buyer, 80, 80, "USD 500", REPORT_ID, "QmUnauthorized");
+    }
+
+    function test_revertsOnInvalidReportId() public {
+        vm.prank(relayer);
+        vm.expectRevert(OnchainReporter.InvalidReportId.selector);
+        reporter.publishFinancialReport(wallet, buyer, 80, 80, "USD 500", "REP-1", "QmBadId");
+    }
+
+    function test_revertsOnDuplicateReportId() public {
+        vm.startPrank(relayer);
+        reporter.publishFinancialReport(wallet, buyer, 80, 80, "USD 500", REPORT_ID, "QmFirst");
+        vm.expectRevert(OnchainReporter.ReportIdAlreadyUsed.selector);
+        reporter.publishFinancialReport(wallet, buyer, 81, 81, "USD 600", REPORT_ID, "QmSecond");
+        vm.stopPrank();
     }
 
     function test_adminCanChangeReporter() public {
@@ -86,11 +102,19 @@ contract OnchainReporterTest is Test {
 
         vm.prank(relayer);
         vm.expectRevert();
-        reporter.publishFinancialReport(wallet, buyer, 80, 80, "USD 500", "QmOldReporter");
+        reporter.publishFinancialReport(wallet, buyer, 80, 80, "USD 500", REPORT_ID, "QmOldReporter");
 
         vm.prank(newRelayer);
-        uint256 reportId = reporter.publishFinancialReport(wallet, buyer, 90, 88, "USD 3,000", "QmNewReporter");
-        assertEq(reportId, 1);
+        reporter.publishFinancialReport(
+            wallet,
+            buyer,
+            90,
+            88,
+            "USD 3,000",
+            "REP-NEWRELAY01",
+            "QmNewReporter"
+        );
+        assertEq(reporter.reportCount(), 1);
     }
 
     function test_revertsWhenNonAdminChangesReporter() public {

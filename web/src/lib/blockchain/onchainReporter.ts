@@ -1,10 +1,7 @@
 import {
   createPublicClient,
   createWalletClient,
-  decodeEventLog,
-  encodePacked,
   http,
-  keccak256,
   type Address,
   type Hex
 } from "viem";
@@ -12,6 +9,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { onchainReporterAbi } from "@/lib/blockchain/abi/onchainReporter";
 import { ONCHAIN_REPORTER_PROXY } from "@/lib/blockchain/constants";
+import { isValidReportId, normalizeReportId } from "@/lib/reports/reportId";
 
 export type OnchainAttestation = {
   wallet: Address;
@@ -29,11 +27,13 @@ export type PublishReportInput = {
   reputationScore: number;
   financialHealthScore: number;
   loanCapacity: string;
-  attestationParagraph: string;
+  reportId: string;
+  /** IPFS CID of the pinned report PDF. */
+  ipfsCid: string;
 };
 
 export type PublishReportResult = {
-  reportId: bigint;
+  reportId: string;
   reportHash: string;
   transactionHash: Hex;
 };
@@ -44,21 +44,6 @@ function getCeloRpcUrl(): string {
 
 function clampScore(score: number): number {
   return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-export function buildReportHash(
-  wallet: Address,
-  buyer: Address,
-  attestationParagraph: string,
-  issuedAtMs = Date.now()
-): string {
-  const digest = keccak256(
-    encodePacked(
-      ["address", "address", "string", "uint256"],
-      [wallet, buyer, attestationParagraph, BigInt(issuedAtMs)]
-    )
-  );
-  return digest;
 }
 
 export function isReporterConfigured(): boolean {
@@ -98,11 +83,15 @@ export async function publishFinancialReportOnchain(
     throw new Error("ONCHAIN_REPORTER_PROXY_ADDRESS is not configured.");
   }
 
-  const reportHash = buildReportHash(
-    input.wallet,
-    input.buyer,
-    input.attestationParagraph
-  );
+  const reportId = normalizeReportId(input.reportId);
+  if (!isValidReportId(reportId)) {
+    throw new Error("reportId must match REP-XXXXXXXXXX (10 uppercase A-Z / 0-9).");
+  }
+
+  const reportHash = input.ipfsCid.trim();
+  if (!reportHash) {
+    throw new Error("ipfsCid is required to publish a financial report.");
+  }
 
   const walletClient = getOnchainReporterWalletClient();
   const publicClient = getOnchainReporterPublicClient();
@@ -117,35 +106,12 @@ export async function publishFinancialReportOnchain(
       clampScore(input.reputationScore),
       clampScore(input.financialHealthScore),
       input.loanCapacity,
+      reportId,
       reportHash
     ]
   });
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
-  let reportId: bigint | undefined;
-
-  for (const log of receipt.logs) {
-    if (log.address.toLowerCase() !== ONCHAIN_REPORTER_PROXY.toLowerCase()) continue;
-
-    try {
-      const decoded = decodeEventLog({
-        abi: onchainReporterAbi,
-        data: log.data,
-        topics: log.topics
-      });
-
-      if (decoded.eventName === "FinancialReportPublished") {
-        reportId = decoded.args.reportId;
-        break;
-      }
-    } catch {
-      // Not a FinancialReportPublished log from this contract.
-    }
-  }
-
-  if (reportId === undefined) {
-    throw new Error("FinancialReportPublished event not found in transaction receipt.");
-  }
+  await publicClient.waitForTransactionReceipt({ hash });
 
   return {
     reportId,
@@ -155,18 +121,19 @@ export async function publishFinancialReportOnchain(
 }
 
 export async function verifyOnchainReportById(
-  reportId: bigint
+  reportId: string
 ): Promise<{ exists: boolean; attestation?: OnchainAttestation }> {
-  if (!ONCHAIN_REPORTER_PROXY) {
+  if (!ONCHAIN_REPORTER_PROXY || !isValidReportId(reportId)) {
     return { exists: false };
   }
 
+  const normalized = normalizeReportId(reportId);
   const publicClient = getOnchainReporterPublicClient();
   const [exists, attestation] = await publicClient.readContract({
     address: ONCHAIN_REPORTER_PROXY,
     abi: onchainReporterAbi,
     functionName: "verifyReport",
-    args: [reportId]
+    args: [normalized]
   });
 
   if (!exists || attestation.wallet === "0x0000000000000000000000000000000000000000") {
@@ -189,7 +156,7 @@ export async function verifyOnchainReportById(
 
 export async function verifyOnchainReportByHash(
   reportHash: string
-): Promise<{ exists: boolean; reportId?: bigint; attestation?: OnchainAttestation }> {
+): Promise<{ exists: boolean; reportId?: string; attestation?: OnchainAttestation }> {
   if (!ONCHAIN_REPORTER_PROXY || !reportHash.trim()) {
     return { exists: false };
   }
@@ -199,7 +166,7 @@ export async function verifyOnchainReportByHash(
     address: ONCHAIN_REPORTER_PROXY,
     abi: onchainReporterAbi,
     functionName: "verifyReportByHash",
-    args: [reportHash]
+    args: [reportHash.replace(/^ipfs:\/\//i, "")]
   });
 
   if (!exists || attestation.wallet === "0x0000000000000000000000000000000000000000") {

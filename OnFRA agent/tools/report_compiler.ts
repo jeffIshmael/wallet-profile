@@ -21,7 +21,11 @@ export const reportCompiler = tool(
     const loanData = JSON.parse(loanCapacityJson);
 
     const timestamp = new Date().toISOString();
-    const reportId = `REP-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
+    const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const suffix = Array.from(crypto.randomBytes(10))
+      .map((byte) => alphabet[byte % alphabet.length])
+      .join("");
+    const reportId = `REP-${suffix}`;
 
     // Compile into sections
     const report = {

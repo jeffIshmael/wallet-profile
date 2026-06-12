@@ -14,17 +14,23 @@ export default defineConfig({
     profiles: {
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
       },
       production: {
         version: "0.8.28",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
-          },
-        },
-      },
-    },
+            runs: 200
+          }
+        }
+      }
+    }
   },
   networks: {
     // Celo Mainnet
@@ -32,7 +38,7 @@ export default defineConfig({
       type: "http",
       url: "https://forno.celo.org",
       accounts: deployerAccounts(),
-      chainId: 42220,
+      chainId: 42220
     },
     // Celo Sepolia Testnet
     "celo-sepolia": {

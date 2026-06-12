@@ -1,15 +1,18 @@
-import { BadgeCheck, Calendar, FileText, TrendingUp } from "lucide-react";
+"use client";
+
+import { BadgeCheck, Calendar, Download, FileText, TrendingUp } from "lucide-react";
+import { exportSampleOfficialReportPdf } from "@/lib/reports/exportOfficialReportPdf";
 
 const scores = [
   { label: "Financial Health", value: "89", suffix: "/ 100", accent: "text-btc-orange" },
   { label: "Reputation Score", value: "92", suffix: "/ 100", accent: "text-btc-orange" },
-  { label: "Income Stability", value: "86", suffix: "/ 100", accent: "text-btc-gold" }
+  { label: "Income Stability", value: "92", suffix: "/ 100", accent: "text-btc-gold" }
 ];
 
 const meta = [
-  { label: "Loan Capacity", value: "KES 120,000", icon: TrendingUp },
-  { label: "Wallet Age", value: "24 Months", icon: Calendar },
-  { label: "Transaction Activity", value: "1,247 Transactions", icon: FileText }
+  { label: "Loan Capacity", value: "$1,800 – $2,400", icon: TrendingUp },
+  { label: "Wallet Age", value: "2 Years 4 Months", icon: Calendar },
+  { label: "Transaction Activity", value: "312 Transactions", icon: FileText }
 ];
 
 export function FinancialPassportPreviewSection() {
@@ -24,7 +27,7 @@ export function FinancialPassportPreviewSection() {
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-7 text-stardust md:text-base">
           Instead of asking for payslips and bank statements, Wallet Analyst generates a professional financial passport
-          powered by blockchain activity.
+          powered by blockchain activity — including a verified 6-month transaction statement.
         </p>
 
         <div className="mx-auto mt-14 max-w-3xl">
@@ -32,7 +35,7 @@ export function FinancialPassportPreviewSection() {
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 md:px-8">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">Wallet Analyst Report</p>
-                <p className="mt-1 font-mono text-sm text-btc-orange">0x7A3...91F</p>
+                <p className="mt-1 font-mono text-sm text-btc-orange">0xe3B6...A057</p>
               </div>
               <div className="flex items-center gap-2 rounded-full border border-btc-gold/30 bg-btc-gold/10 px-3 py-1.5">
                 <BadgeCheck size={14} className="text-btc-gold" />
@@ -66,6 +69,18 @@ export function FinancialPassportPreviewSection() {
               ))}
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => void exportSampleOfficialReportPdf()}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-btc-orange px-5 py-3 text-sm font-bold text-white transition hover:bg-btc-orange/90"
+          >
+            <Download size={16} />
+            Download Sample Report
+          </button>
+          <p className="mt-3 text-center font-mono text-[10px] text-stardust">
+            Includes verification code, proof of income, and 6-month transaction statement
+          </p>
         </div>
       </div>
     </section>

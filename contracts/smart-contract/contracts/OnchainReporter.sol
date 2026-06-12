@@ -8,7 +8,7 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Pau
 
 /// @title OnchainReporter
 /// @notice OnFRA financial attestation registry for verified Wallet Analyst reports.
-/// @dev Upgradeable (UUPS). Only authorized reporters can publish after backend payment verification.
+/// @dev Upgradeable (UUPS). Report IDs are opaque codes: REP- + 10 uppercase alphanumeric chars.
 contract OnchainReporter is
     Initializable,
     UUPSUpgradeable,
@@ -16,6 +16,7 @@ contract OnchainReporter is
     PausableUpgradeable
 {
     bytes32 public constant REPORTER_ROLE = keccak256("REPORTER_ROLE");
+    uint256 private constant REPORT_ID_LENGTH = 14;
 
     struct FinancialAttestation {
         address wallet;
@@ -35,13 +36,14 @@ contract OnchainReporter is
 
     address private _reporter;
     uint256 private _reportCount;
-    mapping(uint256 => FinancialAttestation) private _reports;
-    mapping(uint256 => Purchase) private _purchases;
-    mapping(address => uint256[]) private _walletReportIds;
-    mapping(bytes32 => uint256) private _reportHashToId;
+    mapping(string => FinancialAttestation) private _reports;
+    mapping(string => Purchase) private _purchases;
+    mapping(address => string[]) private _walletReportIds;
+    mapping(bytes32 => string) private _reportHashToId;
 
     event FinancialReportPublished(
-        uint256 indexed reportId,
+        bytes32 indexed reportIdHash,
+        string reportId,
         address indexed wallet,
         address indexed buyer,
         uint8 reputationScore,
@@ -55,8 +57,10 @@ contract OnchainReporter is
     error InvalidBuyer();
     error InvalidScore();
     error InvalidReportHash();
+    error InvalidReportId();
     error ReportNotFound();
     error ReportHashAlreadyUsed();
+    error ReportIdAlreadyUsed();
     error InvalidReporter();
 
     event ReporterUpdated(address indexed previousReporter, address indexed newReporter);
@@ -80,7 +84,6 @@ contract OnchainReporter is
     }
 
     /// @notice Replace the backend reporter address. Callable only by the contract admin.
-    /// @param newReporter New address granted REPORTER_ROLE; the previous reporter is revoked.
     function setReporter(address newReporter) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (newReporter == address(0)) revert InvalidReporter();
 
@@ -103,11 +106,7 @@ contract OnchainReporter is
     }
 
     /// @notice Publish a verified financial report attestation for a wallet.
-    /// @param wallet Subject wallet analyzed by OnFRA.
-    /// @param buyer Wallet that purchased the official report.
-    /// @param reputationScore Onchain reputation score (0-100).
-    /// @param financialHealthScore Financial health score (0-100).
-    /// @param loanCapacity Human-readable loan capacity label (e.g. "450 $").
+    /// @param reportId Opaque verification code in the form REP-XXXXXXXXXX (10 uppercase A-Z / 0-9).
     /// @param reportHash IPFS CID or content hash of the generated PDF report.
     function publishFinancialReport(
         address wallet,
@@ -115,17 +114,21 @@ contract OnchainReporter is
         uint8 reputationScore,
         uint8 financialHealthScore,
         string calldata loanCapacity,
+        string calldata reportId,
         string calldata reportHash
-    ) external onlyRole(REPORTER_ROLE) whenNotPaused returns (uint256 reportId) {
+    ) external onlyRole(REPORTER_ROLE) whenNotPaused {
         if (wallet == address(0)) revert InvalidWallet();
         if (buyer == address(0)) revert InvalidBuyer();
         if (reputationScore > 100 || financialHealthScore > 100) revert InvalidScore();
         if (bytes(reportHash).length == 0) revert InvalidReportHash();
+        _validateReportId(reportId);
+
+        if (_reports[reportId].wallet != address(0)) revert ReportIdAlreadyUsed();
 
         bytes32 hashKey = keccak256(bytes(reportHash));
-        if (_reportHashToId[hashKey] != 0) revert ReportHashAlreadyUsed();
+        if (bytes(_reportHashToId[hashKey]).length != 0) revert ReportHashAlreadyUsed();
 
-        reportId = ++_reportCount;
+        _reportCount++;
 
         _reports[reportId] = FinancialAttestation({
             wallet: wallet,
@@ -147,6 +150,7 @@ contract OnchainReporter is
         _reportHashToId[hashKey] = reportId;
 
         emit FinancialReportPublished(
+            keccak256(bytes(reportId)),
             reportId,
             wallet,
             buyer,
@@ -158,13 +162,13 @@ contract OnchainReporter is
         );
     }
 
-    /// @notice Verify a report by onchain report id.
-    function verifyReport(uint256 reportId)
+    /// @notice Verify a report by its opaque report ID (REP-XXXXXXXXXX).
+    function verifyReport(string calldata reportId)
         external
         view
         returns (bool exists, FinancialAttestation memory attestation)
     {
-        if (reportId == 0 || reportId > _reportCount) {
+        if (!_isValidReportIdFormat(reportId)) {
             return (false, attestation);
         }
 
@@ -176,15 +180,15 @@ contract OnchainReporter is
     function verifyReportByHash(string calldata reportHash)
         external
         view
-        returns (bool exists, uint256 reportId, FinancialAttestation memory attestation)
+        returns (bool exists, string memory reportId, FinancialAttestation memory attestation)
     {
         if (bytes(reportHash).length == 0) {
-            return (false, 0, attestation);
+            return (false, reportId, attestation);
         }
 
         reportId = _reportHashToId[keccak256(bytes(reportHash))];
-        if (reportId == 0) {
-            return (false, 0, attestation);
+        if (bytes(reportId).length == 0) {
+            return (false, reportId, attestation);
         }
 
         attestation = _reports[reportId];
@@ -193,25 +197,29 @@ contract OnchainReporter is
 
     /// @notice Return the latest attestation for a wallet.
     function getProfile(address wallet) external view returns (FinancialAttestation memory latest) {
-        uint256[] storage ids = _walletReportIds[wallet];
+        string[] storage ids = _walletReportIds[wallet];
         if (ids.length == 0) revert ReportNotFound();
         latest = _reports[ids[ids.length - 1]];
     }
 
-    /// @notice Return a specific report by id.
-    function getReport(uint256 reportId) external view returns (FinancialAttestation memory attestation) {
-        if (reportId == 0 || reportId > _reportCount) revert ReportNotFound();
+    /// @notice Return a specific report by opaque ID.
+    function getReport(string calldata reportId) external view returns (FinancialAttestation memory attestation) {
+        if (!_isValidReportIdFormat(reportId) || _reports[reportId].wallet == address(0)) {
+            revert ReportNotFound();
+        }
         attestation = _reports[reportId];
     }
 
     /// @notice Return purchase metadata for a report.
-    function getPurchase(uint256 reportId) external view returns (Purchase memory purchase) {
-        if (reportId == 0 || reportId > _reportCount) revert ReportNotFound();
+    function getPurchase(string calldata reportId) external view returns (Purchase memory purchase) {
+        if (!_isValidReportIdFormat(reportId) || _reports[reportId].wallet == address(0)) {
+            revert ReportNotFound();
+        }
         purchase = _purchases[reportId];
     }
 
-    /// @notice List all report ids published for a wallet.
-    function getWalletReportIds(address wallet) external view returns (uint256[] memory reportIds) {
+    /// @notice List all report IDs published for a wallet.
+    function getWalletReportIds(address wallet) external view returns (string[] memory reportIds) {
         return _walletReportIds[wallet];
     }
 
@@ -226,6 +234,25 @@ contract OnchainReporter is
 
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
+    }
+
+    function _validateReportId(string calldata reportId) internal pure {
+        if (!_isValidReportIdFormat(reportId)) revert InvalidReportId();
+    }
+
+    function _isValidReportIdFormat(string calldata reportId) internal pure returns (bool) {
+        bytes memory id = bytes(reportId);
+        if (id.length != REPORT_ID_LENGTH) return false;
+        if (id[0] != "R" || id[1] != "E" || id[2] != "P" || id[3] != "-") return false;
+
+        for (uint256 i = 4; i < REPORT_ID_LENGTH; i++) {
+            bytes1 char = id[i];
+            bool isDigit = char >= "0" && char <= "9";
+            bool isUpper = char >= "A" && char <= "Z";
+            if (!isDigit && !isUpper) return false;
+        }
+
+        return true;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}

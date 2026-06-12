@@ -2,6 +2,13 @@
   "name": "smart-contract",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:celo": "hardhat run scripts/deploy.ts --network celo",
+    "deploy:celo:force": "FORCE_REDEPLOY=1 hardhat run scripts/deploy.ts --network celo",
+    "upgrade:celo": "hardhat run scripts/upgrade.ts --network celo"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.0.13",
     "@nomicfoundation/hardhat-ignition": "^3.1.7",

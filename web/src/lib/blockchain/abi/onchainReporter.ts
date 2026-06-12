@@ -8,15 +8,16 @@ export const onchainReporterAbi = [
       { name: "reputationScore", type: "uint8" },
       { name: "financialHealthScore", type: "uint8" },
       { name: "loanCapacity", type: "string" },
+      { name: "reportId", type: "string" },
       { name: "reportHash", type: "string" }
     ],
-    outputs: [{ name: "reportId", type: "uint256" }],
+    outputs: [],
     stateMutability: "nonpayable"
   },
   {
     type: "function",
     name: "verifyReport",
-    inputs: [{ name: "reportId", type: "uint256" }],
+    inputs: [{ name: "reportId", type: "string" }],
     outputs: [
       { name: "exists", type: "bool" },
       {
@@ -41,7 +42,7 @@ export const onchainReporterAbi = [
     inputs: [{ name: "reportHash", type: "string" }],
     outputs: [
       { name: "exists", type: "bool" },
-      { name: "reportId", type: "uint256" },
+      { name: "reportId", type: "string" },
       {
         name: "attestation",
         type: "tuple",
@@ -59,10 +60,18 @@ export const onchainReporterAbi = [
     stateMutability: "view"
   },
   {
+    type: "function",
+    name: "reportCount",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view"
+  },
+  {
     type: "event",
     name: "FinancialReportPublished",
     inputs: [
-      { name: "reportId", type: "uint256", indexed: true },
+      { name: "reportIdHash", type: "bytes32", indexed: true },
+      { name: "reportId", type: "string", indexed: false },
       { name: "wallet", type: "address", indexed: true },
       { name: "buyer", type: "address", indexed: true },
       { name: "reputationScore", type: "uint8", indexed: false },

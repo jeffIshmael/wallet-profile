@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, ExternalLink, Loader2, X } from "lucide-react";
+import { Copy, Download, ExternalLink, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
@@ -9,6 +9,8 @@ import { CELOSCAN_BASE_URL } from "@/lib/blockchain/constants";
 
 type ReportPurchaseResult = {
   reportId: string;
+  ipfsCid: string;
+  ipfsUrl: string;
   reportHash: string;
   transactionHash: string;
   attestation: string;
@@ -57,6 +59,8 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
             status: "success",
             result: {
               reportId: payload.reportId,
+              ipfsCid: payload.ipfsCid || payload.reportHash,
+              ipfsUrl: payload.ipfsUrl,
               reportHash: payload.reportHash,
               transactionHash: payload.transactionHash,
               attestation: payload.attestation,
@@ -95,7 +99,7 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
               </p>
             ) : (
               <p className="mt-2 text-xs text-stardust">
-                Publishing your attestation on Celo after payment verification.
+                Generating your report, pinning to IPFS, and publishing on Celo.
               </p>
             )}
           </div>
@@ -118,7 +122,7 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
         {purchase.status === "loading" && (
           <div className="mt-5 flex items-center gap-3 rounded-xl border border-white/10 bg-black/40 p-4 text-sm text-stardust">
             <Loader2 size={18} className="animate-spin text-btc-orange" />
-            Running analysis and publishing onchain attestation...
+            Running analysis, pinning PDF to IPFS, and publishing onchain...
           </div>
         )}
 
@@ -134,17 +138,28 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
               {purchase.result.attestation}
             </p>
             <p className="mt-3 font-mono text-[10px] text-stardust/80">
-              Onchain hash: {purchase.result.reportHash}
+              IPFS CID: {purchase.result.ipfsCid}
             </p>
-            <a
-              href={purchase.result.explorerUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs text-btc-orange hover:underline"
-            >
-              View transaction on Celoscan
-              <ExternalLink size={12} />
-            </a>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <a
+                href={purchase.result.ipfsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-btc-orange hover:underline"
+              >
+                <Download size={12} />
+                Download PDF
+              </a>
+              <a
+                href={purchase.result.explorerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-btc-orange hover:underline"
+              >
+                View transaction on Celoscan
+                <ExternalLink size={12} />
+              </a>
+            </div>
           </>
         )}
 

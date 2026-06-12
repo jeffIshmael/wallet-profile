@@ -60,7 +60,7 @@ export function VerifySection() {
                     setCode(e.target.value);
                     setResult(null);
                   }}
-                  placeholder="REP-1"
+                  placeholder="REP-ABC12XY9Z0"
                   className="min-h-[44px] flex-1 rounded-lg border border-white/10 bg-black/40 px-4 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-btc-orange/50 focus:shadow-[0_0_20px_-8px_rgba(247,147,26,0.4)]"
                 />
                 <button

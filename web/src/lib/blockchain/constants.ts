@@ -35,7 +35,7 @@ export const USDT_CELO_MAINNET =
 
 /** UUPS proxy for OnchainReporter on Celo mainnet (override via env). */
 export const ONCHAIN_REPORTER_PROXY = (process.env.ONCHAIN_REPORTER_PROXY_ADDRESS?.trim() ||
-  "0x50a8Fc322497e2EAc5489A64ce162E07Fb85E6AB") as `0x${string}`;
+  "0xE7621aF5dE3806ba26115bdC89190c65ed835C21") as `0x${string}`;
 
 export const CELOSCAN_BASE_URL = "https://celoscan.io" as const;
 

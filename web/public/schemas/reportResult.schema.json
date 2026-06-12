@@ -12,8 +12,8 @@
     },
     "reportId": {
       "type": "string",
-      "pattern": "^REP-[A-F0-9]+$",
-      "description": "Report identifier (also used as verification code prefix WP-)."
+      "pattern": "^REP-[A-Z0-9]{10}$",
+      "description": "Opaque verification code (REP- + 10 uppercase A-Z / 0-9)."
     },
     "walletAddress": {
       "type": "string",
