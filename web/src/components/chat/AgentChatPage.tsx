@@ -34,7 +34,7 @@ export function AgentChatPage() {
   const showSignedInMobileChat = ready && authenticated && isMobile;
 
   function handleAskAgent() {
-    if (!authenticated) {
+    if (!authenticated || !address) {
       login();
       return;
     }
@@ -59,7 +59,7 @@ export function AgentChatPage() {
           logout();
         }}
         onTryChat={() => {
-          if (!authenticated) {
+          if (!authenticated || !address) {
             login();
             return;
           }

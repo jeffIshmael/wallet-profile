@@ -1,10 +1,18 @@
 "use client";
 
-import { PrivyProvider, usePrivy, useWallets, type User } from "@privy-io/react-auth";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  PrivyProvider,
+  useCreateWallet,
+  usePrivy,
+  useSendTransaction,
+  useWallets,
+  type User
+} from "@privy-io/react-auth";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { EIP1193Provider } from "viem";
 import { celo } from "viem/chains";
 import { connectInjectedWallet, isMiniPay } from "@/lib/minipay";
+import { createSponsoredProvider } from "@/lib/privy/sponsoredProvider";
 
 type AuthContextValue = {
   ready: boolean;
@@ -89,9 +97,13 @@ function MiniPayBridge({ children }: { children: React.ReactNode }) {
 function PrivyBridge({ children }: { children: React.ReactNode }) {
   const { ready, authenticated, login: privyLogin, logout: privyLogout, user } = usePrivy();
   const { wallets } = useWallets();
+  const { createWallet } = useCreateWallet();
+  const { sendTransaction } = useSendTransaction();
   const [miniPay, setMiniPay] = useState(false);
   const [miniPayAddress, setMiniPayAddress] = useState<string | null>(null);
   const [connectingMiniPay, setConnectingMiniPay] = useState(false);
+  const [creatingWallet, setCreatingWallet] = useState(false);
+  const walletCreationAttempted = useRef(false);
 
   useEffect(() => {
     if (!isMiniPay()) return;
@@ -107,17 +119,41 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
   const privyAddress = resolvePrivyWalletAddress(user, wallets);
   const address = miniPayAddress ?? privyAddress;
 
+  useEffect(() => {
+    if (!ready || !authenticated || address || miniPay) {
+      if (!authenticated) walletCreationAttempted.current = false;
+      return;
+    }
+    if (walletCreationAttempted.current || creatingWallet) return;
+
+    walletCreationAttempted.current = true;
+    setCreatingWallet(true);
+    void createWallet()
+      .catch(() => {
+        walletCreationAttempted.current = false;
+      })
+      .finally(() => {
+        setCreatingWallet(false);
+      });
+  }, [ready, authenticated, address, miniPay, createWallet, creatingWallet]);
+
   const getEthereumProvider = useCallback(async () => {
-    const injected = getInjectedProvider();
-    if (injected) return injected;
+    if (miniPayAddress) {
+      return getInjectedProvider();
+    }
 
     const normalized = address?.toLowerCase();
     const wallet =
       wallets.find((item) => item.address?.toLowerCase() === normalized) ?? wallets[0];
-    if (!wallet) return undefined;
+    if (!wallet?.address) {
+      return getInjectedProvider();
+    }
 
-    return (await wallet.getEthereumProvider()) as EIP1193Provider;
-  }, [address, wallets]);
+    const provider = (await wallet.getEthereumProvider()) as EIP1193Provider;
+    if (wallet.walletClientType !== "privy") return provider;
+
+    return createSponsoredProvider(provider, sendTransaction, wallet.address);
+  }, [miniPayAddress, address, wallets, sendTransaction]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -140,7 +176,7 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       },
       address,
       miniPay,
-      connectingMiniPay,
+      connectingMiniPay: connectingMiniPay || creatingWallet,
       getEthereumProvider
     }),
     [
@@ -152,6 +188,7 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       miniPay,
       miniPayAddress,
       connectingMiniPay,
+      creatingWallet,
       getEthereumProvider
     ]
   );
@@ -177,7 +214,7 @@ export function AppAuthProvider({ children }: { children: React.ReactNode }) {
         loginMethods: ["wallet", "email"],
         embeddedWallets: {
           ethereum: {
-            createOnLogin: "off"
+            createOnLogin: "users-without-wallets"
           }
         },
         supportedChains: [celo],

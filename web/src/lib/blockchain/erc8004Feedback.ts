@@ -28,9 +28,8 @@ export const AGENT_FEEDBACK_TAG_OPTIONS = [
 
 export type AgentFeedbackTagId = (typeof AGENT_FEEDBACK_TAG_OPTIONS)[number]["id"];
 
-function scoreFromTags(tags: AgentFeedbackTagId[]): number {
-  if (tags.length === 0) return 90;
-  return Math.min(100, 90 + tags.length * 2);
+function scoreFromTags(_tags: AgentFeedbackTagId[]): number {
+  return 100;
 }
 
 function buildFeedbackPayload(

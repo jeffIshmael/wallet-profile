@@ -1,24 +1,21 @@
 "use client";
 
 import { useCallback } from "react";
-import type { EIP1193Provider } from "viem";
 import {
   markFeedbackSubmitted,
   submitErc8004Feedback,
   type AgentFeedbackTagId
 } from "@/lib/blockchain/erc8004Feedback";
-
-function getInjectedProvider(): EIP1193Provider | undefined {
-  if (typeof window === "undefined") return undefined;
-  return (window as Window & { ethereum?: EIP1193Provider }).ethereum;
-}
+import { useAuth } from "@/providers/AuthProvider";
 
 export function useSubmitAgentFeedback(address: string | null) {
+  const { getEthereumProvider } = useAuth();
+
   return useCallback(
     async (tags: AgentFeedbackTagId[]) => {
       if (!address) throw new Error("Connect a wallet to submit feedback.");
 
-      const provider = getInjectedProvider();
+      const provider = await getEthereumProvider();
       if (!provider) {
         throw new Error("No wallet provider available. Connect MiniPay or an external wallet.");
       }
@@ -27,6 +24,6 @@ export function useSubmitAgentFeedback(address: string | null) {
       markFeedbackSubmitted(address);
       void result;
     },
-    [address]
+    [address, getEthereumProvider]
   );
 }

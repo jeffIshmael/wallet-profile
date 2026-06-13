@@ -42,7 +42,7 @@ export function HeroSection({
   const hasStoredAnalysis = storedAnalysisStatus === "yes";
 
   function handleCta() {
-    if (!authenticated) {
+    if (!authenticated || !address) {
       onSignIn();
       return;
     }

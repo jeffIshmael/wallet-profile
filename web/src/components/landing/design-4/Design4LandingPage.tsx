@@ -32,7 +32,7 @@ export function Design4LandingPage({
   onTryChat
 }: Design4LandingPageProps) {
   function handleAnalyze() {
-    if (!authenticated) {
+    if (!authenticated || !address) {
       onSignIn();
       return;
     }
