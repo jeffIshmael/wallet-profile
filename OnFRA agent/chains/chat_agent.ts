@@ -7,6 +7,7 @@ import { loanCapacity } from "../tools/loan_capacity.js";
 import { fullOnchainDataCache } from "../lib/getWalletDetails.js";
 import {
   answerFromCachedDashboard,
+  buildDashboardContextForGemini,
   classifyQuery,
   INTENT_TOOL,
   type CachedDashboard,
@@ -99,6 +100,46 @@ async function runSingleTool(
   };
 }
 
+async function answerGeneralWithGemini(
+  dashboard: CachedDashboard,
+  userMessage: string,
+  apiKey: string | undefined,
+  timeoutMs = 15_000
+): Promise<string | null> {
+  if (!apiKey) return null;
+
+  const model = new ChatGoogle({
+    model: "gemini-2.5-flash",
+    apiKey,
+    temperature: 0.3
+  });
+
+  const context = buildDashboardContextForGemini(dashboard);
+
+  try {
+    const result = await Promise.race([
+      model.invoke(
+        `You are OnFRA, an onchain financial reputation assistant on Celo (Chainalyse).
+Answer the user's question using ONLY the wallet profile below. Be concise, friendly, and practical.
+Plain text only — no markdown, no asterisks. Use "• " for bullet lists when helpful.
+Keep all numbers exactly as given. If data is insufficient, say what you can infer and suggest a clearer follow-up.
+
+Wallet profile:
+${context}
+
+User question: ${userMessage}`
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Gemini timeout")), timeoutMs)
+      )
+    ]);
+    const text = String((result as { content?: unknown }).content ?? "").trim();
+    return text.length > 0 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 async function maybePolishWithGemini(
   draft: string,
   userMessage: string,
@@ -153,6 +194,18 @@ export async function runChatAgent(
     const cachedAnswer = answerFromCachedDashboard(lastUserQuery, intent, context.cachedDashboard);
     if (cachedAnswer) {
       return { text: cachedAnswer, toolsUsed: [], source: "cache" };
+    }
+
+    if (intent === "general") {
+      onStatus?.("Answering from your profile…");
+      const generalAnswer = await answerGeneralWithGemini(
+        context.cachedDashboard,
+        lastUserQuery,
+        actualApiKey
+      );
+      if (generalAnswer) {
+        return { text: generalAnswer, toolsUsed: [], source: "gemini" };
+      }
     }
   }
 

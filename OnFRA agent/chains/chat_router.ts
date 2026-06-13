@@ -7,8 +7,24 @@ export type QueryIntent =
   | "tokens"
   | "general";
 
+export function isExplainerQuestion(message: string): boolean {
+  const q = message.toLowerCase();
+  if (/\bwhat does\b.*\bmean\b/.test(q)) return true;
+  if (/\b(explain|define|tell me about)\b/.test(q)) return true;
+  if (
+    /\bwhat is\b/.test(q) &&
+    !/\bwhat is my\b/.test(q) &&
+    /\b(financial health|reputation|loan capacity|income stability|risk score|onfra)\b/.test(q)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function classifyQuery(message: string): QueryIntent {
   const q = message.toLowerCase();
+
+  if (isExplainerQuestion(message)) return "general";
 
   if (
     /\b(token|tokens|cusd|celo|usdt|usdc)\b/.test(q) ||
@@ -18,7 +34,9 @@ export function classifyQuery(message: string): QueryIntent {
     return "tokens";
   }
   if (/\b(reputation|trust|trustworthy)\b/.test(q)) return "reputation";
-  if (/\b(income|monthly inflow|earn|earning|salary)\b/.test(q)) return "income";
+  if (/\b(income|monthly inflow|earn|earning|salary|recurring|subscription)\b/.test(q)) {
+    return "income";
+  }
   if (/\b(loan|borrow|borrowing|limit|capacity|afford)\b/.test(q)) return "loan_capacity";
   if (/\b(spending|spend)\b/.test(q) && /\b(discipline|habit|less|reduce|improve)\b/.test(q)) {
     return "financial_health";
@@ -44,6 +62,7 @@ export type CachedDashboard = {
       monthlyEstimateUsd: number;
       weeklyConsistency: number;
       averageInflowUsd: number;
+      recurringSenderPatterns?: boolean;
     };
     loanCapacity: { range: string; confidence: string; minLoanUsd: number; maxLoanUsd: number };
   };
@@ -195,8 +214,30 @@ export function answerFromCachedDashboard(
       }
       return lines.join("\n");
     }
-    case "income":
-      return `${you} estimated monthly income is about $${metrics.incomeProfile.monthlyEstimateUsd.toLocaleString()}, classified as "${metrics.incomeProfile.label}". Average inflow size is $${metrics.incomeProfile.averageInflowUsd.toLocaleString()} with ${metrics.incomeProfile.weeklyConsistency}% weekly consistency.`;
+    case "income": {
+      const { label, monthlyEstimateUsd, averageInflowUsd, weeklyConsistency, recurringSenderPatterns } =
+        metrics.incomeProfile;
+      const asksRecurring = /\b(recurring|subscription|regular|salary-like)\b/i.test(message);
+      if (asksRecurring) {
+        const detected = recurringSenderPatterns === true;
+        const lines = [
+          detected
+            ? "Yes — we detect recurring sender patterns in your inflows (similar amounts repeated several times)."
+            : "No strong recurring payment patterns yet — inflows look irregular rather than salary-like.",
+          "",
+          `Income profile: "${label}" with ~$${monthlyEstimateUsd.toLocaleString()}/month estimated.`,
+          `Weekly consistency: ${weeklyConsistency}%. Average inflow: $${averageInflowUsd.toLocaleString()}.`
+        ];
+        if (!detected) {
+          lines.push(
+            "",
+            "Tip: Steady, similar-sized inflows over 90 days (e.g. payroll) improve income stability and loan capacity."
+          );
+        }
+        return lines.join("\n");
+      }
+      return `${you} estimated monthly income is about $${monthlyEstimateUsd.toLocaleString()}, classified as "${label}". Average inflow size is $${averageInflowUsd.toLocaleString()} with ${weeklyConsistency}% weekly consistency.`;
+    }
     case "reputation":
       return `${you} wallet reputation is ${metrics.reputation.score}/100 (${metrics.reputation.category}). ${metrics.reputation.rationale}`;
     case "risk":
@@ -226,7 +267,24 @@ export function answerFromCachedDashboard(
       }
       return lines.join("\n");
     }
-    case "general":
+    case "general": {
+      const conceptAnswer = answerGeneralConcept(message, dashboard);
+      if (conceptAnswer) return conceptAnswer;
+
+      if (/\b(recurring|subscription|regular payment|standing order|payroll)\b/i.test(message)) {
+        const detected = metrics.incomeProfile.recurringSenderPatterns === true;
+        return [
+          detected
+            ? "Your transaction history shows recurring sender patterns — repeated inflows of similar size."
+            : "I don't see clear recurring payment patterns in your history. Inflows look variable rather than payroll-like.",
+          "",
+          `Profile: "${metrics.incomeProfile.label}", ~$${metrics.incomeProfile.monthlyEstimateUsd.toLocaleString()}/month, ${metrics.incomeProfile.weeklyConsistency}% weekly consistency.`,
+          detected
+            ? "This helps your income stability score."
+            : "Building 90 days of steady, similar inflows would strengthen your financial health."
+        ].join("\n");
+      }
+
       if (/\b(who are you|what are you|onfra|chainalyse|wallet analyst)\b/i.test(message)) {
         return [
           "I'm OnFRA — your OnChain Financial Reputation Agent on Chainalyse.",
@@ -251,7 +309,77 @@ export function answerFromCachedDashboard(
         ].join("\n");
       }
       return null;
+    }
   }
+}
+
+function answerGeneralConcept(message: string, dashboard: CachedDashboard): string | null {
+  if (!isExplainerQuestion(message)) return null;
+
+  const { metrics } = dashboard;
+  const q = message.toLowerCase();
+
+  if (/\bfinancial health\b/.test(q)) {
+    const { score, breakdown } = metrics.financialHealth;
+    const [weakestLabel, weakestScore] = weakestBreakdown(breakdown);
+    return [
+      "Financial health is OnFRA's 0–100 view of how strong your onchain profile looks to lenders.",
+      "",
+      "It blends six signals: income stability, savings buffer, portfolio risk, spending discipline, wallet maturity, and debt risk.",
+      "",
+      `Your score: ${score}/100. Weakest area: ${weakestLabel} (${weakestScore}/100).`,
+      "Ask \"How do I improve my financial health?\" for targeted steps."
+    ].join("\n");
+  }
+
+  if (/\b(reputation|trust)\b/.test(q)) {
+    return [
+      "Reputation reflects how trustworthy and established your wallet appears onchain — based on activity history, ENS, and behavioral signals.",
+      "",
+      `Yours: ${metrics.reputation.score}/100 (${metrics.reputation.category}). ${metrics.reputation.rationale}`
+    ].join("\n");
+  }
+
+  if (/\b(loan capacity|borrowing)\b/.test(q)) {
+    const { range, confidence } = metrics.loanCapacity;
+    return [
+      "Loan capacity is an estimated safe borrowing range derived from your income stability, reputation, and portfolio risk — not a loan offer.",
+      "",
+      `Your estimate: ${range} (${confidence} confidence).`
+    ].join("\n");
+  }
+
+  if (/\b(income stability|income)\b/.test(q)) {
+    const p = metrics.incomeProfile;
+    return [
+      "Income stability measures how regular and predictable your inflows are — lenders prefer salary-like patterns over sporadic transfers.",
+      "",
+      `Yours: "${p.label}", ~$${p.monthlyEstimateUsd.toLocaleString()}/month, ${p.weeklyConsistency}% weekly consistency.`,
+      p.recurringSenderPatterns
+        ? "Recurring sender patterns detected."
+        : "No strong recurring patterns detected yet."
+    ].join("\n");
+  }
+
+  return null;
+}
+
+export function buildDashboardContextForGemini(dashboard: CachedDashboard): string {
+  const { metrics, onfraAssessment, portfolio } = dashboard;
+  const b = metrics.financialHealth.breakdown;
+  return [
+    `Wallet: ${dashboard.ens ?? dashboard.walletAddress}`,
+    `Financial health: ${metrics.financialHealth.score}/100 (income ${b.incomeStability}, savings ${b.savingsDiscipline}, risk ${b.portfolioRisk}, spending ${b.spendingDiscipline}, maturity ${b.walletMaturity})`,
+    `Reputation: ${metrics.reputation.score}/100 (${metrics.reputation.category})`,
+    `Income: "${metrics.incomeProfile.label}", ~$${metrics.incomeProfile.monthlyEstimateUsd}/mo, ${metrics.incomeProfile.weeklyConsistency}% weekly consistency, recurring patterns: ${metrics.incomeProfile.recurringSenderPatterns ? "yes" : "no"}`,
+    `Loan capacity: ${metrics.loanCapacity.range} (${metrics.loanCapacity.confidence})`,
+    `Risk: ${metrics.risk.category} — stable ${metrics.risk.allocation.stablecoin}%, volatile ${metrics.risk.allocation.volatile}%, DeFi ${metrics.risk.allocation.defi}%`,
+    `Portfolio: ~$${portfolio.totalValueUsd.toFixed(2)} (stable $${portfolio.stablecoinBalance.toFixed(2)}, volatile $${portfolio.volatileBalance.toFixed(2)})`,
+    onfraAssessment.strengths.length ? `Strengths: ${onfraAssessment.strengths.join("; ")}` : "",
+    onfraAssessment.watchItems.length ? `Watch items: ${onfraAssessment.watchItems.join("; ")}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export const INTENT_TOOL: Record<Exclude<QueryIntent, "general" | "tokens">, string> = {
