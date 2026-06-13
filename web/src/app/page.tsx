@@ -27,7 +27,7 @@ export default function HomePage() {
     <Design4LandingPage
       authenticated={ready && authenticated}
       address={ready ? address : null}
-      connecting={connectingMiniPay || !ready}
+      connecting={connectingMiniPay}
       storedAnalysisStatus={storedStatus}
       onSignIn={login}
       onDisconnect={() => {

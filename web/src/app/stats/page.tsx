@@ -26,7 +26,7 @@ export default function StatsPage() {
         onTryChat={handleTryChat}
         authenticated={ready && authenticated}
         address={ready ? address : null}
-        connecting={connectingMiniPay || !ready}
+        connecting={connectingMiniPay}
         active="stats"
       />
       <main className="flex flex-1 flex-col pt-24">

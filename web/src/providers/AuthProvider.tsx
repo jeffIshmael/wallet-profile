@@ -102,8 +102,8 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
   const [miniPay, setMiniPay] = useState(false);
   const [miniPayAddress, setMiniPayAddress] = useState<string | null>(null);
   const [connectingMiniPay, setConnectingMiniPay] = useState(false);
-  const [creatingWallet, setCreatingWallet] = useState(false);
   const walletCreationAttempted = useRef(false);
+  const pendingLogin = useRef(false);
 
   useEffect(() => {
     if (!isMiniPay()) return;
@@ -120,22 +120,22 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
   const address = miniPayAddress ?? privyAddress;
 
   useEffect(() => {
-    if (!ready || !authenticated || address || miniPay) {
+    if (!ready || !authenticated || address || miniPay || walletCreationAttempted.current) {
       if (!authenticated) walletCreationAttempted.current = false;
       return;
     }
-    if (walletCreationAttempted.current || creatingWallet) return;
 
     walletCreationAttempted.current = true;
-    setCreatingWallet(true);
-    void createWallet()
-      .catch(() => {
-        walletCreationAttempted.current = false;
-      })
-      .finally(() => {
-        setCreatingWallet(false);
-      });
-  }, [ready, authenticated, address, miniPay, createWallet, creatingWallet]);
+    void createWallet().catch(() => {
+      // Keep the attempt marked so we don't spin in a retry loop on failure.
+    });
+  }, [ready, authenticated, address, miniPay, createWallet]);
+
+  useEffect(() => {
+    if (!ready || !pendingLogin.current) return;
+    pendingLogin.current = false;
+    privyLogin();
+  }, [ready, privyLogin]);
 
   const getEthereumProvider = useCallback(async () => {
     if (miniPayAddress) {
@@ -167,7 +167,10 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
             .finally(() => setConnectingMiniPay(false));
           return;
         }
-        if (!ready) return;
+        if (!ready) {
+          pendingLogin.current = true;
+          return;
+        }
         privyLogin();
       },
       logout: () => {
@@ -176,7 +179,7 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       },
       address,
       miniPay,
-      connectingMiniPay: connectingMiniPay || creatingWallet,
+      connectingMiniPay,
       getEthereumProvider
     }),
     [
@@ -188,7 +191,6 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       miniPay,
       miniPayAddress,
       connectingMiniPay,
-      creatingWallet,
       getEthereumProvider
     ]
   );

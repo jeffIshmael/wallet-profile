@@ -37,8 +37,6 @@ export function HeroSection({
   connecting,
   storedAnalysisStatus = "unknown"
 }: HeroSectionProps) {
-  const ctaLoading =
-    connecting || (authenticated && Boolean(address) && storedAnalysisStatus === "unknown");
   const hasStoredAnalysis = storedAnalysisStatus === "yes";
 
   function handleCta() {
@@ -50,7 +48,6 @@ export function HeroSection({
   }
 
   function ctaLabel() {
-    if (ctaLoading) return "Loading...";
     if (!authenticated || !address) return "Sign in";
     if (hasStoredAnalysis) return "Go to Dashboard";
     return "Analyse My Wallet";
@@ -101,11 +98,10 @@ export function HeroSection({
             <button
               type="button"
               onClick={handleCta}
-              disabled={ctaLoading}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105 disabled:cursor-wait disabled:opacity-70"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105"
             >
               <span>{ctaLabel()}</span>
-              {!ctaLoading && <ArrowRight size={14} />}
+              <ArrowRight size={14} />
             </button>
             <a
               href="/chat"

@@ -26,7 +26,7 @@ export default function VerifyPage() {
         onTryChat={handleTryChat}
         authenticated={ready && authenticated}
         address={ready ? address : null}
-        connecting={connectingMiniPay || !ready}
+        connecting={connectingMiniPay}
         active="verify"
       />
       <main className="flex flex-1 flex-col pt-24">

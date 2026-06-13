@@ -68,14 +68,14 @@ export function AgentChatPage() {
         }}
         authenticated={ready && authenticated}
         address={ready ? address : null}
-        connecting={connectingMiniPay || !ready}
+        connecting={connectingMiniPay}
       />
       <main className="pt-20">
         <AgentChatPreviewClaude
           authenticated={ready && authenticated}
           onAskAgent={handleAskAgent}
           onSignIn={login}
-          connecting={connectingMiniPay || !ready}
+          connecting={connectingMiniPay}
         />
       </main>
       <FooterSection />
