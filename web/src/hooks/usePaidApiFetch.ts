@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { formatWalletTxError } from "@/lib/privy/formatWalletTxError";
 import { createPaidFetch } from "@/lib/x402/createPaidFetch";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -25,11 +26,19 @@ export function usePaidApiFetch(): PaidFetchFn {
 
       const walletKey = address.toLowerCase();
       if (!paidFetchRef.current || walletKeyRef.current !== walletKey) {
-        paidFetchRef.current = await createPaidFetch(getEthereumProvider);
-        walletKeyRef.current = walletKey;
+        try {
+          paidFetchRef.current = await createPaidFetch(getEthereumProvider);
+          walletKeyRef.current = walletKey;
+        } catch (error) {
+          throw new Error(formatWalletTxError(error));
+        }
       }
 
-      return paidFetchRef.current(input as RequestInfo, init);
+      try {
+        return await paidFetchRef.current(input as RequestInfo, init);
+      } catch (error) {
+        throw new Error(formatWalletTxError(error));
+      }
     },
     [address, authenticated, getEthereumProvider]
   );

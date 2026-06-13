@@ -11,11 +11,9 @@ import {
   type AgentFeedbackTagId
 } from "@/lib/blockchain/erc8004Feedback";
 import { formatWalletTxError } from "@/lib/privy/formatWalletTxError";
+import { SMART_WALLET_NOT_READY } from "@/lib/privy/sponsoredProvider";
 import { waitForTxReceipt } from "@/lib/privy/waitForTxReceipt";
 import { useAuth } from "@/providers/AuthProvider";
-
-const SMART_WALLET_NOT_READY =
-  "Smart wallet is still initializing. Wait a few seconds and try again. If this persists, enable smart wallets and a Celo paymaster in the Privy Dashboard.";
 
 export function useSubmitAgentFeedback(address: string | null) {
   const { getEthereumProvider, miniPay } = useAuth();

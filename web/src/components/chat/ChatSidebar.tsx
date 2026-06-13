@@ -15,6 +15,7 @@ import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { copyWithToast } from "@/lib/copyToClipboard";
 import { formatMessageTime } from "@/lib/formatMessageTime";
+import { formatWalletTxError } from "@/lib/privy/formatWalletTxError";
 
 type ChatMessage = { role: "user" | "ai"; text: string; isError?: boolean; createdAt?: string };
 
@@ -251,7 +252,7 @@ export function ChatSidebar({
         ...current,
         {
           role: "ai",
-          text: "Network error while contacting Chainalyse AI.",
+          text: formatWalletTxError(err),
           isError: true,
           createdAt: messageTimestamp()
         }

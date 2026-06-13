@@ -2,6 +2,7 @@
 
 import { Loader2, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AGENT_FEEDBACK_TAG_OPTIONS, type AgentFeedbackTagId } from "@/lib/blockchain/erc8004Feedback";
 
 type AgentRatingModalProps = {
@@ -31,6 +32,9 @@ export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalPr
       await onSubmit(selected);
       setSelected([]);
       onClose();
+      toast.success("Feedback submitted onchain", {
+        description: "Thanks — your rating helps others discover OnFRA."
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit rating.");
     } finally {

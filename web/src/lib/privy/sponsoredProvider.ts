@@ -1,16 +1,5 @@
-import type { UnsignedTransactionRequest } from "@privy-io/react-auth";
-import type { EIP1193Provider } from "viem";
-import { CHAIN_ID } from "@/lib/blockchain/constants";
-import { shouldUsePrivyGasSponsorship } from "@/lib/privy/formatWalletTxError";
-
-type SendTransactionFn = (
-  input: UnsignedTransactionRequest,
-  options?: {
-    sponsor?: boolean;
-    address?: string;
-    uiOptions?: { showWalletUIs?: boolean };
-  }
-) => Promise<{ hash: string }>;
+import type { SmartWalletClientType } from "@privy-io/react-auth/smart-wallets";
+import type { EIP1193Provider, Hex } from "viem";
 
 type TxParams = {
   from?: string;
@@ -26,48 +15,40 @@ type TxParams = {
   type?: string | number;
 };
 
-function parseChainId(chainId: string | number | undefined): number {
-  if (typeof chainId === "number") return chainId;
-  if (typeof chainId === "string") {
-    return parseInt(chainId, chainId.startsWith("0x") ? 16 : 10);
-  }
-  return CHAIN_ID;
-}
-
-function toUnsignedTransactionRequest(params: TxParams): UnsignedTransactionRequest {
-  return {
-    from: params.from,
-    to: params.to,
-    data: params.data,
-    value: params.value,
-    gasLimit: params.gas ?? params.gasLimit,
-    gasPrice: params.gasPrice,
-    maxFeePerGas: params.maxFeePerGas,
-    maxPriorityFeePerGas: params.maxPriorityFeePerGas,
-    chainId: parseChainId(params.chainId),
-    type: typeof params.type === "string" ? parseInt(params.type, 10) : params.type
-  };
-}
-
 type ProviderRequestArgs = {
   method: string;
   params?: readonly unknown[];
 };
 
-/** Route embedded-wallet sends through Privy with gas sponsorship enabled. */
-export function createSponsoredProvider(
+export const SMART_WALLET_NOT_READY =
+  "Smart wallet is still initializing. Wait a few seconds and try again. If this persists, enable smart wallets and a Celo paymaster in the Privy Dashboard.";
+
+/** Route embedded-wallet sends through the Privy smart wallet (sponsored gas). */
+export function createPrivyEmbeddedProvider(
   baseProvider: EIP1193Provider,
-  sendTransaction: SendTransactionFn,
-  walletAddress: string
+  smartWalletClient: SmartWalletClientType | undefined
 ): EIP1193Provider {
   const request = (async (args: ProviderRequestArgs) => {
     if (args.method === "eth_sendTransaction") {
+      if (!smartWalletClient) {
+        throw new Error(SMART_WALLET_NOT_READY);
+      }
+
       const params = (args.params?.[0] ?? {}) as TxParams;
-      const { hash } = await sendTransaction(toUnsignedTransactionRequest(params), {
-        sponsor: shouldUsePrivyGasSponsorship(),
-        address: walletAddress,
-        uiOptions: { showWalletUIs: false }
-      });
+      if (!params.to) {
+        throw new Error("Transaction is missing a recipient address.");
+      }
+
+      const hash = await smartWalletClient.sendTransaction(
+        {
+          to: params.to as Hex,
+          data: (params.data as Hex | undefined) ?? "0x",
+          value: params.value ? BigInt(params.value) : 0n,
+          type: "legacy"
+        },
+        { uiOptions: { showWalletUIs: false } }
+      );
+
       return hash;
     }
 

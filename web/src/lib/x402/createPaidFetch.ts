@@ -1,6 +1,7 @@
 "use client";
 
 import type { EIP1193Provider } from "viem";
+import { formatWalletTxError } from "@/lib/privy/formatWalletTxError";
 
 type PaidFetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -18,22 +19,26 @@ export async function createPaidFetch(
     throw new Error("Connect your wallet before making a paid request.");
   }
 
-  const [{ createThirdwebClient }, { celo }, { wrapFetchWithPayment }, { EIP1193 }] =
-    await Promise.all([
-      import("thirdweb"),
-      import("thirdweb/chains"),
-      import("thirdweb/x402"),
-      import("thirdweb/wallets")
-    ]);
-
-  const client = createThirdwebClient({ clientId });
-  const wallet = EIP1193.fromProvider({ provider });
-
   try {
-    await wallet.autoConnect({ client, chain: celo });
-  } catch {
-    await wallet.connect({ client, chain: celo });
-  }
+    const [{ createThirdwebClient }, { celo }, { wrapFetchWithPayment }, { EIP1193 }] =
+      await Promise.all([
+        import("thirdweb"),
+        import("thirdweb/chains"),
+        import("thirdweb/x402"),
+        import("thirdweb/wallets")
+      ]);
 
-  return wrapFetchWithPayment(fetch, client, wallet) as PaidFetchFn;
+    const client = createThirdwebClient({ clientId });
+    const wallet = EIP1193.fromProvider({ provider });
+
+    try {
+      await wallet.autoConnect({ client, chain: celo });
+    } catch {
+      await wallet.connect({ client, chain: celo });
+    }
+
+    return wrapFetchWithPayment(fetch, client, wallet) as PaidFetchFn;
+  } catch (error) {
+    throw new Error(formatWalletTxError(error));
+  }
 }
