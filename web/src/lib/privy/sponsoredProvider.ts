@@ -48,13 +48,18 @@ function toUnsignedTransactionRequest(params: TxParams): UnsignedTransactionRequ
   };
 }
 
+type ProviderRequestArgs = {
+  method: string;
+  params?: readonly unknown[];
+};
+
 /** Route embedded-wallet sends through Privy with gas sponsorship enabled. */
 export function createSponsoredProvider(
   baseProvider: EIP1193Provider,
   sendTransaction: SendTransactionFn,
   walletAddress: string
 ): EIP1193Provider {
-  const request: EIP1193Provider["request"] = async (args) => {
+  const request = (async (args: ProviderRequestArgs) => {
     if (args.method === "eth_sendTransaction") {
       const params = (args.params?.[0] ?? {}) as TxParams;
       const { hash } = await sendTransaction(toUnsignedTransactionRequest(params), {
@@ -62,11 +67,11 @@ export function createSponsoredProvider(
         address: walletAddress,
         uiOptions: { showWalletUIs: false }
       });
-      return hash as `0x${string}`;
+      return hash;
     }
 
-    return baseProvider.request(args);
-  };
+    return baseProvider.request(args as Parameters<EIP1193Provider["request"]>[0]);
+  }) as EIP1193Provider["request"];
 
   return {
     ...baseProvider,
