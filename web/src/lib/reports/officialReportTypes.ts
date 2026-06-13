@@ -12,6 +12,7 @@ export type OfficialReportInput = {
   walletAddress: string;
   ens: string | null;
   walletAgeMonths: number;
+  walletAgeDays?: number;
   totalTransactions: number;
   portfolio: WalletData["portfolio"];
   tokens: WalletData["tokens"];

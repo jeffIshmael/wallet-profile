@@ -3,7 +3,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { 
   getWalletBalances, 
-  getWalletAgeMonths, 
+  getWalletAge, 
   getWalletTransactions, 
   getWalletFirstAndLastTransactions,
   getEnsName, 
@@ -16,6 +16,7 @@ export interface OnchainData {
   walletAddress: string;
   ens: string | null;
   walletAgeMonths: number;
+  walletAgeDays: number;
   firstTransaction: TransactionDetails | null;
   lastTransaction: TransactionDetails | null;
   stablecoinBalance: number;
@@ -41,6 +42,7 @@ export const fetchOnchainData = tool(
         walletAddress,
         ens: warmed.ens ?? null,
         walletAgeMonths: warmed.walletAgeMonths,
+        walletAgeDays: warmed.walletAgeDays ?? 0,
         firstTransaction: warmed.firstTransaction ?? null,
         lastTransaction: warmed.lastTransaction ?? null,
         stablecoinBalance: warmed.stablecoinBalance,
@@ -56,14 +58,14 @@ export const fetchOnchainData = tool(
     console.log("Fetching onchain data for wallet address:", address);
 
     // Fetch ENS, Wallet Age, Balances, and NFT Exposure in parallel!
-    const [ens, walletAgeMonths, balances, nft] = await Promise.all([
+    const [ens, walletAge, balances, nft] = await Promise.all([
       getEnsName(address),
-      getWalletAgeMonths(address),
+      getWalletAge(address),
       getWalletBalances(address),
       getNftExposure(address)
     ]);
     console.log("ENS:", ens);
-    console.log("Wallet Age:", walletAgeMonths);
+    console.log("Wallet Age:", walletAge.months, "months,", walletAge.days, "days");
     console.log("Balances:", balances);
     console.log("NFT:", nft);
 
@@ -92,7 +94,8 @@ export const fetchOnchainData = tool(
     const data: OnchainData = {
       walletAddress,
       ens,
-      walletAgeMonths,
+      walletAgeMonths: walletAge.months,
+      walletAgeDays: walletAge.days,
       firstTransaction,
       lastTransaction,
       stablecoinBalance: balances.stablecoinBalance,

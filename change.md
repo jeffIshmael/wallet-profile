@@ -1,5 +1,3 @@
 This file has the details of the and things that need to be fixed at least now:-
-1. A loading state when fetching the previous chats
-2. Clicking the text on the chat section should copy the message
-3. On web, let th euser be able to adjust the width of the chat agent window once its open. But let the default be the least width.
-4. See how in the shared image the wallet address is going past the div, fix that.
+1. The stablecois on celo changes cKES was changed to KESm so make sure the previous stablecoins that were starting with the c was removed and they end with m.
+2. How we show the wallet age: it shows 0 months, at leas let it count to days and if its clearly 0 let it show new.

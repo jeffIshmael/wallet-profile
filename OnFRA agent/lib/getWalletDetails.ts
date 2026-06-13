@@ -36,9 +36,9 @@ export interface StablecoinInfo {
 }
 
 export const STABLECOINS: Record<string, StablecoinInfo> = {
-  "0x765de816845861e75a25fca122bb6898b8b1282a": { symbol: "cUSD", name: "Mento Dollar", address: "0x765de816845861e75a25fca122bb6898b8b1282a", decimals: 18, usdRate: 1.0 },
-  "0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73": { symbol: "cEUR", name: "Mento Euro", address: "0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73", decimals: 18, usdRate: 1.08 },
-  "0xe8537a3d056da446677b9e9d6c5db704eaab4787": { symbol: "cREAL", name: "Mento Brazilian Real", address: "0xe8537a3d056da446677b9e9d6c5db704eaab4787", decimals: 18, usdRate: 0.18 },
+  "0x765de816845861e75a25fca122bb6898b8b1282a": { symbol: "USDm", name: "Mento Dollar", address: "0x765de816845861e75a25fca122bb6898b8b1282a", decimals: 18, usdRate: 1.0 },
+  "0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73": { symbol: "EURm", name: "Mento Euro", address: "0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73", decimals: 18, usdRate: 1.08 },
+  "0xe8537a3d056da446677b9e9d6c5db704eaab4787": { symbol: "BRLm", name: "Mento Brazilian Real", address: "0xe8537a3d056da446677b9e9d6c5db704eaab4787", decimals: 18, usdRate: 0.18 },
   "0x73f93dcc49cb8a239e2032663e9475dd5ef29a08": { symbol: "XOFm", name: "Mento West African CFA Franc", address: "0x73f93dcc49cb8a239e2032663e9475dd5ef29a08", decimals: 18, usdRate: 0.0016 },
   "0x456a3d042c0dbd3db53d5489e98dfb038553b0d0": { symbol: "KESm", name: "Mento Kenyan Shilling", address: "0x456a3d042c0dbd3db53d5489e98dfb038553b0d0", decimals: 18, usdRate: 0.0076 },
   "0x105d4a9306d2e55a71d2eb95b81553ae1dc20d7b": { symbol: "PHPm", name: "Mento Philippine Peso", address: "0x105d4a9306d2e55a71d2eb95b81553ae1dc20d7b", decimals: 18, usdRate: 0.017 },
@@ -64,6 +64,17 @@ export const STABLECOINS: Record<string, StablecoinInfo> = {
   "0xc92e8fc2947e32f2b574cca9f2f12097a71d5606": { symbol: "COPM", name: "Minteo Colombian Peso", address: "0xc92e8fc2947e32f2b574cca9f2f12097a71d5606", decimals: 18, usdRate: 0.00025 },
   "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a": { symbol: "G$", name: "GoodDollar", address: "0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a", decimals: 18, usdRate: 0.0001 }
 };
+
+const LEGACY_MENTO_SYMBOLS: Record<string, string> = {
+  CUSD: "USDm",
+  CEUR: "EURm",
+  CREAL: "BRLm",
+  CKES: "KESm"
+};
+
+function normalizeMentoSymbol(symbol: string): string {
+  return LEGACY_MENTO_SYMBOLS[symbol.toUpperCase()] ?? symbol;
+}
 
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 const CELO_PRICE_TTL_MS = 5 * 60 * 1000;
@@ -215,19 +226,25 @@ export async function getEnsName(address: string): Promise<string | null> {
   return null;
 }
 
-export async function getWalletAgeMonths(address: string): Promise<number> {
+export async function getWalletAge(address: string): Promise<{ months: number; days: number }> {
   try {
     const res = await fetch(`https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=asc&page=1&offset=1`);
     const json: any = await res.json();
     if (json && json.status === "1" && json.result && json.result.length > 0) {
       const timeStamp = parseInt(json.result[0].timeStamp);
       const ageMs = Date.now() - timeStamp * 1000;
-      return Math.max(0, Math.floor(ageMs / (1000 * 60 * 60 * 24 * 30.4368))); // average month length
+      const days = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60 * 24)));
+      const months = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60 * 24 * 30.4368)));
+      return { months, days };
     }
   } catch (e) {
     console.warn("Failed to get wallet age from Blockscout:", e);
   }
-  return 0;
+  return { months: 0, days: 0 };
+}
+
+export async function getWalletAgeMonths(address: string): Promise<number> {
+  return (await getWalletAge(address)).months;
 }
 
 async function fetchWalletBalancesUncached(address: string) {
@@ -253,7 +270,7 @@ async function fetchWalletBalancesUncached(address: string) {
       for (const tx of json.result) {
         if (tx.contractAddress && tx.tokenSymbol) {
           const addr = tx.contractAddress.toLowerCase();
-          const symbol = tx.tokenSymbol;
+          const symbol = normalizeMentoSymbol(tx.tokenSymbol);
           const name = tx.tokenName || symbol;
           const decimals = parseInt(tx.tokenDecimal || "18");
           discoveredTokens.set(addr, { symbol, name, decimals });
@@ -412,7 +429,7 @@ async function fetchWalletBalancesUncached(address: string) {
 
         tokenList.push({
           address: addr,
-          symbol: info.symbol,
+          symbol: normalizeMentoSymbol(info.symbol),
           name: info.name,
           balance,
           usdValue,
@@ -788,9 +805,9 @@ export function invalidateWalletOnchainCache(address: string): void {
 export async function warmWalletDataCache(address: string, months: number = 12) {
   const normalized = address.toLowerCase();
   const balances = await getWalletBalances(normalized);
-  const [ens, walletAgeMonths, nft, txBounds, transactions] = await Promise.all([
+  const [ens, walletAge, nft, txBounds, transactions] = await Promise.all([
     getEnsName(normalized),
-    getWalletAgeMonths(normalized),
+    getWalletAge(normalized),
     getNftExposure(normalized),
     getWalletFirstAndLastTransactions(normalized, balances.celoPrice),
     getWalletTransactions(normalized, balances.celoPrice, months)
@@ -811,7 +828,8 @@ export async function warmWalletDataCache(address: string, months: number = 12) 
   fullOnchainDataCache.set(normalized, {
     walletAddress: normalized,
     ens,
-    walletAgeMonths,
+    walletAgeMonths: walletAge.months,
+    walletAgeDays: walletAge.days,
     firstTransaction: txBounds.firstTransaction,
     lastTransaction: txBounds.lastTransaction,
     stablecoinBalance: balances.stablecoinBalance,

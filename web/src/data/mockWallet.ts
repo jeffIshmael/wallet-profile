@@ -2,6 +2,7 @@ export const mockWallet = {
   walletAddress: "0x4821ced48fb4456055c86e42587f61c1f39c6315",
   ens: null,
   walletAgeMonths: 28,
+  walletAgeDays: 850,
   celoPrice: 0.06087,
   totalTransactions: 312,
   portfolio: {

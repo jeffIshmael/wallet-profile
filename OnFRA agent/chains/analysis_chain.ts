@@ -65,6 +65,7 @@ export async function runAnalysisChain(
     walletAddress: string;
     ens: string | null;
     walletAgeMonths?: number;
+    walletAgeDays?: number;
     firstTransaction?: unknown;
     lastTransaction?: unknown;
     stablecoinBalance?: number;
@@ -84,6 +85,7 @@ export async function runAnalysisChain(
       walletAddress,
       ens: warmed.ens ?? null,
       walletAgeMonths: warmed.walletAgeMonths,
+      walletAgeDays: warmed.walletAgeDays ?? 0,
       firstTransaction: warmed.firstTransaction ?? null,
       lastTransaction: warmed.lastTransaction ?? null,
       stablecoinBalance: warmed.stablecoinBalance,

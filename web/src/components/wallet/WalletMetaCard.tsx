@@ -8,7 +8,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { WalletIdentityAvatar } from "@/components/wallet/WalletIdentityAvatar";
 import { useWalletData } from "@/hooks/useWalletData";
 import { copyWithToast } from "@/lib/copyToClipboard";
-import { formatTokenBalance, formatUtc, formatWalletAge, truncateAddress } from "@/lib/format";
+import { formatTokenBalance, formatUtc, formatWalletAge, formatWalletAgeSummary, truncateAddress } from "@/lib/format";
 
 function daysSince(timestamp: string) {
   const diff = Date.now() - new Date(timestamp).getTime();
@@ -47,7 +47,7 @@ export function WalletMetaCard() {
     { label: "ENS Name on Celo", value: walletData.ens, isEns: true, valueClass: "wallet-value-muted" },
     {
       label: "Wallet Age",
-      value: formatWalletAge(walletData.walletAgeMonths),
+      value: formatWalletAge(walletData.walletAgeMonths, walletData.walletAgeDays),
       valueClass: "wallet-value-age"
     }
   ];
@@ -80,7 +80,7 @@ export function WalletMetaCard() {
   }));
   const balanceSlots = [...balances, null, null].slice(0, 6);
 
-  const yearsActive = (walletData.walletAgeMonths / 12).toFixed(1);
+  const activeDuration = formatWalletAgeSummary(walletData.walletAgeMonths, walletData.walletAgeDays);
 
   return (
     <Card compact className="h-full !py-3">
@@ -98,8 +98,14 @@ export function WalletMetaCard() {
               }}
             />
             <p className="mt-1 text-[11px] leading-4">
-              <span className="text-stardust">Active for </span>
-              <span className="font-semibold text-btc-orange">{yearsActive} years</span>
+              {walletData.walletAgeMonths <= 0 && walletData.walletAgeDays <= 0 ? (
+                <span className="font-semibold text-btc-orange">New wallet</span>
+              ) : (
+                <>
+                  <span className="text-stardust">Active for </span>
+                  <span className="font-semibold text-btc-orange">{activeDuration}</span>
+                </>
+              )}
               <span className="text-stardust"> · </span>
               <span className="wallet-value-body font-semibold">{walletData.totalTransactions} transactions</span>
             </p>

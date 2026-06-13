@@ -4,6 +4,7 @@ export type WalletData = {
   walletAddress: string;
   ens: string | null;
   walletAgeMonths: number;
+  walletAgeDays: number;
   celoPrice: number;
   totalTransactions: number;
   portfolio: {

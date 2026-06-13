@@ -7,7 +7,8 @@ export async function GET(_req: Request, context: RouteContext) {
   const result = await verifyReportCode(reportId);
 
   if (!result.valid) {
-    return Response.json({ valid: false, reportId }, { status: 404 });
+    const status = result.reason === "invalid_format" ? 400 : 404;
+    return Response.json({ valid: false, reason: result.reason ?? "not_found" }, { status });
   }
 
   return Response.json({
@@ -20,6 +21,7 @@ export async function GET(_req: Request, context: RouteContext) {
     loanCapacity: result.loanCapacity,
     reportHash: result.reportHash,
     publishedAt: result.publishedAt,
-    source: result.source
+    source: result.source,
+    contractAddress: result.contractAddress
   });
 }

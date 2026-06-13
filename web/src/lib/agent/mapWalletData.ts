@@ -41,6 +41,7 @@ type DashboardBundle = {
   };
   rawData: {
     walletAgeMonths?: number;
+    walletAgeDays?: number;
     stablecoinBalance?: number;
     volatileBalance?: number;
     defiExposure?: number;
@@ -68,13 +69,13 @@ const INCOME_LABELS = new Set<IncomeAnimalKey>([
 
 function normalizeSymbol(symbol: string) {
   const map: Record<string, string> = {
-    cUSD: "USDm",
     CUSD: "USDm",
-    cEUR: "EURm",
-    cREAL: "BRLm",
+    CEUR: "EURm",
+    CREAL: "BRLm",
+    CKES: "KESm",
     USDM: "USDm"
   };
-  return map[symbol] ?? symbol;
+  return map[symbol.toUpperCase()] ?? symbol;
 }
 
 function mergeTokens(tokens: WalletData["tokens"]) {
@@ -275,6 +276,7 @@ export function mapBundleToWalletData(bundle: DashboardBundle): WalletData {
     walletAddress: analysis.walletAddress,
     ens: analysis.ens,
     walletAgeMonths: Number(rawData.walletAgeMonths ?? 0),
+    walletAgeDays: Number(rawData.walletAgeDays ?? 0),
     celoPrice: bundle.celoPrice,
     totalTransactions: bundle.totalTransactions,
     portfolio: {

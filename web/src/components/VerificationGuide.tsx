@@ -11,13 +11,13 @@ const REGION = {
   /** Grey metadata box — Verification Code row. */
   highlight: { top: 25.3, left: 3.5, width: 93, height: 1.35 },
   /** Point the lens zooms into — the "Verification Code:" text. */
-  focus: { x: 21.5, y: 26.5 },
-  lensSize: { width: 380, height: 60 },
+  focus: { x: 21.5, y: 26.8 },
+  lensSize: { width: 380, height: 47 },
   zoom: { bgScale: 3.7 }
 } as const;
 
 const CAPTION =
-  "In the grey box below the title — the line labelled Verification Code (e.g. REP-SAMPLE-000001).";
+  "In the grey box below the title — the line labelled Verification Code (e.g. REP-SAMPLE0001).";
 
 function HighlightBox() {
   const { highlight } = REGION;

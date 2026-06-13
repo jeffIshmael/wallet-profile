@@ -41,7 +41,13 @@ export function daysSince(timestamp: string) {
   return months === 1 ? "1 month ago" : `${months} months ago`;
 }
 
-export function formatWalletAge(months: number) {
+export function formatWalletAge(months: number, days?: number) {
+  if (months <= 0) {
+    const ageDays = days ?? 0;
+    if (ageDays <= 0) return "New";
+    return ageDays === 1 ? "1 Day" : `${ageDays} Days`;
+  }
+
   const years = Math.floor(months / 12);
   const remainingMonths = months % 12;
 
@@ -54,6 +60,12 @@ export function formatWalletAge(months: number) {
 
   const monthLabel = remainingMonths === 1 ? "1 Month" : `${remainingMonths} Months`;
   return `${yearLabel} ${monthLabel}`;
+}
+
+export function formatWalletAgeSummary(months: number, days?: number) {
+  if (months <= 0 && (days === undefined || days <= 0)) return "New";
+  if (months >= 12) return `${(months / 12).toFixed(1)} years`;
+  return formatWalletAge(months, days).toLowerCase();
 }
 
 export function formatLocalDateTime(timestamp: string) {

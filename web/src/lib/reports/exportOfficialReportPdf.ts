@@ -115,7 +115,7 @@ function drawReportHeader(
   }
   doc.text(`Report Generated: ${formatLedgerDateTime(input.generatedAt)}`, margin, y);
   y += 5;
-  doc.text(`Wallet Age: ${formatWalletAge(input.walletAgeMonths)} · Total Transactions: ${input.totalTransactions.toLocaleString()}`, margin, y);
+  doc.text(`Wallet Age: ${formatWalletAge(input.walletAgeMonths, input.walletAgeDays)} · Total Transactions: ${input.totalTransactions.toLocaleString()}`, margin, y);
 
   return y + 10;
 }
