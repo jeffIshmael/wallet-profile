@@ -32,12 +32,7 @@ export function AgentRatingModal({ open, onClose, onSubmit }: AgentRatingModalPr
       setSelected([]);
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not submit rating.";
-      if (message.includes("User rejected") || message.includes("rejected the request")) {
-        setError("Transaction cancelled.");
-      } else {
-        setError(message);
-      }
+      setError(err instanceof Error ? err.message : "Could not submit rating.");
     } finally {
       setSubmitting(false);
     }

@@ -2,6 +2,7 @@ import {
   createPublicClient,
   createWalletClient,
   custom,
+  encodeFunctionData,
   http,
   keccak256,
   toBytes,
@@ -57,21 +58,16 @@ function buildFeedbackPayload(
   };
 }
 
-export async function submitErc8004Feedback(
-  provider: EIP1193Provider,
-  reviewerAddress: `0x${string}`,
-  tags: AgentFeedbackTagId[]
-): Promise<{ hash: `0x${string}`; score: number }> {
-  const score = scoreFromTags(tags);
+export type GiveFeedbackCall = {
+  to: `0x${string}`;
+  data: `0x${string}`;
+  score: number;
+};
 
+export async function assertCanSubmitFeedback(reviewerAddress: `0x${string}`): Promise<void> {
   const publicClient = createPublicClient({
     chain: celo,
     transport: http()
-  });
-
-  const walletClient = createWalletClient({
-    chain: celo,
-    transport: custom(provider)
   });
 
   const agentOwner = await publicClient.readContract({
@@ -84,7 +80,15 @@ export async function submitErc8004Feedback(
   if (agentOwner.toLowerCase() === reviewerAddress.toLowerCase()) {
     throw new Error("Agent owners cannot submit feedback for their own agent.");
   }
+}
 
+export async function buildGiveFeedbackCall(
+  reviewerAddress: `0x${string}`,
+  tags: AgentFeedbackTagId[]
+): Promise<GiveFeedbackCall> {
+  await assertCanSubmitFeedback(reviewerAddress);
+
+  const score = scoreFromTags(tags);
   const feedbackJson = JSON.stringify(
     buildFeedbackPayload(ERC8004_AGENT_ID, score, reviewerAddress, tags),
     null,
@@ -94,9 +98,7 @@ export async function submitErc8004Feedback(
   const feedbackHash = keccak256(toBytes(feedbackJson));
   const endpoint = `${getAppBaseUrl()}/api/agent/chat`;
 
-  const hash = await walletClient.writeContract({
-    account: reviewerAddress,
-    address: ERC8004_REPUTATION_REGISTRY,
+  const data = encodeFunctionData({
     abi: reputationRegistryAbi,
     functionName: "giveFeedback",
     args: [
@@ -109,6 +111,36 @@ export async function submitErc8004Feedback(
       feedbackURI,
       feedbackHash
     ]
+  });
+
+  return {
+    to: ERC8004_REPUTATION_REGISTRY,
+    data,
+    score
+  };
+}
+
+export async function submitErc8004Feedback(
+  provider: EIP1193Provider,
+  reviewerAddress: `0x${string}`,
+  tags: AgentFeedbackTagId[]
+): Promise<{ hash: `0x${string}`; score: number }> {
+  const { to, data, score } = await buildGiveFeedbackCall(reviewerAddress, tags);
+
+  const publicClient = createPublicClient({
+    chain: celo,
+    transport: http()
+  });
+
+  const walletClient = createWalletClient({
+    chain: celo,
+    transport: custom(provider)
+  });
+
+  const hash = await walletClient.sendTransaction({
+    account: reviewerAddress,
+    to,
+    data
   });
 
   await publicClient.waitForTransactionReceipt({ hash });

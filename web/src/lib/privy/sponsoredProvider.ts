@@ -1,6 +1,7 @@
 import type { UnsignedTransactionRequest } from "@privy-io/react-auth";
 import type { EIP1193Provider } from "viem";
 import { CHAIN_ID } from "@/lib/blockchain/constants";
+import { shouldUsePrivyGasSponsorship } from "@/lib/privy/formatWalletTxError";
 
 type SendTransactionFn = (
   input: UnsignedTransactionRequest,
@@ -63,7 +64,7 @@ export function createSponsoredProvider(
     if (args.method === "eth_sendTransaction") {
       const params = (args.params?.[0] ?? {}) as TxParams;
       const { hash } = await sendTransaction(toUnsignedTransactionRequest(params), {
-        sponsor: true,
+        sponsor: shouldUsePrivyGasSponsorship(),
         address: walletAddress,
         uiOptions: { showWalletUIs: false }
       });
