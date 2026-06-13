@@ -54,21 +54,23 @@ export function createSponsoredProvider(
   sendTransaction: SendTransactionFn,
   walletAddress: string
 ): EIP1193Provider {
+  const request: EIP1193Provider["request"] = async (args) => {
+    if (args.method === "eth_sendTransaction") {
+      const params = (args.params?.[0] ?? {}) as TxParams;
+      const { hash } = await sendTransaction(toUnsignedTransactionRequest(params), {
+        sponsor: true,
+        address: walletAddress,
+        uiOptions: { showWalletUIs: false }
+      });
+      return hash as `0x${string}`;
+    }
+
+    return baseProvider.request(args);
+  };
+
   return {
     ...baseProvider,
-    request: async (args) => {
-      if (args.method === "eth_sendTransaction") {
-        const params = (args.params?.[0] ?? {}) as TxParams;
-        const { hash } = await sendTransaction(toUnsignedTransactionRequest(params), {
-          sponsor: true,
-          address: walletAddress,
-          uiOptions: { showWalletUIs: false }
-        });
-        return hash;
-      }
-
-      return baseProvider.request(args);
-    },
+    request,
     on: baseProvider.on?.bind(baseProvider),
     removeListener: baseProvider.removeListener?.bind(baseProvider)
   };
