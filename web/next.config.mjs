@@ -2,16 +2,23 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const monorepoRoot = path.join(__dirname, "..");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    outputFileTracingRoot: __dirname,
+    // Workspace deps (e.g. @prisma/client) are hoisted to the repo root.
+    outputFileTracingRoot: monorepoRoot,
     outputFileTracingIncludes: {
-      "/api/agent/analyze": ["./src/lib/agent/onfra-dist/**/*"],
-      "/api/agent/report": ["./src/lib/agent/onfra-dist/**/*"],
-      "/api/agent/chat": ["./src/lib/agent/onfra-dist/**/*"]
+      "/api/agent/analyze": ["./web/src/lib/agent/onfra-dist/**/*"],
+      "/api/agent/report": ["./web/src/lib/agent/onfra-dist/**/*"],
+      "/api/agent/chat": ["./web/src/lib/agent/onfra-dist/**/*"],
+      "/api/**/*": [
+        "./web/generated/prisma/**/*",
+        "./node_modules/@prisma/client/**/*",
+        "./node_modules/@prisma/adapter-pg/**/*"
+      ]
     },
     serverComponentsExternalPackages: [
       "@langchain/core",
