@@ -38,6 +38,10 @@ export function formatWalletTxError(error: unknown): string {
     return INSUFFICIENT_GAS_FUNDS;
   }
 
+  if (combined.includes("timed out while waiting for transaction")) {
+    return "Transaction is taking too long to confirm. Check Celoscan for status, or try again.";
+  }
+
   if (message.includes("ContractFunctionExecutionError")) {
     const detailMatch = /Details:\s*([^]+?)(?:\n\nVersion:|$)/.exec(message);
     if (detailMatch?.[1]) return detailMatch[1].trim();

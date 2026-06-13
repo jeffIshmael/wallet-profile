@@ -8,6 +8,7 @@ import {
   useWallets,
   type User
 } from "@privy-io/react-auth";
+import { SmartWalletsProvider } from "@privy-io/react-auth/smart-wallets";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { EIP1193Provider } from "viem";
 import { celo } from "viem/chains";
@@ -223,7 +224,16 @@ export function AppAuthProvider({ children }: { children: React.ReactNode }) {
         defaultChain: celo
       }}
     >
-      <PrivyBridge>{children}</PrivyBridge>
+      <SmartWalletsProvider
+        config={{
+          paymasterContext: {
+            mode: "SPONSORED",
+            calculateGasLimits: true
+          }
+        }}
+      >
+        <PrivyBridge>{children}</PrivyBridge>
+      </SmartWalletsProvider>
     </PrivyProvider>
   );
 }
