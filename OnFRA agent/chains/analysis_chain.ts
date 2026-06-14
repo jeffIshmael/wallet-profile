@@ -168,11 +168,20 @@ export async function runAnalysisChain(
       const response = await model.invoke(formattedPrompt);
       const text = String((response as { content?: unknown }).content ?? "");
 
-      // Split the text into Dashboard Summary and Attestation
-      // Let's check for standard patterns in LLM response
-      const sections = text.split(/(?:2\.\s*A\s*formal|Attestation|Attestation Paragraph:)/gi);
-      aiDashboardSummary = sections[0].replace(/1\.\s*/gi, "").trim();
-      aiAttestation = (sections[1] || "").trim();
+      // Split dashboard summary vs formal attestation (handles numbered + markdown variants)
+      const sections = text.split(
+        /\d+\.\s*(?:A\s+)?(?:formal financial attestation paragraph|Formal Financial Attestation)|Attestation Paragraph:?/gi
+      );
+      aiDashboardSummary = sections[0]
+        .replace(/^1\.\s*(?:A\s+)?(?:short\s+)?dashboard summary[^:\n]*:?\s*/i, "")
+        .replace(/\*{0,2}\d+\.\s*(\*{0,2})?\s*$/g, "")
+        .replace(/\*\*/g, "")
+        .trim();
+      aiAttestation = (sections[1] || "")
+        .replace(/^(?:Formal\s+)?(?:financial\s+)?attestation\s+paragraph\s*/i, "")
+        .replace(/^Paragraph\s*/i, "")
+        .replace(/\*\*/g, "")
+        .trim();
       
       if (!aiAttestation) {
         // Fallback split if standard numbering didn't match cleanly

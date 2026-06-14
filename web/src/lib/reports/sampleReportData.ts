@@ -255,6 +255,7 @@ export function buildOfficialReportFromWalletData(
     monthlyIncomeStats: data.monthlyIncomeStats,
     cashFlow: data.cashFlow,
     onfraAssessment: data.onfraAssessment,
+    attestationParagraph: data.attestation.paragraph,
     statementPeriod,
     statement: {
       summary,
@@ -291,6 +292,7 @@ export function getSampleOfficialReport(): OfficialReportInput {
       strengths: [...mockWallet.onfraAssessment.strengths],
       watchItems: [...mockWallet.onfraAssessment.watchItems]
     },
+    attestationParagraph: mockWallet.attestation.paragraph,
     statementPeriod: "6M",
     statement: {
       summary: {

@@ -103,6 +103,10 @@ export function isPaymentEnforced(): boolean {
   return process.env.X402_ENFORCE === "true" && isX402Configured();
 }
 
+export function getX402SettlementMode(): "simulated" | "confirmed" {
+  return process.env.NODE_ENV === "production" ? "confirmed" : "simulated";
+}
+
 /**
  * Settle x402 via Thirdweb facilitator.
  * Skipped entirely when `skipPayment` is true (own-wallet queries).
@@ -112,21 +116,37 @@ export async function assertPayment(
   tier: X402PriceTier,
   options?: { skipPayment?: boolean }
 ): Promise<Response | null> {
-  if (options?.skipPayment) return null;
-  if (!isPaymentEnforced()) return null;
+  const logPrefix = `[x402 ${tier}]`;
+
+  if (options?.skipPayment) {
+    console.log(`${logPrefix} Payment skipped (own-wallet query).`);
+    return null;
+  }
+  if (!isPaymentEnforced()) {
+    console.log(`${logPrefix} Payment not enforced (X402_ENFORCE is off or facilitator not configured).`);
+    return null;
+  }
 
   const twFacilitator = getFacilitator();
   const payTo = getX402PayToAddress();
   if (!twFacilitator || !payTo) {
-    console.warn("[x402] X402_ENFORCE is enabled but Thirdweb facilitator is not configured.");
+    console.warn(`${logPrefix} X402_ENFORCE is enabled but Thirdweb facilitator is not configured.`);
     return paymentRequiredResponse(tier);
   }
 
+  const settlementMode = getX402SettlementMode();
+  const priceUsdt = TIER_AMOUNTS[tier];
+  const paymentHeader = getPaymentHeader(req);
+  console.log(
+    `${logPrefix} Settling payment: price=${priceUsdt} USDT, payTo=${payTo.slice(0, 10)}…, mode=${settlementMode}, hasPaymentHeader=${Boolean(paymentHeader)}`
+  );
+
   const resourceUrl = new URL(req.url).toString();
+  const settleStarted = Date.now();
   const result = await settlePayment({
     resourceUrl,
     method: req.method.toUpperCase(),
-    paymentData: getPaymentHeader(req),
+    paymentData: paymentHeader,
     payTo,
     network: celo,
     price: tierPrice(tier),
@@ -137,7 +157,19 @@ export async function assertPayment(
     }
   });
 
-  if (result.status === 200) return null;
+  if (result.status === 200) {
+    console.log(
+      `${logPrefix} Payment settled in ${Date.now() - settleStarted}ms (mode=${settlementMode}, price=${priceUsdt} USDT).` +
+        (settlementMode === "simulated"
+          ? " Dev mode: no real USDT is transferred — balance will not change."
+          : " Production mode: real USDT transfer confirmed.")
+    );
+    return null;
+  }
+
+  console.log(
+    `${logPrefix} Payment required (HTTP ${result.status}) after ${Date.now() - settleStarted}ms — client must sign and retry.`
+  );
 
   const body =
     "responseBody" in result && result.responseBody && Object.keys(result.responseBody).length > 0

@@ -21,6 +21,7 @@ export type OfficialReportInput = {
   monthlyIncomeStats: WalletData["monthlyIncomeStats"];
   cashFlow: WalletData["cashFlow"];
   onfraAssessment: WalletData["onfraAssessment"];
+  attestationParagraph: string;
   statementPeriod: StatementPeriod;
   statement: {
     summary: {

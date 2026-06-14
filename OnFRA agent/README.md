@@ -39,7 +39,7 @@ When a wallet is analyzed (`dashboard_bundle.ts`):
 
 | Action | Cost |
 |--------|------|
-| Wallet analysis / chat query | 0.05 USDT |
+| Wallet analysis / chat query | 0.01 USDT |
 | Verified financial report | 0.10 USDT |
 
 Billing middleware wraps tool calls; enforcement is handled at the web API layer.

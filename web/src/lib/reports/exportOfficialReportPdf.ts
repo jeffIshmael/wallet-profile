@@ -2,6 +2,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatReportLoanCapacity } from "@/lib/formatLoanCapacity";
 import { formatLocalDateTime, formatWalletAge, moneyPrecise } from "@/lib/format";
+import {
+  extractDashboardSummary,
+  extractFormalAttestation
+} from "@/lib/reports/formatAssessmentText";
 import type { OfficialReportInput } from "@/lib/reports/officialReportTypes";
 import {
   buildOfficialReportFilename,
@@ -384,40 +388,101 @@ function drawStatementSection(doc: jsPDF, input: OfficialReportInput, y: number,
 }
 
 function drawLenderAssessment(doc: jsPDF, input: OfficialReportInput, y: number, margin: number, pageWidth: number): number {
-  y = ensureSpace(doc, y, 40, margin);
+  y = ensureSpace(doc, y, 50, margin);
   y = drawSectionTitle(doc, "AI Lender Assessment", y, margin, pageWidth);
 
-  const narrativeLines = doc.splitTextToSize(input.onfraAssessment.narrative, pageWidth - margin * 2 - 6);
-  const boxHeight = Math.max(16, narrativeLines.length * 4.2 + 8);
+  const summary = extractDashboardSummary(input.onfraAssessment.narrative);
+  const attestation = extractFormalAttestation(
+    input.onfraAssessment.narrative,
+    input.attestationParagraph
+  );
+
+  const contentWidth = pageWidth - margin * 2;
+
+  // Executive Summary
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
+  doc.text("Executive Summary", margin, y);
+  y += 4;
+
+  const summaryLines = doc.splitTextToSize(summary, contentWidth - 8);
+  const summaryBoxH = Math.max(14, summaryLines.length * 4.2 + 8);
+  y = ensureSpace(doc, y, summaryBoxH + 8, margin);
   doc.setFillColor(REPORT_THEME.surface[0], REPORT_THEME.surface[1], REPORT_THEME.surface[2]);
   doc.setDrawColor(REPORT_THEME.border[0], REPORT_THEME.border[1], REPORT_THEME.border[2]);
-  doc.roundedRect(margin, y, pageWidth - margin * 2, boxHeight, 2, 2, "FD");
+  doc.roundedRect(margin, y, contentWidth, summaryBoxH, 2, 2, "FD");
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(REPORT_THEME.body[0], REPORT_THEME.body[1], REPORT_THEME.body[2]);
-  doc.text(narrativeLines, margin + 3, y + 6);
-  y += boxHeight + 6;
+  doc.text(summaryLines, margin + 4, y + 6);
+  y += summaryBoxH + 8;
 
-  const strengths = input.onfraAssessment.strengths.map((s) => `• ${s}`).join("\n");
-  const watch = input.onfraAssessment.watchItems.map((s) => `• ${s}`).join("\n");
+  // Formal Attestation
+  if (attestation) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
+    doc.text("Formal Attestation", margin, y);
+    y += 4;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text("Strengths", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.text(doc.splitTextToSize(strengths, (pageWidth - margin * 2) / 2 - 4), margin, y + 4);
+    const attestationLines = doc.splitTextToSize(attestation, contentWidth - 10);
+    const attestationBoxH = Math.max(14, attestationLines.length * 4.2 + 10);
+    y = ensureSpace(doc, y, attestationBoxH + 8, margin);
+    doc.setFillColor(252, 250, 245);
+    doc.setDrawColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, contentWidth, attestationBoxH, 2, 2, "FD");
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(50, 50, 58);
+    doc.text(attestationLines, margin + 5, y + 7);
+    y += attestationBoxH + 8;
+  }
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Watch Items", margin + (pageWidth - margin * 2) / 2, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    doc.splitTextToSize(watch, (pageWidth - margin * 2) / 2 - 4),
-    margin + (pageWidth - margin * 2) / 2,
-    y + 4
+  // Strengths & Watch Items — two styled columns
+  const colWidth = contentWidth / 2 - 3;
+  const strengths = input.onfraAssessment.strengths;
+  const watchItems = input.onfraAssessment.watchItems;
+  const strengthsLines = strengths.flatMap((s) => doc.splitTextToSize(`• ${s}`, colWidth - 6));
+  const watchLines = watchItems.flatMap((s) => doc.splitTextToSize(`• ${s}`, colWidth - 6));
+  const columnsH = Math.max(
+    18,
+    strengthsLines.length * 4 + 10,
+    watchLines.length * 4 + 10
   );
 
-  return y + 22;
+  y = ensureSpace(doc, y, columnsH + 4, margin);
+
+  // Strengths column
+  doc.setFillColor(240, 252, 248);
+  doc.setDrawColor(0, 130, 100);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(margin, y, colWidth, columnsH, 2, 2, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(0, 110, 85);
+  doc.text("Strengths", margin + 4, y + 5);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(REPORT_THEME.body[0], REPORT_THEME.body[1], REPORT_THEME.body[2]);
+  doc.text(strengthsLines, margin + 4, y + 10);
+
+  // Watch Items column
+  const watchX = margin + colWidth + 6;
+  doc.setFillColor(255, 248, 240);
+  doc.setDrawColor(180, 90, 0);
+  doc.roundedRect(watchX, y, colWidth, columnsH, 2, 2, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(160, 80, 0);
+  doc.text("Watch Items", watchX + 4, y + 5);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(REPORT_THEME.body[0], REPORT_THEME.body[1], REPORT_THEME.body[2]);
+  doc.text(watchLines, watchX + 4, y + 10);
+
+  return y + columnsH + 6;
 }
 
 function drawReportFooter(doc: jsPDF, input: OfficialReportInput, margin: number, pageWidth: number) {

@@ -3,6 +3,7 @@
 import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { REPORTS_UPDATED_EVENT } from "@/lib/reports/reportsEvents";
 import type { ReportRecord } from "@/types/reportRecord";
 
 type ReportsState =
@@ -14,7 +15,9 @@ function formatReportDate(iso: string): string {
   return new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
-    year: "numeric"
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
   }).format(new Date(iso));
 }
 
@@ -25,6 +28,14 @@ function shortAddress(address: string): string {
 export function MyReportsCard() {
   const { address } = useWalletAuth();
   const [state, setState] = useState<ReportsState>({ status: "idle" });
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const refresh = () => setRefreshKey((key) => key + 1);
+    window.addEventListener(REPORTS_UPDATED_EVENT, refresh);
+    return () => window.removeEventListener(REPORTS_UPDATED_EVENT, refresh);
+  }, []);
 
   useEffect(() => {
     if (!address) {
@@ -64,7 +75,7 @@ export function MyReportsCard() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [address, refreshKey]);
 
   if (!address) return null;
 
@@ -119,6 +130,7 @@ export function MyReportsCard() {
                     href={report.ipfsUrl}
                     target="_blank"
                     rel="noreferrer"
+                    download
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 text-[11px] text-stardust hover:text-white"
                   >
                     <Download size={12} />
