@@ -6,7 +6,9 @@ import {
   getThirdwebClientId,
   getThirdwebSecretKey,
   getX402PayToAddress,
-  isX402Configured
+  getX402SettlementMode,
+  isX402Configured,
+  isX402Enforced
 } from "@/lib/agent/env";
 
 export type IntegrationStatus = {
@@ -74,7 +76,7 @@ export async function checkThirdwebIntegration(): Promise<
     const twFacilitator = facilitator({
       client,
       serverWalletAddress: payTo,
-      waitUntil: "simulated"
+      waitUntil: getX402SettlementMode()
     });
     await twFacilitator.supported({
       chainId: 42220,
@@ -108,8 +110,9 @@ export async function getIntegrationsSummary() {
     gemini,
     thirdweb,
     x402: {
-      enforce: process.env.X402_ENFORCE === "true",
-      configured: isX402Configured()
+      enforce: isX402Enforced(),
+      configured: isX402Configured(),
+      settlementMode: getX402SettlementMode()
     }
   };
 }

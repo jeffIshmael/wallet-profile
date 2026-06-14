@@ -12,13 +12,15 @@ type AgentChatPreviewClaudeProps = {
   onAskAgent: () => void;
   onSignIn: () => void;
   connecting?: boolean;
+  miniPay?: boolean;
 };
 
 export function AgentChatPreviewClaude({
   authenticated,
   onAskAgent,
   onSignIn,
-  connecting = false
+  connecting = false,
+  miniPay = false
 }: AgentChatPreviewClaudeProps) {
   function scrollToDemo() {
     document.getElementById("agent-chat-phone")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -94,6 +96,18 @@ export function AgentChatPreviewClaude({
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(247,147,26,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 hover:shadow-[0_0_32px_-4px_rgba(247,147,26,0.65)] disabled:cursor-wait disabled:opacity-70"
               >
                 {connecting ? "Connecting..." : "Ask Agent"}
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          ) : miniPay ? (
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={onAskAgent}
+                disabled={connecting}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(247,147,26,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 disabled:cursor-wait disabled:opacity-70"
+              >
+                {connecting ? "Connecting…" : "Ask Agent"}
                 <ArrowRight size={14} />
               </button>
             </div>

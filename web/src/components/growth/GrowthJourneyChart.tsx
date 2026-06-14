@@ -6,20 +6,25 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useWalletData } from "@/hooks/useWalletData";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 type AssetKey = "CELO" | "USDm" | "USDC" | "USDT";
 
-const tokenCycle: { key: AssetKey; label: string }[] = [
+const allTokens: { key: AssetKey; label: string }[] = [
   { key: "CELO", label: "CELO" },
   { key: "USDm", label: "USDm" },
   { key: "USDC", label: "USDC" },
   { key: "USDT", label: "USDT" }
 ];
 
+const minipayTokens = allTokens.filter((token) => token.key !== "CELO");
+
 const ROTATE_MS = 4000;
 
 export function GrowthJourneyChart() {
+  const { miniPay } = useWalletAuth();
   const { walletData } = useWalletData();
+  const tokenCycle = miniPay ? minipayTokens : allTokens;
   const [tokenIndex, setTokenIndex] = useState(0);
   const rotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const asset = tokenCycle[tokenIndex];

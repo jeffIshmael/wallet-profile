@@ -5,6 +5,7 @@ import { ArrowRight, Bot } from "lucide-react";
 import { HeroAnimationPanel } from "@/components/landing/design-4/hero/HeroAnimationPanel";
 import { LandingNav } from "@/components/landing/design-4/LandingNav";
 import type { StoredAnalysisStatus } from "@/hooks/useStoredAnalysis";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 const container = {
   hidden: {},
@@ -37,18 +38,22 @@ export function HeroSection({
   connecting,
   storedAnalysisStatus = "unknown"
 }: HeroSectionProps) {
+  const { miniPay } = useWalletAuth();
   const hasStoredAnalysis = storedAnalysisStatus === "yes";
 
   function handleCta() {
+    if (miniPay && connecting) return;
     if (!authenticated || !address) {
-      onSignIn();
+      if (!miniPay) onSignIn();
       return;
     }
     onAnalyze();
   }
 
   function ctaLabel() {
-    if (!authenticated || !address) return "Sign in";
+    if (miniPay && connecting) return "Connecting…";
+    if (miniPay && authenticated) return hasStoredAnalysis ? "Go to Dashboard" : "Analyse My Wallet";
+    if (!authenticated || !address) return miniPay ? "Connecting…" : "Sign in";
     if (hasStoredAnalysis) return "Go to Dashboard";
     return "Analyse My Wallet";
   }

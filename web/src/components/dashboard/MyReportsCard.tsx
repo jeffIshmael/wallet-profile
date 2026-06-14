@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
+import { ExternalLink, FileText, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { REPORTS_UPDATED_EVENT } from "@/lib/reports/reportsEvents";
@@ -130,20 +130,10 @@ export function MyReportsCard() {
                     href={report.ipfsUrl}
                     target="_blank"
                     rel="noreferrer"
-                    download
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 text-[11px] text-stardust hover:text-white"
                   >
-                    <Download size={12} />
-                    Download PDF
-                  </a>
-                  <a
-                    href={report.ipfsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 text-[11px] text-stardust hover:text-white"
-                  >
+                    View PDF
                     <ExternalLink size={12} />
-                    IPFS
                   </a>
                 </div>
               </div>

@@ -27,6 +27,9 @@ From the repo root: `npm run dev` (npm workspaces).
 | `THIRDWEB_SECRET_KEY` | Thirdweb secret key for x402 payment settlement |
 | `THIRDWEB_CLIENT_ID` | Thirdweb client ID (used with the secret key) |
 | `X402_PAY_TO` | Optional treasury wallet for x402 USDT; defaults to `REPORTER_PRIVATE_KEY` address |
+| `NEXT_PUBLIC_X402_PAY_TO` | Public treasury address for MiniPay direct USDT transfers (must match `X402_PAY_TO`) |
+| `X402_SETTLEMENT_MODE` | `confirmed` (real USDT on Celo) or `simulated` (no balance change). Default: `confirmed` in production, `simulated` in dev |
+| `NEXT_PUBLIC_X402_SETTLEMENT_MODE` | Client UI copy — keep in sync with `X402_SETTLEMENT_MODE` |
 | `X402_ENFORCE` + Thirdweb vars | Enable x402 micropayment enforcement on analyze/chat/report |
 
 ### ERC-8004 reputation feedback

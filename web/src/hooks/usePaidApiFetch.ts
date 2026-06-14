@@ -27,7 +27,7 @@ export function usePaidApiFetch(): PaidFetchFn {
       const walletKey = address.toLowerCase();
       if (!paidFetchRef.current || walletKeyRef.current !== walletKey) {
         try {
-          paidFetchRef.current = await createPaidFetch(getEthereumProvider);
+          paidFetchRef.current = await createPaidFetch(getEthereumProvider, address);
           walletKeyRef.current = walletKey;
         } catch (error) {
           throw new Error(formatWalletTxError(error));

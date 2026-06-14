@@ -1,4 +1,5 @@
 import { PRICING } from "@/lib/blockchain/constants";
+import { MINIPAY_ADD_CASH_URL } from "@/lib/minipay/constants";
 
 export type ApiErrorCode =
   | "INVALID_WALLET"
@@ -27,15 +28,20 @@ export function invalidWalletError(fragment?: string) {
   );
 }
 
-export function insufficientBalanceError(balance: number, requiredUsdt: string) {
+export function insufficientBalanceError(balance: number, requiredUsdt: string, miniPay = false) {
   return apiError(
     "INSUFFICIENT_BALANCE",
-    `Insufficient USDT balance. You need at least ${requiredUsdt} USDT on Celo for this query, but your wallet has ${balance.toFixed(4)} USDT.`,
+    miniPay
+      ? `Insufficient USDT balance. You need at least ${requiredUsdt} USDT for this query, but your wallet has ${balance.toFixed(4)} USDT.`
+      : `Insufficient USDT balance. You need at least ${requiredUsdt} USDT on Celo for this query, but your wallet has ${balance.toFixed(4)} USDT.`,
     402,
     {
       balanceUsdt: balance.toFixed(4),
       requiredUsdt,
-      topUpHint: "Add USDT on Celo to your connected wallet, then try again."
+      topUpHint: miniPay
+        ? "Deposit USDT in MiniPay, then try again."
+        : "Add USDT on Celo to your connected wallet, then try again.",
+      depositUrl: miniPay ? MINIPAY_ADD_CASH_URL : undefined
     }
   );
 }

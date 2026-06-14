@@ -10,6 +10,7 @@ import { AGENT_CHAT_SUGGESTIONS } from "@/components/chat/chatContent";
 import { CHAT_LOADING_STAGES } from "@/lib/agent/chatTypes";
 import { isReportRequest, resolveChatQueryTarget } from "@/lib/agent/walletQuery";
 import { PRICING } from "@/lib/blockchain/constants";
+import { openMiniPayDeposit } from "@/lib/minipay/payments";
 import { hasSubmittedFeedback } from "@/lib/blockchain/erc8004Feedback";
 import { useSubmitAgentFeedback } from "@/hooks/useSubmitAgentFeedback";
 import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
@@ -33,6 +34,7 @@ function formatApiError(payload: {
   code?: string;
   response?: string;
   topUpHint?: string;
+  depositUrl?: string;
 }): string {
   if (payload.response) return payload.response;
   const parts = [payload.error ?? "Something went wrong."];
@@ -50,7 +52,7 @@ export function ChatSidebar({
   fullPage?: boolean;
   onClose?: () => void;
 }) {
-  const { address } = useWalletAuth();
+  const { address, miniPay } = useWalletAuth();
   const chatFetch = usePaidApiFetch();
   const submitFeedback = useSubmitAgentFeedback(address);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -198,9 +200,17 @@ export function ChatSidebar({
     setSending(true);
 
     if (wantsReport) {
-      setLoadingStatus(`Awaiting x402 payment approval (${PRICING.verifiedReportUsdt} USDT)…`);
+      setLoadingStatus(
+        miniPay
+          ? `Approve ${PRICING.verifiedReportUsdt} USDT transfer in MiniPay…`
+          : `Awaiting x402 payment approval (${PRICING.verifiedReportUsdt} USDT)…`
+      );
     } else if (earlyCheck.target.isExternal) {
-      setLoadingStatus(`Awaiting x402 payment approval (${PRICING.externalWalletQueryUsdt} USDT)…`);
+      setLoadingStatus(
+        miniPay
+          ? `Approve ${PRICING.externalWalletQueryUsdt} USDT transfer in MiniPay…`
+          : `Awaiting x402 payment approval (${PRICING.externalWalletQueryUsdt} USDT)…`
+      );
     } else {
       startLoadingStages();
     }
@@ -265,14 +275,23 @@ export function ChatSidebar({
         error?: string;
         code?: string;
         topUpHint?: string;
+        depositUrl?: string;
         sessionId?: string;
       };
 
       if (!response.ok) {
+        if (payload.code === "INSUFFICIENT_BALANCE" && (payload.depositUrl || miniPay)) {
+          finishUserMessage(formatApiError(payload), true);
+          if (miniPay) openMiniPayDeposit();
+          return;
+        }
+
         const errorText =
           payload.code === "PAYMENT_REQUIRED"
             ? payload.error ??
-              `External wallet queries require ${PRICING.externalWalletQueryUsdt} USDT via x402. Approve the payment prompt and try again.`
+              (miniPay
+                ? `External wallet queries require ${PRICING.externalWalletQueryUsdt} USDT. Approve the transfer in MiniPay and try again.`
+                : `External wallet queries require ${PRICING.externalWalletQueryUsdt} USDT via x402. Approve the payment prompt and try again.`)
             : formatApiError(payload);
         finishUserMessage(errorText, true);
         return;

@@ -1,4 +1,8 @@
 import { createThirdwebClient } from "thirdweb";
+import {
+  assertMiniPayTransferPayment,
+  getMiniPayTxHeader
+} from "@/lib/x402/minipaySettlement";
 import { celo } from "thirdweb/chains";
 import { facilitator, settlePayment, type ThirdwebX402Facilitator } from "thirdweb/x402";
 import {
@@ -14,7 +18,9 @@ import {
   getThirdwebClientId,
   getThirdwebSecretKey,
   getX402PayToAddress,
-  isX402Configured
+  getX402SettlementMode,
+  isX402Configured,
+  isX402Enforced
 } from "@/lib/agent/env";
 
 export type X402PriceTier = "external" | "report";
@@ -30,6 +36,23 @@ function usdtToAtomic(amount: string): string {
   const [whole, frac = ""] = amount.split(".");
   const padded = (frac + "000000").slice(0, 6);
   return `${whole}${padded}`.replace(/^0+/, "") || "0";
+}
+
+function decodePaymentRequiredError(
+  responseHeaders?: Record<string, string>
+): string | null {
+  const encoded =
+    responseHeaders?.["PAYMENT-REQUIRED"] ?? responseHeaders?.["payment-required"];
+  if (!encoded) return null;
+  try {
+    const json = JSON.parse(Buffer.from(encoded, "base64").toString("utf8")) as {
+      error?: string;
+      message?: string;
+    };
+    return json.error ?? json.message ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function tierPrice(tier: X402PriceTier) {
@@ -60,7 +83,7 @@ function getFacilitator(): ThirdwebX402Facilitator | null {
   cachedFacilitator = facilitator({
     client,
     serverWalletAddress: payTo,
-    waitUntil: process.env.NODE_ENV === "production" ? "confirmed" : "simulated"
+    waitUntil: getX402SettlementMode()
   });
 
   return cachedFacilitator;
@@ -98,14 +121,12 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
   );
 }
 
-/** When x402 facilitator is not configured, allow requests in development. */
+/** When x402 facilitator is not configured, allow requests (X402_ENFORCE off). */
 export function isPaymentEnforced(): boolean {
-  return process.env.X402_ENFORCE === "true" && isX402Configured();
+  return isX402Enforced();
 }
 
-export function getX402SettlementMode(): "simulated" | "confirmed" {
-  return process.env.NODE_ENV === "production" ? "confirmed" : "simulated";
-}
+export { getX402SettlementMode } from "@/lib/agent/env";
 
 /**
  * Settle x402 via Thirdweb facilitator.
@@ -131,6 +152,21 @@ export async function assertPayment(
   const payTo = getX402PayToAddress();
   if (!twFacilitator || !payTo) {
     console.warn(`${logPrefix} X402_ENFORCE is enabled but Thirdweb facilitator is not configured.`);
+    return paymentRequiredResponse(tier);
+  }
+
+  const directTransferTx = getMiniPayTxHeader(req);
+  if (directTransferTx) {
+    const verified = await assertMiniPayTransferPayment(req, tier);
+    if (verified) {
+      console.log(
+        `${logPrefix} Direct USDT transfer verified on Celo (${directTransferTx.slice(0, 12)}…).`
+      );
+      return null;
+    }
+    console.warn(
+      `${logPrefix} Direct transfer verification failed for ${directTransferTx.slice(0, 12)}… — check payer, amount, and payTo.`
+    );
     return paymentRequiredResponse(tier);
   }
 
@@ -161,14 +197,16 @@ export async function assertPayment(
     console.log(
       `${logPrefix} Payment settled in ${Date.now() - settleStarted}ms (mode=${settlementMode}, price=${priceUsdt} USDT).` +
         (settlementMode === "simulated"
-          ? " Dev mode: no real USDT is transferred — balance will not change."
-          : " Production mode: real USDT transfer confirmed.")
+          ? " Simulated settlement — no real USDT is transferred."
+          : " Real USDT transfer confirmed on Celo.")
     );
     return null;
   }
 
-  console.log(
-    `${logPrefix} Payment required (HTTP ${result.status}) after ${Date.now() - settleStarted}ms — client must sign and retry.`
+  const settlementError = decodePaymentRequiredError(result.responseHeaders);
+  console.warn(
+    `${logPrefix} Payment required (HTTP ${result.status}) after ${Date.now() - settleStarted}ms` +
+      (settlementError ? ` — ${settlementError}` : " — client must sign and retry.")
   );
 
   const body =

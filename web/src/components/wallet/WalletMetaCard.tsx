@@ -7,6 +7,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { WalletIdentityAvatar } from "@/components/wallet/WalletIdentityAvatar";
 import { useWalletData } from "@/hooks/useWalletData";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { copyWithToast } from "@/lib/copyToClipboard";
 import { formatTokenBalance, formatUtc, formatWalletAge, formatWalletAgeSummary, truncateAddress } from "@/lib/format";
 
@@ -35,13 +36,14 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function WalletMetaCard() {
+  const { miniPay } = useWalletAuth();
   const { walletData } = useWalletData();
   if (!walletData) return null;
 
   const identity = [
     {
-      label: "Wallet Address",
-      value: truncateAddress(walletData.walletAddress, 8, 6),
+      label: miniPay ? "Wallet" : "Wallet Address",
+      value: miniPay ? "Connected via MiniPay" : truncateAddress(walletData.walletAddress, 8, 6),
       valueClass: "wallet-value-address"
     },
     { label: "ENS Name on Celo", value: walletData.ens, isEns: true, valueClass: "wallet-value-muted" },
@@ -75,7 +77,7 @@ export function WalletMetaCard() {
   ];
 
   const balances = walletData.tokens
-    .filter(({ balance }) => balance > 0)
+    .filter(({ balance, symbol }) => balance > 0 && (!miniPay || symbol !== "CELO"))
     .map(({ symbol, balance }) => ({
       label: formatTokenBalance(balance, symbol),
       colorClass: TOKEN_COLOR_CLASS[symbol] ?? "wallet-value-body"
@@ -124,7 +126,10 @@ export function WalletMetaCard() {
                 <div key={label} className="flex min-h-[22px] items-baseline justify-between gap-3">
                   <FieldLabel>{label}</FieldLabel>
                   <dd className="text-right">
-                    {label === "Wallet Address" ? (
+                    {label === "Wallet Address" || (miniPay && label === "Wallet") ? (
+                      miniPay ? (
+                        <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>
+                      ) : (
                       <span className="inline-flex items-center gap-1.5">
                         <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>
                         <Tooltip label="Copy wallet address">
@@ -140,6 +145,7 @@ export function WalletMetaCard() {
                           </button>
                         </Tooltip>
                       </span>
+                      )
                     ) : isEns && !value ? (
                       <Link
                         href="https://names.celo.org/"

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPublicClient, createWalletClient, custom, formatUnits, http } from "viem";
-import { celo } from "viem/chains";
+import { celo } from "@/lib/chains/celo";
 
 const USDM_ADDRESS = "0x765DE816845861e75A25fCA122bb6898B8B1282a" as const;
 

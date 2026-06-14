@@ -29,7 +29,7 @@ function useIsMobileSignedInChat() {
 
 export function AgentChatPage() {
   const router = useRouter();
-  const { ready, authenticated, login, logout, address, connectingMiniPay } = useWalletAuth();
+  const { ready, authenticated, login, logout, address, connectingMiniPay, miniPay } = useWalletAuth();
   const isMobile = useIsMobileSignedInChat();
   const showSignedInMobileChat = ready && authenticated && isMobile;
 
@@ -76,6 +76,7 @@ export function AgentChatPage() {
           onAskAgent={handleAskAgent}
           onSignIn={login}
           connecting={connectingMiniPay}
+          miniPay={miniPay}
         />
       </main>
       <FooterSection />

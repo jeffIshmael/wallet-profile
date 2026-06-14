@@ -4,7 +4,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ChainalyseBrand } from "@/components/layout/ChainalyseBrand";
-import { truncateAddress } from "@/lib/format";
+import { useWalletDisplay } from "@/hooks/useWalletDisplay";
 
 type LandingNavProps = {
   onSignIn: () => void;
@@ -31,6 +31,7 @@ export function LandingNav({
   connecting = false,
   active = "home"
 }: LandingNavProps) {
+  const { miniPay, primaryLabel, secondaryHint } = useWalletDisplay();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -104,7 +105,10 @@ export function LandingNav({
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
               >
-                {truncateAddress(address)}
+                <span>{primaryLabel}</span>
+                {secondaryHint && (
+                  <span className="font-mono text-[10px] font-normal text-void/60">{secondaryHint}</span>
+                )}
                 <ChevronDown size={14} className={`transition ${menuOpen ? "rotate-180" : ""}`} />
               </button>
 
@@ -125,6 +129,10 @@ export function LandingNav({
                 </div>
               )}
             </div>
+          ) : miniPay ? (
+            <span className="rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-stardust">
+              {connecting ? "Connecting…" : "Opening MiniPay…"}
+            </span>
           ) : (
             <button
               type="button"

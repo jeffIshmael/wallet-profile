@@ -1,11 +1,21 @@
 import { createWalletClient, custom, type EIP1193Provider } from "viem";
-import { celo } from "viem/chains";
+import { celo } from "@/lib/chains/celo";
+
+export {
+  MINIPAY_ADD_CASH_URL,
+  MINIPAY_FEE_CURRENCY,
+  MINIPAY_STABLES,
+  MINIPAY_TX_HEADER
+} from "@/lib/minipay/constants";
+export { openMiniPayDeposit, payUsdtViaMiniPayTransfer } from "@/lib/minipay/payments";
+export { getPreferredStablecoin, getUsdtBalance } from "@/lib/minipay/stablecoins";
+export { sendMiniPayTransaction } from "@/lib/minipay/transactions";
 
 type MiniPayProvider = EIP1193Provider & {
   isMiniPay?: boolean;
 };
 
-function getInjectedProvider() {
+export function getInjectedProvider() {
   if (typeof window === "undefined") return undefined;
   return (window as Window & { ethereum?: MiniPayProvider }).ethereum;
 }
@@ -25,6 +35,6 @@ export async function connectInjectedWallet() {
     transport: custom(provider)
   });
 
-  const addresses = await walletClient.requestAddresses();
+  const addresses = await walletClient.getAddresses();
   return addresses[0];
 }

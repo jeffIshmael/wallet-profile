@@ -1,14 +1,8 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  custom,
-  encodeFunctionData,
-  http,
-  keccak256,
-  toBytes,
-  type EIP1193Provider
-} from "viem";
-import { celo } from "viem/chains";
+import { createPublicClient, createWalletClient, custom, encodeFunctionData, http, keccak256, toBytes, type EIP1193Provider } from "viem";
+import { celo } from "@/lib/chains/celo";
+import { isMiniPay } from "@/lib/minipay";
+import { feeTokenFromPreferred, sendMiniPayTransaction } from "@/lib/minipay/transactions";
+import { getPreferredStablecoin } from "@/lib/minipay/stablecoins";
 import {
   ERC8004_AGENT_ID,
   ERC8004_IDENTITY_REGISTRY,
@@ -136,6 +130,19 @@ export async function submitErc8004Feedback(
     chain: celo,
     transport: custom(provider)
   });
+
+  if (isMiniPay()) {
+    const preferred = await getPreferredStablecoin(reviewerAddress);
+    const feeToken = feeTokenFromPreferred(preferred);
+    const hash = await sendMiniPayTransaction(provider, {
+      account: reviewerAddress,
+      to,
+      data,
+      feeToken
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+    return { hash, score };
+  }
 
   const hash = await walletClient.sendTransaction({
     account: reviewerAddress,

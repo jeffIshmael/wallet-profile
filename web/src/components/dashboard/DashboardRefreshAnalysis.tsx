@@ -47,7 +47,12 @@ export function DashboardRefreshAnalysis({ compact = false }: DashboardRefreshAn
         {busy ? (isAnalyzing ? "Refreshing..." : "Updating...") : "Refresh analysis"}
       </span>
       {!busy && lastFetchedAt && (
-        <span className={clsx("font-normal text-stardust/70", compact ? "text-[9px]" : "text-[10px]")}>
+        <span
+          className={clsx(
+            "hidden font-normal text-stardust/70 lg:inline",
+            compact ? "text-[9px]" : "text-[10px]"
+          )}
+        >
           Lastly: {formatLastAnalysed(lastFetchedAt)}
         </span>
       )}

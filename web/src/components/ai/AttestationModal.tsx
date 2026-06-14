@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Download, ExternalLink, Loader2, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
@@ -9,6 +9,7 @@ import { useWalletData } from "@/hooks/useWalletData";
 import { consumeReportProgressStream } from "@/lib/reports/consumeReportStream";
 import { dispatchReportsUpdated } from "@/lib/reports/reportsEvents";
 import { copyWithToast } from "@/lib/copyToClipboard";
+import { isX402ClientProduction } from "@/lib/x402/clientConfig";
 import type { ReportCompletedResult, ReportProgressStep } from "@/types/reportProgress";
 
 const STEP_ORDER: ReportProgressStep[] = ["payment", "analysis", "pdf", "ipfs", "onchain", "saving"];
@@ -63,10 +64,9 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
       const initialLogs: ProgressEntry[] = [
         {
           step: "x402",
-          message:
-            process.env.NODE_ENV === "development"
-              ? "Authorizing USDT payment via x402… (dev mode: simulated — balance won't change)"
-              : "Authorizing USDT payment via x402…",
+          message: isX402ClientProduction()
+            ? "Authorizing USDT payment via x402 on Celo…"
+            : "Authorizing USDT payment via x402… (simulated — balance won't change)",
           status: "active"
         }
       ];
@@ -81,6 +81,16 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
             buyerAddress: buyer
           })
         });
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+            message?: string;
+          } | null;
+          throw new Error(
+            payload?.error ?? payload?.message ?? `Payment failed (${response.status}).`
+          );
+        }
 
         let logs = upsertLog(initialLogs, {
           step: "x402",
@@ -240,11 +250,10 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
                 href={purchase.result.ipfsUrl}
                 target="_blank"
                 rel="noreferrer"
-                download
                 className="inline-flex items-center gap-1.5 rounded-full bg-btc-orange px-4 py-2 text-xs font-semibold text-white hover:bg-btc-orange/90"
               >
-                <Download size={14} />
-                Download PDF
+                View PDF
+                <ExternalLink size={14} />
               </a>
               <a
                 href={purchase.result.explorerUrl}
@@ -257,7 +266,7 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
               </a>
             </div>
             <p className="mt-3 text-[11px] text-stardust/80">
-              Open the PDF for the full AI lender assessment. This report is saved under My Reports — download anytime without paying again.
+              Open the PDF for the full AI lender assessment. This report is saved under My Reports — view it anytime without paying again.
             </p>
           </>
         )}
