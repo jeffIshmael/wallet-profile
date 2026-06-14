@@ -14,11 +14,50 @@ export function isExplainerQuestion(message: string): boolean {
   if (
     /\bwhat is\b/.test(q) &&
     !/\bwhat is my\b/.test(q) &&
-    /\b(financial health|reputation|loan capacity|income stability|risk score|onfra)\b/.test(q)
+    /\b(financial health|reputation|loan capacity|income stability|risk score|onfra|verified report|financial passport|official report)\b/.test(
+      q
+    )
   ) {
     return true;
   }
   return false;
+}
+
+export function isVerifiedReportExplainer(message: string): boolean {
+  const q = message.toLowerCase();
+  if (/\b(generate|create|buy|purchase|order|download|get me)\b/.test(q)) return false;
+  return /\b(verified report|financial passport|official report|attestation report)\b/.test(q);
+}
+
+export function answerVerifiedReportExplainer(isOwnWallet: boolean): string {
+  const lines = [
+    "A Verified Financial Reputation Report — the Chainalyse Financial Passport — is a lender-ready PDF that turns onchain wallet activity into proof you can share with lenders, underwriters, or partners.",
+    "",
+    "Each report includes:",
+    "• A 6-month transaction statement",
+    "• Financial health, reputation, income stability, and loan capacity scores",
+    "• AI assessment and borrowing recommendations",
+    "• A unique verification code (REP-XXXXXXXXXX)",
+    "",
+    "Reports are pinned to IPFS and registered onchain on Celo. Anyone can confirm authenticity at chainalyse.xyz/verify using the code.",
+    "",
+    "Cost: 0.10 USDT for any wallet — yours or someone else's.",
+    "Quick wallet lookups in chat cost 0.01 USDT. Questions about your own wallet are free."
+  ];
+
+  if (isOwnWallet) {
+    lines.push(
+      "",
+      "To generate one for your wallet, say \"Generate verified report\" here or use the Financial Passport button on your dashboard."
+    );
+  } else {
+    lines.push(
+      "",
+      "To generate one, include a wallet address and say \"Generate verified report for 0x…\"."
+    );
+  }
+
+  return lines.join("\n");
 }
 
 export function classifyQuery(message: string): QueryIntent {
@@ -268,6 +307,10 @@ export function answerFromCachedDashboard(
       return lines.join("\n");
     }
     case "general": {
+      if (isVerifiedReportExplainer(message)) {
+        return answerVerifiedReportExplainer(true);
+      }
+
       const conceptAnswer = answerGeneralConcept(message, dashboard);
       if (conceptAnswer) return conceptAnswer;
 
@@ -359,6 +402,10 @@ function answerGeneralConcept(message: string, dashboard: CachedDashboard): stri
         ? "Recurring sender patterns detected."
         : "No strong recurring patterns detected yet."
     ].join("\n");
+  }
+
+  if (/\b(verified report|financial passport|official report|attestation report)\b/.test(q)) {
+    return answerVerifiedReportExplainer(true);
   }
 
   return null;

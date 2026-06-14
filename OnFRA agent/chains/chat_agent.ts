@@ -7,9 +7,11 @@ import { loanCapacity } from "../tools/loan_capacity.js";
 import { fullOnchainDataCache } from "../lib/getWalletDetails.js";
 import {
   answerFromCachedDashboard,
+  answerVerifiedReportExplainer,
   buildDashboardContextForGemini,
   classifyQuery,
   INTENT_TOOL,
+  isVerifiedReportExplainer,
   type CachedDashboard,
   type QueryIntent
 } from "./chat_router.js";
@@ -183,6 +185,14 @@ export async function runChatAgent(
   const lastUserQuery = history.filter((h) => h.role === "user").pop()?.content?.trim() ?? "";
   const intent = classifyQuery(lastUserQuery);
   const target = context.targetWallet.toLowerCase();
+
+  if (isVerifiedReportExplainer(lastUserQuery)) {
+    return {
+      text: answerVerifiedReportExplainer(context.isOwnWallet),
+      toolsUsed: [],
+      source: "cache"
+    };
+  }
 
   if (context.cachedDashboard) {
     seedCacheFromDashboard(context.cachedDashboard);

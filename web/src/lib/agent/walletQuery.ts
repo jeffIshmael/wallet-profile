@@ -90,6 +90,48 @@ export function resolveChatQueryTarget(
   };
 }
 
+/** Detects when the user wants a verified report (0.10 USDT), not a chat query (0.01 USDT). */
+export function isReportRequest(message: string): boolean {
+  const q = message.toLowerCase();
+
+  if (
+    /\b(what is|what's|what are|explain|tell me about|how does|how do|describe)\b/.test(q)
+  ) {
+    return false;
+  }
+
+  if (
+    /\b(generate|create|produce|issue|buy|purchase|order|download)\b/.test(q) &&
+    /\breport\b/.test(q)
+  ) {
+    return true;
+  }
+
+  if (
+    /\b(get|make)\b/.test(q) &&
+    /\b(me\s+)?(a\s+)?(verified|official|full|premium)?\s*report\b/.test(q)
+  ) {
+    return true;
+  }
+
+  if (
+    /\b(generate|create|get|buy|purchase|order|download)\b/.test(q) &&
+    /\b(financial passport|attestation)\b/.test(q)
+  ) {
+    return true;
+  }
+
+  if (/\b(verified|official|full|premium)\s+(financial\s+)?report\b/.test(q)) {
+    return true;
+  }
+
+  if (/\bfinancial passport\b/.test(q)) {
+    return true;
+  }
+
+  return false;
+}
+
 export function resolveAnalysisTarget(
   walletAddress: string,
   callerAddress?: string

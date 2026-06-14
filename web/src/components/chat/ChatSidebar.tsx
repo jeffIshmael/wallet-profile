@@ -8,7 +8,8 @@ import { AgentRatingModal } from "@/components/chat/AgentRatingModal";
 import { ChatMessageBody } from "@/components/chat/ChatMessageBody";
 import { AGENT_CHAT_SUGGESTIONS } from "@/components/chat/chatContent";
 import { CHAT_LOADING_STAGES } from "@/lib/agent/chatTypes";
-import { resolveChatQueryTarget } from "@/lib/agent/walletQuery";
+import { isReportRequest, resolveChatQueryTarget } from "@/lib/agent/walletQuery";
+import { PRICING } from "@/lib/blockchain/constants";
 import { hasSubmittedFeedback } from "@/lib/blockchain/erc8004Feedback";
 import { useSubmitAgentFeedback } from "@/hooks/useSubmitAgentFeedback";
 import { usePaidApiFetch } from "@/hooks/usePaidApiFetch";
@@ -16,10 +17,16 @@ import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { copyWithToast } from "@/lib/copyToClipboard";
 import { formatMessageTime } from "@/lib/formatMessageTime";
 import { formatWalletTxError } from "@/lib/privy/formatWalletTxError";
+import { consumeReportProgressStream } from "@/lib/reports/consumeReportStream";
+import { formatReportChatReply } from "@/lib/reports/formatReportChatReply";
+import { dispatchReportsUpdated } from "@/lib/reports/reportsEvents";
+import type { ReportCompletedResult } from "@/types/reportProgress";
 
 type ChatMessage = { role: "user" | "ai"; text: string; isError?: boolean; createdAt?: string };
 
-const RATING_PROMPT_AFTER_MESSAGES = 5;
+/** First prompt at 5 messages, then every 10 messages after that. */
+const RATING_FIRST_PROMPT_AT = 5;
+const RATING_REPEAT_EVERY = 10;
 
 function formatApiError(payload: {
   error?: string;
@@ -140,9 +147,22 @@ export function ChatSidebar({
 
   function maybePromptForRating(nextUserCount: number) {
     if (!address || hasSubmittedFeedback(address)) return;
-    if (nextUserCount >= RATING_PROMPT_AFTER_MESSAGES) {
+    if (
+      nextUserCount >= RATING_FIRST_PROMPT_AT &&
+      (nextUserCount - RATING_FIRST_PROMPT_AT) % RATING_REPEAT_EVERY === 0
+    ) {
       setRatingOpen(true);
     }
+  }
+
+  function finishUserMessage(reply: string, isError = false) {
+    setMessages((current) => [
+      ...current,
+      { role: "ai", text: reply, isError, createdAt: messageTimestamp() }
+    ]);
+    const nextCount = userMessageCount + 1;
+    setUserMessageCount(nextCount);
+    maybePromptForRating(nextCount);
   }
 
   function copyMessage(text: string) {
@@ -157,6 +177,7 @@ export function ChatSidebar({
     if (!text.trim() || sending || !address) return;
 
     const userMessage = text.trim();
+    const wantsReport = isReportRequest(userMessage);
 
     const earlyCheck = resolveChatQueryTarget(userMessage, address);
     if (!earlyCheck.ok) {
@@ -175,15 +196,51 @@ export function ChatSidebar({
     ]);
     setInput("");
     setSending(true);
-    startLoadingStages();
-    if (earlyCheck.target.isExternal) {
-      setLoadingStatus("Awaiting x402 payment approval (0.01 USDT)…");
+
+    if (wantsReport) {
+      setLoadingStatus(`Awaiting x402 payment approval (${PRICING.verifiedReportUsdt} USDT)…`);
+    } else if (earlyCheck.target.isExternal) {
+      setLoadingStatus(`Awaiting x402 payment approval (${PRICING.externalWalletQueryUsdt} USDT)…`);
+    } else {
+      startLoadingStages();
     }
 
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
+      if (wantsReport) {
+        const response = await chatFetch("/api/agent/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletAddress: earlyCheck.target.targetWallet,
+            buyerAddress: address
+          }),
+          signal: controller.signal
+        });
+
+        let result: ReportCompletedResult | null = null;
+
+        await consumeReportProgressStream(response, (event) => {
+          if (event.type === "status") {
+            setLoadingStatus(event.message);
+          }
+          if (event.type === "done") {
+            result = event.result;
+          }
+        });
+
+        if (!result) {
+          finishUserMessage("Report completed without a result. Please try again.", true);
+          return;
+        }
+
+        dispatchReportsUpdated();
+        finishUserMessage(formatReportChatReply(result));
+        return;
+      }
+
       const history = messages
         .filter((m) => m.role === "user" || m.role === "ai")
         .map((m) => ({
@@ -215,17 +272,9 @@ export function ChatSidebar({
         const errorText =
           payload.code === "PAYMENT_REQUIRED"
             ? payload.error ??
-              "External wallet queries require 0.01 USDT via x402. Approve the payment prompt and try again."
+              `External wallet queries require ${PRICING.externalWalletQueryUsdt} USDT via x402. Approve the payment prompt and try again.`
             : formatApiError(payload);
-        setMessages((current) => [
-          ...current,
-          {
-            role: "ai",
-            text: errorText,
-            isError: true,
-            createdAt: messageTimestamp()
-          }
-        ]);
+        finishUserMessage(errorText, true);
         return;
       }
 
@@ -235,28 +284,13 @@ export function ChatSidebar({
         "Chainalyse AI could not respond right now. Please try again.";
 
       if (payload.sessionId) setSessionId(payload.sessionId);
-      setMessages((current) => [...current, { role: "ai", text: reply, createdAt: messageTimestamp() }]);
-
-      const nextCount = userMessageCount + 1;
-      setUserMessageCount(nextCount);
-      maybePromptForRating(nextCount);
+      finishUserMessage(reply);
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
-        setMessages((current) => [
-          ...current,
-          { role: "ai", text: "Request cancelled.", isError: true, createdAt: messageTimestamp() }
-        ]);
+        finishUserMessage("Request cancelled.", true);
         return;
       }
-      setMessages((current) => [
-        ...current,
-        {
-          role: "ai",
-          text: formatWalletTxError(err),
-          isError: true,
-          createdAt: messageTimestamp()
-        }
-      ]);
+      finishUserMessage(formatWalletTxError(err), true);
     } finally {
       abortRef.current = null;
       stopLoadingStages();
