@@ -74,10 +74,12 @@ export function WalletMetaCard() {
     }
   ];
 
-  const balances = walletData.tokens.map(({ symbol, balance }) => ({
-    label: formatTokenBalance(balance, symbol),
-    colorClass: TOKEN_COLOR_CLASS[symbol] ?? "wallet-value-body"
-  }));
+  const balances = walletData.tokens
+    .filter(({ balance }) => balance > 0)
+    .map(({ symbol, balance }) => ({
+      label: formatTokenBalance(balance, symbol),
+      colorClass: TOKEN_COLOR_CLASS[symbol] ?? "wallet-value-body"
+    }));
   const balanceSlots = [...balances, null, null].slice(0, 6);
 
   const activeDuration = formatWalletAgeSummary(walletData.walletAgeMonths, walletData.walletAgeDays);
@@ -171,19 +173,23 @@ export function WalletMetaCard() {
 
           <div className="wallet-summary-section rounded-lg bg-white/[0.02] px-2 py-4 sm:col-span-2 sm:bg-transparent sm:px-4 sm:py-0 lg:col-span-2 lg:pr-0">
             <SectionLabel>Balances</SectionLabel>
-            <dl className="grid grid-cols-2 grid-rows-3 gap-x-4 gap-y-2.5">
-              {balanceSlots.map((balance, index) => (
-                <div key={`balance-${index}`} className="flex min-h-[22px] items-baseline">
-                  {balance ? (
-                    <dd className={`text-sm font-semibold ${balance.colorClass}`}>{balance.label}</dd>
-                  ) : (
-                    <dd className="text-sm text-transparent" aria-hidden>
-                      —
-                    </dd>
-                  )}
-                </div>
-              ))}
-            </dl>
+            {balances.length === 0 ? (
+              <p className="text-sm font-medium text-stardust">No token balances on Celo</p>
+            ) : (
+              <dl className="grid grid-cols-2 grid-rows-3 gap-x-4 gap-y-2.5">
+                {balanceSlots.map((balance, index) => (
+                  <div key={`balance-${index}`} className="flex min-h-[22px] items-baseline">
+                    {balance ? (
+                      <dd className={`text-sm font-semibold ${balance.colorClass}`}>{balance.label}</dd>
+                    ) : (
+                      <dd className="text-sm text-transparent" aria-hidden>
+                        —
+                      </dd>
+                    )}
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
         </div>
       </div>

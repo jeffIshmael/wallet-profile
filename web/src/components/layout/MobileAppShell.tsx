@@ -1,15 +1,19 @@
 "use client";
 
 import { Suspense, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 export const MOBILE_NAV_HEIGHT = "4.5rem";
 
+const HIDE_MOBILE_NAV_PATHS = ["/chat"];
+
 function MobileBottomNavGate() {
+  const pathname = usePathname();
   const { ready, authenticated } = useWalletAuth();
 
-  if (!ready || !authenticated) return null;
+  if (!ready || !authenticated || HIDE_MOBILE_NAV_PATHS.includes(pathname)) return null;
 
   return <MobileBottomNav />;
 }
@@ -19,8 +23,9 @@ type MobileAppShellProps = {
 };
 
 export function MobileAppShell({ children }: MobileAppShellProps) {
+  const pathname = usePathname();
   const { ready, authenticated } = useWalletAuth();
-  const showNav = ready && authenticated;
+  const showNav = ready && authenticated && !HIDE_MOBILE_NAV_PATHS.includes(pathname);
 
   return (
     <>

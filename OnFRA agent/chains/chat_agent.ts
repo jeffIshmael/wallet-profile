@@ -7,10 +7,12 @@ import { loanCapacity } from "../tools/loan_capacity.js";
 import { fullOnchainDataCache } from "../lib/getWalletDetails.js";
 import {
   answerFromCachedDashboard,
+  answerSupportedChainsExplainer,
   answerVerifiedReportExplainer,
   buildDashboardContextForGemini,
   classifyQuery,
   INTENT_TOOL,
+  isSupportedChainsQuestion,
   isVerifiedReportExplainer,
   type CachedDashboard,
   type QueryIntent
@@ -189,6 +191,14 @@ export async function runChatAgent(
   if (isVerifiedReportExplainer(lastUserQuery)) {
     return {
       text: answerVerifiedReportExplainer(context.isOwnWallet),
+      toolsUsed: [],
+      source: "cache"
+    };
+  }
+
+  if (isSupportedChainsQuestion(lastUserQuery)) {
+    return {
+      text: answerSupportedChainsExplainer(),
       toolsUsed: [],
       source: "cache"
     };

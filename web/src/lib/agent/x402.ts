@@ -114,12 +114,12 @@ export function getX402SettlementMode(): "simulated" | "confirmed" {
 export async function assertPayment(
   req: Request,
   tier: X402PriceTier,
-  options?: { skipPayment?: boolean }
+  options?: { skipPayment?: boolean; skipReason?: string }
 ): Promise<Response | null> {
   const logPrefix = `[x402 ${tier}]`;
 
   if (options?.skipPayment) {
-    console.log(`${logPrefix} Payment skipped (own-wallet query).`);
+    console.log(`${logPrefix} Payment skipped (${options.skipReason ?? "free request"}).`);
     return null;
   }
   if (!isPaymentEnforced()) {

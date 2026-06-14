@@ -2,9 +2,12 @@
 
 import {
   PrivyProvider,
+  getEmbeddedConnectedWallet,
+  useActiveWallet,
   useCreateWallet,
   usePrivy,
   useWallets,
+  type ConnectedWallet,
   type User
 } from "@privy-io/react-auth";
 import { SmartWalletsProvider, useSmartWallets } from "@privy-io/react-auth/smart-wallets";
@@ -33,17 +36,55 @@ function getInjectedProvider(): EIP1193Provider | undefined {
   return (window as Window & { ethereum?: EIP1193Provider }).ethereum;
 }
 
-function resolvePrivyWalletAddress(user: User | null, wallets: { address?: string }[]): string | null {
-  const connected = wallets.find((wallet) => wallet.address)?.address ?? null;
-  if (connected) return connected;
-  if (user?.wallet?.address) return user.wallet.address;
+function resolvePrivyWalletAddress(
+  user: User | null,
+  wallets: ConnectedWallet[],
+  smartWalletAddress?: string | null
+): string | null {
+  const embedded = getEmbeddedConnectedWallet(wallets);
 
-  const linkedWallet = user?.linkedAccounts.find((account) => account.type === "wallet");
-  if (linkedWallet && "address" in linkedWallet && linkedWallet.address) {
-    return linkedWallet.address;
+  if (embedded?.address) {
+    return smartWalletAddress ?? embedded.address;
   }
 
+  if (user?.wallet?.address) {
+    return smartWalletAddress ?? user.wallet.address;
+  }
+
+  const embeddedLinked = user?.linkedAccounts.find(
+    (account) =>
+      account.type === "wallet" &&
+      "walletClientType" in account &&
+      account.walletClientType === "privy" &&
+      "address" in account &&
+      account.address
+  );
+  if (embeddedLinked && "address" in embeddedLinked && embeddedLinked.address) {
+    return smartWalletAddress ?? embeddedLinked.address;
+  }
+
+  const external = wallets.find(
+    (wallet) => wallet.address && wallet.walletClientType !== "privy"
+  );
+  if (external?.address) return external.address;
+
   return null;
+}
+
+function pickPrivyWallet(
+  wallets: ConnectedWallet[],
+  address: string | null
+): ConnectedWallet | undefined {
+  const embedded = getEmbeddedConnectedWallet(wallets);
+  if (embedded?.address) return embedded;
+
+  const normalized = address?.toLowerCase();
+  if (normalized) {
+    const matched = wallets.find((wallet) => wallet.address?.toLowerCase() === normalized);
+    if (matched) return matched;
+  }
+
+  return wallets[0];
 }
 
 function MiniPayBridge({ children }: { children: React.ReactNode }) {
@@ -96,7 +137,8 @@ function MiniPayBridge({ children }: { children: React.ReactNode }) {
 
 function PrivyBridge({ children }: { children: React.ReactNode }) {
   const { ready, authenticated, login: privyLogin, logout: privyLogout, user } = usePrivy();
-  const { wallets } = useWallets();
+  const { wallets, ready: walletsReady } = useWallets();
+  const { setActiveWallet } = useActiveWallet();
   const { createWallet } = useCreateWallet();
   const { client: smartWalletClient } = useSmartWallets();
   const [miniPay, setMiniPay] = useState(false);
@@ -116,20 +158,33 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       .finally(() => setConnectingMiniPay(false));
   }, []);
 
-  const privyAddress = resolvePrivyWalletAddress(user, wallets);
+  const smartWalletAddress = smartWalletClient?.account?.address ?? null;
+  const privyAddress = resolvePrivyWalletAddress(user, wallets, smartWalletAddress);
   const address = miniPayAddress ?? privyAddress;
 
   useEffect(() => {
-    if (!ready || !authenticated || address || miniPay || walletCreationAttempted.current) {
+    if (!ready || !walletsReady || !authenticated || miniPay) return;
+
+    const embedded = getEmbeddedConnectedWallet(wallets);
+    if (embedded) {
+      setActiveWallet(embedded);
+    }
+  }, [ready, walletsReady, authenticated, miniPay, wallets, setActiveWallet]);
+
+  useEffect(() => {
+    if (!ready || !authenticated || miniPay || walletCreationAttempted.current) {
       if (!authenticated) walletCreationAttempted.current = false;
       return;
     }
+
+    const embedded = getEmbeddedConnectedWallet(wallets);
+    if (embedded?.address) return;
 
     walletCreationAttempted.current = true;
     void createWallet().catch(() => {
       // Keep the attempt marked so we don't spin in a retry loop on failure.
     });
-  }, [ready, authenticated, address, miniPay, createWallet]);
+  }, [ready, authenticated, miniPay, wallets, createWallet]);
 
   useEffect(() => {
     if (!ready || !pendingLogin.current) return;
@@ -142,10 +197,9 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       return getInjectedProvider();
     }
 
-    const normalized = address?.toLowerCase();
-    const wallet =
-      wallets.find((item) => item.address?.toLowerCase() === normalized) ?? wallets[0];
+    const wallet = pickPrivyWallet(wallets, address);
     if (!wallet?.address) {
+      if (authenticated) return undefined;
       return getInjectedProvider();
     }
 
@@ -153,7 +207,7 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
     if (wallet.walletClientType !== "privy") return provider;
 
     return createPrivyEmbeddedProvider(provider, smartWalletClient);
-  }, [miniPayAddress, address, wallets, smartWalletClient]);
+  }, [miniPayAddress, address, wallets, smartWalletClient, authenticated]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -211,12 +265,13 @@ export function AppAuthProvider({ children }: { children: React.ReactNode }) {
       config={{
         appearance: {
           theme: "light",
-          accentColor: "#1A56FF"
+          accentColor: "#1A56FF",
+          showWalletLoginFirst: false
         },
-        loginMethods: ["wallet", "email"],
+        loginMethods: ["email", "wallet"],
         embeddedWallets: {
           ethereum: {
-            createOnLogin: "users-without-wallets"
+            createOnLogin: "all-users"
           }
         },
         supportedChains: [celo],

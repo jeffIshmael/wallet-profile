@@ -44,7 +44,7 @@ export function AgentChatPage() {
 
   if (showSignedInMobileChat) {
     return (
-      <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px))] flex-col bg-void font-inter text-white md:hidden">
+      <div className="flex h-dvh flex-col bg-void font-inter text-white md:hidden">
         <ChatSidebar fullPage />
       </div>
     );

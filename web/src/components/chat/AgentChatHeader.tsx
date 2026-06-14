@@ -1,12 +1,20 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AGENT_CHAT_NAME } from "@/components/chat/chatContent";
 import { AGENT_LOGO_PATH } from "@/lib/blockchain/constants";
 
-export function AgentChatHeader({ compact = false }: { compact?: boolean }) {
+export function AgentChatHeader({
+  compact = false,
+  showBack = false
+}: {
+  compact?: boolean;
+  showBack?: boolean;
+}) {
+  const router = useRouter();
   const [logoError, setLogoError] = useState(false);
   const avatarSize = compact ? 36 : 40;
 
@@ -14,6 +22,16 @@ export function AgentChatHeader({ compact = false }: { compact?: boolean }) {
     <div
       className={`flex items-center gap-3 pl-2 ${compact ? "py-2" : "border-b border-white/10 py-3 pl-2 pr-4"}`}
     >
+      {showBack && (
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-stardust transition hover:bg-white/5 hover:text-white"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={18} />
+        </button>
+      )}
       <div className="relative shrink-0">
         <div
           className="grid place-items-center overflow-hidden rounded-full border border-white/15 bg-black/70"

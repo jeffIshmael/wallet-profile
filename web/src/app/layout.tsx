@@ -6,7 +6,7 @@ import { AppAuthProvider } from "@/providers/AuthProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Chainalyse AI",
+  title: "Chainalyse",
   description: "Onchain reputation and financial health dashboard for Celo and MiniPay users"
 };
 

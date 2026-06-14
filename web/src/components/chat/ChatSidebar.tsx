@@ -307,7 +307,7 @@ export function ChatSidebar({
           fullPage ? "bg-void" : overlay ? "" : "glass-panel rounded-2xl p-4"
         }`}
       >
-        {showHeader && <AgentChatHeader />}
+        {showHeader && <AgentChatHeader showBack />}
 
         {!overlay && !fullPage && (
           <div className="mb-3 flex items-center justify-between">
@@ -393,8 +393,10 @@ export function ChatSidebar({
         )}
 
         <form
-          className={`mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2 ${
-            fullPage ? "mx-4 mb-4" : ""
+          className={`mt-3 flex items-center gap-2 rounded-xl border p-2 ${
+            fullPage
+              ? "mx-4 mb-[max(1rem,env(safe-area-inset-bottom))] border-white/20 bg-void-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              : "border-white/10 bg-black/30"
           }`}
           onSubmit={(event) => {
             event.preventDefault();
@@ -410,7 +412,11 @@ export function ChatSidebar({
             onChange={(event) => setInput(event.target.value)}
             placeholder={address ? "Ask OnFRA about your wallet..." : "Connect wallet to chat"}
             disabled={!address || sending}
-            className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white outline-none placeholder:text-stardust"
+            className={`min-w-0 flex-1 text-xs text-white outline-none placeholder:text-stardust ${
+              fullPage
+                ? "rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2"
+                : "bg-transparent px-1"
+            }`}
           />
           {sending ? (
             <button

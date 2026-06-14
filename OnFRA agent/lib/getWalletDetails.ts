@@ -3,7 +3,7 @@ import { mainnet, celo, base } from 'viem/chains'
 
 export const publicClient = createPublicClient({ 
   chain: celo,
-  transport: http()
+  transport: http(undefined, { timeout: 15_000 })
 })
 
 export const mainnetClient = createPublicClient({
@@ -228,8 +228,10 @@ export async function getEnsName(address: string): Promise<string | null> {
 
 export async function getWalletAge(address: string): Promise<{ months: number; days: number }> {
   try {
-    const res = await fetch(`https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=asc&page=1&offset=1`);
-    const json: any = await res.json();
+    const json: any = await fetchJsonWithTimeout(
+      `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=asc&page=1&offset=1`,
+      10_000
+    );
     if (json && json.status === "1" && json.result && json.result.length > 0) {
       const timeStamp = parseInt(json.result[0].timeStamp);
       const ageMs = Date.now() - timeStamp * 1000;
@@ -245,6 +247,27 @@ export async function getWalletAge(address: string): Promise<{ months: number; d
 
 export async function getWalletAgeMonths(address: string): Promise<number> {
   return (await getWalletAge(address)).months;
+}
+
+async function walletHasOnchainActivity(address: string): Promise<boolean> {
+  try {
+    const [txJson, tokenJson] = await Promise.all([
+      fetchJsonWithTimeout(
+        `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=desc&page=1&offset=1`,
+        10_000
+      ),
+      fetchJsonWithTimeout(
+        `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&sort=desc&page=1&offset=1`,
+        10_000
+      )
+    ]);
+    const hasTx = txJson?.status === "1" && Array.isArray(txJson.result) && txJson.result.length > 0;
+    const hasTokenTx =
+      tokenJson?.status === "1" && Array.isArray(tokenJson.result) && tokenJson.result.length > 0;
+    return hasTx || hasTokenTx;
+  } catch {
+    return true;
+  }
 }
 
 async function fetchWalletBalancesUncached(address: string) {
@@ -264,8 +287,10 @@ async function fetchWalletBalancesUncached(address: string) {
   const discoveredTokens = new Map<string, { symbol: string; name: string; decimals: number }>();
   
   try {
-    const res = await fetch(`https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&offset=1000`);
-    const json: any = await res.json();
+    const json: any = await fetchJsonWithTimeout(
+      `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&offset=100`,
+      15_000
+    );
     if (json && json.status === "1" && Array.isArray(json.result)) {
       for (const tx of json.result) {
         if (tx.contractAddress && tx.tokenSymbol) {
@@ -279,6 +304,21 @@ async function fetchWalletBalancesUncached(address: string) {
     }
   } catch (e) {
     console.warn("Failed to fetch token transfers from Blockscout:", e);
+  }
+
+  // Fast path: brand-new / inactive wallets skip heavy stablecoin multicall
+  if (celoBalance === 0n && discoveredTokens.size === 0) {
+    const hasActivity = await walletHasOnchainActivity(address);
+    if (!hasActivity) {
+      console.log(`[getWalletDetails] Inactive wallet fast path: ${address}`);
+      return {
+        stablecoinBalance: 0,
+        volatileBalance: 0,
+        defiExposure: 0,
+        tokens: [],
+        celoPrice
+      };
+    }
   }
 
   // 3. Merge with stablecoin config contracts to ensure we scan them
@@ -629,13 +669,11 @@ export async function getWalletFirstAndLastTransactions(address: string, celoPri
 
   try {
     const responses = await Promise.all(
-      urls.map(url => 
-        fetch(url)
-          .then(r => r.json() as any)
-          .catch(err => {
-            console.warn(`Failed to fetch URL ${url}:`, err);
-            return null;
-          })
+      urls.map((url) =>
+        fetchJsonWithTimeout(url, 10_000).catch((err) => {
+          console.warn(`Failed to fetch URL ${url}:`, err);
+          return null;
+        })
       )
     );
     const [firstNormalJson, lastNormalJson, firstTokenJson, lastTokenJson] = responses;

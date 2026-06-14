@@ -19,6 +19,9 @@ import {
 import type { WalletData } from "@/types/walletData";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 
+/** Only background-refresh analysis when local snapshot is near expiry (matches server TTL). */
+const ANALYSIS_STALE_MS = 14 * 60 * 1000;
+
 type AnalyzeOptions = {
   force?: boolean;
   silent?: boolean;
@@ -195,14 +198,17 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (!address || isHydrating || !walletData) return;
+    if (!address || isHydrating || !walletData || !lastFetchedAt) return;
 
     const key = address.toLowerCase();
     if (silentRefreshKey.current === key) return;
-    silentRefreshKey.current = key;
 
+    const ageMs = Date.now() - new Date(lastFetchedAt).getTime();
+    if (ageMs < ANALYSIS_STALE_MS) return;
+
+    silentRefreshKey.current = key;
     void analyzeWallet(key, { silent: true });
-  }, [address, isHydrating, walletData, analyzeWallet]);
+  }, [address, isHydrating, walletData, lastFetchedAt, analyzeWallet]);
 
   const clearWallet = useCallback(() => {
     setWalletData(null);

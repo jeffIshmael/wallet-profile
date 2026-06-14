@@ -60,6 +60,34 @@ export function answerVerifiedReportExplainer(isOwnWallet: boolean): string {
   return lines.join("\n");
 }
 
+export function isSupportedChainsQuestion(message: string): boolean {
+  const q = message.toLowerCase();
+  return (
+    /\bdo you\b.*\b(check|analyze|scan|read|support|cover)\b.*\b(base|celo|network|chain|blockchain)\b/.test(
+      q
+    ) ||
+    /\b(base|polygon|ethereum|arbitrum|optimism|bnb|solana)\b.*\b(network|chain|blockchain)\b/.test(
+      q
+    ) ||
+    /\b(network|chain|blockchain)\b.*\b(base|polygon|ethereum|arbitrum|optimism|bnb)\b/.test(q) ||
+    /\b(supported|support)\b.*\b(chain|network|blockchain)\b/.test(q) ||
+    /\bwhich\b.*\b(chain|network)\b.*\b(support|analyze|check)\b/.test(q) ||
+    /\bonchain activity on\b/.test(q)
+  );
+}
+
+export function answerSupportedChainsExplainer(): string {
+  return [
+    "Today Chainalyse analyzes wallet activity on Celo mainnet only — transactions, balances, income patterns, scores, and verified reports all use Celo onchain data.",
+    "",
+    "We do not yet analyze Base network activity for financial health, reputation, or loan capacity. Base and additional EVM chains are on the roadmap.",
+    "",
+    "You can connect any EVM address and we will look up that address on Celo. If the wallet has little or no Celo history yet, scores will reflect a new or inactive profile.",
+    "",
+    "Questions about your own Celo wallet are free. Looking up another address costs 0.01 USDT."
+  ].join("\n");
+}
+
 export function classifyQuery(message: string): QueryIntent {
   const q = message.toLowerCase();
 
@@ -307,6 +335,10 @@ export function answerFromCachedDashboard(
       return lines.join("\n");
     }
     case "general": {
+      if (isSupportedChainsQuestion(message)) {
+        return answerSupportedChainsExplainer();
+      }
+
       if (isVerifiedReportExplainer(message)) {
         return answerVerifiedReportExplainer(true);
       }
@@ -337,6 +369,8 @@ export function answerFromCachedDashboard(
           "• Reputation and income stability",
           "• Loan capacity and how to improve it",
           "• Token flows and portfolio risk",
+          "",
+          "Supported today: Celo mainnet only. Base and other chains are coming soon.",
           "",
           "Questions about your own wallet are free. Looking up another wallet costs 0.01 USDT."
         ].join("\n");

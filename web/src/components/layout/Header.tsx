@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Wallet } from "lucide-react";
+import { clsx } from "clsx";
 import { DashboardHeaderActions } from "@/components/layout/DashboardHeaderActions";
 import { ChainalyseBrand } from "@/components/layout/ChainalyseBrand";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -50,7 +51,7 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
           </div>
         )}
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className={clsx("flex shrink-0 items-center gap-2", isDashboard && "ml-auto")}>
           {miniPay && <StatusBadge tone="green">MiniPay</StatusBadge>}
           <ThemeToggleButton />
         </div>

@@ -79,16 +79,22 @@ export async function POST(req: Request) {
   }
 
   const paymentBlock = await assertPayment(req, "external", {
-    skipPayment: target.isOwnWallet
+    skipPayment: target.isOwnWallet,
+    skipReason: "own-wallet analyze"
   });
   if (paymentBlock) return paymentBlock;
 
+  const logPrefix = `[analyze ${walletAddress.slice(0, 10)}…]`;
   const started = Date.now();
+  console.log(
+    `${logPrefix} Starting (ownWallet=${target.isOwnWallet}, force=${Boolean(body.force)}, external=${target.isExternal})`
+  );
 
   try {
     if (!body.force) {
       const cached = await getCachedWalletData(walletAddress);
       if (cached) {
+        console.log(`${logPrefix} Cache hit in ${Date.now() - started}ms`);
         await trackApiEvent({
           endpoint: "analyze",
           status: "success",
@@ -102,6 +108,10 @@ export async function POST(req: Request) {
 
     const walletData = await runDashboardAnalysis(walletAddress, { force: body.force });
     await saveAnalysisRun(walletAddress, walletData);
+
+    console.log(
+      `${logPrefix} Completed fresh analysis in ${Date.now() - started}ms (txs=${walletData.totalTransactions ?? walletData.transactions?.length ?? 0})`
+    );
 
     await trackApiEvent({
       endpoint: "analyze",
@@ -122,7 +132,7 @@ export async function POST(req: Request) {
         message: error instanceof Error ? error.message : "Analysis failed."
       }
     });
-    console.error("[analyze] OnFRA agent failed:", error);
+    console.error(`${logPrefix} Failed after ${Date.now() - started}ms:`, error);
     return Response.json(
       { error: error instanceof Error ? error.message : "Analysis failed.", code: "AGENT_ERROR" },
       { status: 500 }
