@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { footerLinks } from "@/lib/siteLinks";
+import { footerLinks, PLATFORM_LINKS } from "@/lib/siteLinks";
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
 
 export function FooterSection() {
   const year = new Date().getFullYear();
@@ -12,9 +20,19 @@ export function FooterSection() {
           <p className="mt-1 font-mono text-xs text-stardust">© {year} Chainalyse. All rights reserved.</p>
         </div>
 
-        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
           {footerLinks.map((link) =>
-            link.href.startsWith("/") ? (
+            link.external ? (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs text-stardust transition hover:text-white"
+              >
+                {link.label}
+              </a>
+            ) : (
               <Link
                 key={link.label}
                 href={link.href}
@@ -22,16 +40,19 @@ export function FooterSection() {
               >
                 {link.label}
               </Link>
-            ) : (
-              <a
-                key={link.label}
-                href={link.href}
-                className="font-mono text-xs text-stardust transition hover:text-white"
-              >
-                {link.label}
-              </a>
             )
           )}
+
+          <a
+            href={PLATFORM_LINKS.x}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Chainalyse on X (${PLATFORM_LINKS.xHandle})`}
+            className="flex flex-col items-center gap-1 text-stardust transition hover:text-white"
+          >
+            <XIcon className="h-4 w-4" />
+            {/* <span className="font-mono text-[10px] leading-tight">{PLATFORM_LINKS.xHandle}</span> */}
+          </a>
         </nav>
       </div>
     </footer>

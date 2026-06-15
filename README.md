@@ -4,6 +4,19 @@ Chainalyse is an onchain financial reputation platform for the Celo ecosystem. U
 
 The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), an [ERC-8004 agent on Celo mainnet (#9219)](https://8004scan.io/agents/celo/9219).
 
+## Links
+
+| Resource | URL |
+|----------|-----|
+| **Live demo** | [chainalyse.xyz](https://chainalyse.xyz) |
+| **Demo video** | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
+| **Documentation** | [docs/](./docs/) |
+| **GitHub** | [github.com/jeffIshmael/wallet-profile](https://github.com/jeffIshmael/wallet-profile) |
+| **X / Twitter** | [@chainalyse_xyz](https://x.com/chainalyse_xyz) |
+| **OnFRA on 8004scan** | [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219) |
+| **OnchainReporter contract** | [`0xE7621aF5dE3806ba26115bdC89190c65ed835C21`](https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21) |
+| **ERC-8004 Identity Registry** | [`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`](https://celoscan.io/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432) |
+
 ## The problem
 
 Your wallet knows your income. Your lender doesn't.
@@ -30,6 +43,8 @@ Instead of asking users for payslips and bank statements, lenders can evaluate a
 3. **Generate financial scores** — Receive Financial Health, Reputation, Income Stability, and Loan Capacity insights.
 4. **Download your financial passport** — Generate a verified report with transaction statements, financial scores, and borrowing recommendations. Reports can be registered onchain and verified by code.
 
+Watch the full walkthrough: [Demo video (YouTube)](https://youtu.be/7WC3lD5dDj4)
+
 ---
 
 The repository is organized into three packages:
@@ -37,11 +52,13 @@ The repository is organized into three packages:
 ```
 .
 ├── web/              # Next.js app — landing, dashboard, API routes, agent discovery
-├── OnFRA agent/    # LangChain agent — wallet analysis, chat, report compilation
-└── contracts/      # Solidity contracts and ERC-8004 registration tooling
+├── OnFRA agent/      # LangChain agent — wallet analysis, chat, report compilation
+└── contracts/        # Solidity contracts and ERC-8004 registration tooling
     ├── smart-contract/   # OnchainReporter UUPS attestation registry (Hardhat)
     └── erc8004-agent/    # ERC-8004 identity registration scripts
 ```
+
+Full platform documentation: **[docs/](./docs/)**
 
 ## Quick start
 
@@ -62,7 +79,7 @@ Copy `web/.env.local.example` to `web/.env` and configure:
 - `REPORTER_PRIVATE_KEY` — backend relayer for onchain report publishing
 - `ONCHAIN_REPORTER_PROXY_ADDRESS` — deployed `OnchainReporter` proxy on Celo
 
-See each package README for additional configuration.
+See each package README and [docs/architecture.md](./docs/architecture.md) for additional configuration.
 
 ## Package overview
 
@@ -83,13 +100,17 @@ See each package README for additional configuration.
 
 JSON request/response schemas are served from `web/public/schemas/` at `https://<app-url>/schemas/*.schema.json`.
 
+See [docs/api.md](./docs/api.md) for full API reference.
+
 ## Onchain deployment (Celo mainnet)
 
 | Contract | Address |
 |----------|---------|
-| OnchainReporter proxy | `0x50a8Fc322497e2EAc5489A64ce162E07Fb85E6AB` |
-| ERC-8004 Identity Registry | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
-| OnFRA agent ID | `9219` |
+| OnchainReporter proxy | [`0xE7621aF5dE3806ba26115bdC89190c65ed835C21`](https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21) |
+| ERC-8004 Identity Registry | [`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`](https://celoscan.io/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432) |
+| OnFRA agent ID | [`9219`](https://8004scan.io/agents/celo/9219) |
+
+See [docs/onchain.md](./docs/onchain.md) for verification flow and contract details.
 
 ## License
 
