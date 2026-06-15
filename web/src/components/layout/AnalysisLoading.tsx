@@ -66,6 +66,9 @@ export function AnalysisLoading({ step }: { step: number }) {
 
         <Progress value={progress} className="mt-6 h-2" />
         <p className="mt-3 font-mono text-xs text-stardust">{Math.round(progress)}% complete</p>
+        <p className="mt-2 text-xs leading-relaxed text-stardust/80">
+          This may take 5–7 minutes. Please wait on this page while we finish your analysis.
+        </p>
       </motion.div>
     </div>
   );
