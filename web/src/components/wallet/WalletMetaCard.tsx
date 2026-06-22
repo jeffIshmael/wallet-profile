@@ -42,9 +42,10 @@ export function WalletMetaCard() {
 
   const identity = [
     {
-      label: miniPay ? "Wallet" : "Wallet Address",
-      value: miniPay ? "Connected via MiniPay" : truncateAddress(walletData.walletAddress, 8, 6),
-      valueClass: "wallet-value-address"
+      label: "Wallet Address",
+      value: truncateAddress(walletData.walletAddress, 8, 6),
+      valueClass: "wallet-value-address",
+      copyable: true
     },
     { label: "ENS Name on Celo", value: walletData.ens, isEns: true, valueClass: "wallet-value-muted" },
     {
@@ -122,14 +123,11 @@ export function WalletMetaCard() {
           <div className="wallet-summary-section rounded-lg bg-white/[0.02] px-2 py-2 sm:bg-transparent sm:px-4 sm:py-0 lg:pl-0">
             <SectionLabel>Identity</SectionLabel>
             <dl className="space-y-2.5">
-              {identity.map(({ label, value, isEns, valueClass }) => (
+              {identity.map(({ label, value, isEns, valueClass, copyable }) => (
                 <div key={label} className="flex min-h-[22px] items-baseline justify-between gap-3">
                   <FieldLabel>{label}</FieldLabel>
                   <dd className="text-right">
-                    {label === "Wallet Address" || (miniPay && label === "Wallet") ? (
-                      miniPay ? (
-                        <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>
-                      ) : (
+                    {copyable ? (
                       <span className="inline-flex items-center gap-1.5">
                         <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>
                         <Tooltip label="Copy wallet address">
@@ -145,7 +143,6 @@ export function WalletMetaCard() {
                           </button>
                         </Tooltip>
                       </span>
-                      )
                     ) : isEns && !value ? (
                       <Link
                         href="https://names.celo.org/"

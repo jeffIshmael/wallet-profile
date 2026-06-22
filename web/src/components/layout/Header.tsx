@@ -45,7 +45,7 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
                 {connecting ? "Connecting..." : primaryLabel}
               </span>
               <span className="font-mono text-[10px] text-white sm:hidden">
-                {connecting ? "…" : miniPay ? "Wallet" : primaryLabel}
+                {connecting ? "…" : primaryLabel}
               </span>
               {!miniPay && address && (
                 <Tooltip label="Copy address">

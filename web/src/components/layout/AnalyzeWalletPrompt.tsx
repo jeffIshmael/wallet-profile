@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowRight, LayoutDashboard, Wallet } from "lucide-react";
-import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { truncateAddress } from "@/lib/format";
 
 type AnalyzeWalletPromptProps = {
@@ -17,8 +16,6 @@ export function AnalyzeWalletPrompt({
   onAnalyze,
   onGoToDashboard
 }: AnalyzeWalletPromptProps) {
-  const { miniPay } = useWalletAuth();
-
   return (
     <div className="relative flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px))] items-center justify-center bg-void px-6 pb-6 font-inter text-white md:min-h-screen">
       <div
@@ -49,9 +46,7 @@ export function AnalyzeWalletPrompt({
         {address && (
           <p className="mt-4 font-mono text-xs text-stardust">
             Connected:{" "}
-            <span className="text-white">
-              {miniPay ? "MiniPay wallet" : truncateAddress(address)}
-            </span>
+            <span className="text-white">{truncateAddress(address)}</span>
           </p>
         )}
 

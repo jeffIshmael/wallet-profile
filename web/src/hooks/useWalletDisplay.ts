@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { truncateAddress } from "@/lib/format";
 import { useAuth } from "@/providers/AuthProvider";
 
-/** MiniPay-friendly wallet label — phone-first identity; address only as secondary hint. */
+/** Wallet label for nav/header — truncated address when connected. */
 export function useWalletDisplay() {
   const { address, miniPay, connectingMiniPay } = useAuth();
 
@@ -13,12 +13,12 @@ export function useWalletDisplay() {
       address,
       miniPay,
       connecting: connectingMiniPay,
-      /** Primary identifier shown in nav/header (never raw 0x in MiniPay). */
+      /** Primary identifier shown in nav/header. */
       primaryLabel: miniPay
         ? connectingMiniPay
           ? "Connecting…"
           : address
-            ? "My Wallet"
+            ? truncateAddress(address)
             : "MiniPay"
         : address
           ? truncateAddress(address)
