@@ -1,10 +1,10 @@
 const users = [
-  { emoji: "💼", title: "Freelancers", description: "Convert crypto earnings into lender-ready proof of income." },
+  { emoji: "💼", title: "Freelancers", description: "Convert stablecoin earnings into lender-ready proof of income." },
   { emoji: "🌍", title: "Remote Workers", description: "Demonstrate cross-border income without traditional payslips." },
   { emoji: "🏛️", title: "DAO Contributors", description: "Verify recurring contributor compensation and treasury payments." },
   { emoji: "🎨", title: "Creators", description: "Turn community and platform earnings into financial credibility." },
   { emoji: "🏦", title: "Saccos & Lenders", description: "Assess borrower reliability using transparent blockchain data." },
-  { emoji: "⚡", title: "Crypto Entrepreneurs", description: "Use wallet activity as evidence of business performance and revenue." }
+  { emoji: "⚡", title: "Digital Entrepreneurs", description: "Use wallet activity as evidence of business performance and revenue." }
 ];
 
 export function UsersSection() {

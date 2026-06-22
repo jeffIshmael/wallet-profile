@@ -14,8 +14,10 @@ import {
   createPublicClient,
   createWalletClient,
   erc20Abi,
+  formatEther,
   formatUnits,
-  http
+  http,
+  parseEther
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
@@ -108,9 +110,72 @@ export async function sendReporterUsdtBalance(recipient = DEFAULT_RECIPIENT) {
   return hash;
 }
 
+/**
+ * Send native CELO from the reporter wallet to `recipient`.
+ * Signs with REPORTER_PRIVATE_KEY; reporter address is derived from that key
+ * (or validated against REPORTER_ADDRESS when set).
+ */
+export async function sendReporterCelo(amount = "0.3", recipient = DEFAULT_RECIPIENT) {
+  const privateKey = process.env.REPORTER_PRIVATE_KEY?.trim();
+  const rpcUrl = process.env.CELO_RPC_URL?.trim() || "https://forno.celo.org";
+
+  if (!privateKey) {
+    throw new Error("REPORTER_PRIVATE_KEY is required in web/.env");
+  }
+
+  const normalizedKey = privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`;
+  const account = privateKeyToAccount(normalizedKey);
+
+  const reporterAddress = process.env.REPORTER_ADDRESS?.trim();
+  if (reporterAddress && reporterAddress.toLowerCase() !== account.address.toLowerCase()) {
+    throw new Error(
+      `REPORTER_ADDRESS (${reporterAddress}) does not match REPORTER_PRIVATE_KEY (${account.address})`
+    );
+  }
+
+  const publicClient = createPublicClient({ chain: celo, transport: http(rpcUrl) });
+  const walletClient = createWalletClient({
+    account,
+    chain: celo,
+    transport: http(rpcUrl)
+  });
+
+  const value = parseEther(amount);
+  const balance = await publicClient.getBalance({ address: account.address });
+
+  if (balance < value) {
+    throw new Error(
+      `Insufficient CELO: reporter has ${formatEther(balance)} CELO, need ${amount} CELO`
+    );
+  }
+
+  console.log(`Reporter:  ${account.address}`);
+  console.log(`Recipient: ${recipient}`);
+  console.log(`Amount:    ${amount} CELO`);
+  console.log(`Balance:   ${formatEther(balance)} CELO`);
+
+  const hash = await walletClient.sendTransaction({
+    to: recipient,
+    value
+  });
+
+  console.log(`Transaction: ${hash}`);
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  console.log(`Confirmed in block ${receipt.blockNumber} (status: ${receipt.status})`);
+  console.log(`Sent ${amount} CELO to ${recipient}`);
+
+  return hash;
+}
+
 async function main() {
   loadEnvFile();
-  const recipient = process.argv[2]?.trim() || DEFAULT_RECIPIENT;
+  const arg = process.argv[2]?.trim();
+  if (arg?.toLowerCase() === "celo") {
+    const recipient = process.argv[3]?.trim() || DEFAULT_RECIPIENT;
+    await sendReporterCelo("0.3", recipient);
+    return;
+  }
+  const recipient = arg || DEFAULT_RECIPIENT;
   await sendReporterUsdtBalance(recipient);
 }
 

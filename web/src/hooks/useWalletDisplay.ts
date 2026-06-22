@@ -23,8 +23,8 @@ export function useWalletDisplay() {
         : address
           ? truncateAddress(address)
           : "",
-      /** Secondary hint — truncated address in MiniPay only. */
-      secondaryHint: miniPay && address ? truncateAddress(address, 4, 3) : null
+      /** Secondary hint — omitted in MiniPay (phone-first identity). */
+      secondaryHint: null
     }),
     [address, miniPay, connectingMiniPay]
   );

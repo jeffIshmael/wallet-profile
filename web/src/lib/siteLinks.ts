@@ -20,6 +20,9 @@ export const PLATFORM_LINKS = {
 } as const;
 
 export const footerLinks = [
+  { label: "Support", href: "/support", external: false },
+  { label: "Terms", href: "/terms", external: false },
+  { label: "Privacy", href: "/privacy", external: false },
   { label: "Docs", href: PLATFORM_LINKS.docs, external: true },
   { label: "Stats", href: "/stats", external: false },
   { label: "Verify", href: "/verify", external: false }

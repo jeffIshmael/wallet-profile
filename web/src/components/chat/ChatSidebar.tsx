@@ -309,7 +309,7 @@ export function ChatSidebar({
         finishUserMessage("Request cancelled.", true);
         return;
       }
-      finishUserMessage(formatWalletTxError(err), true);
+      finishUserMessage(formatWalletTxError(err, { miniPay }), true);
     } finally {
       abortRef.current = null;
       stopLoadingStages();

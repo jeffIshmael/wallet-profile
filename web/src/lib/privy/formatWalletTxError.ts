@@ -1,11 +1,21 @@
+type FormatWalletTxErrorOptions = {
+  miniPay?: boolean;
+};
+
 const GAS_SPONSORSHIP_DISABLED =
   "Gas sponsorship is not enabled in Privy. Enable it in Privy Dashboard → Wallet infrastructure → Gas sponsorship, add Celo (42220), allow client-side transactions, and fund gas credits.";
 
 const INSUFFICIENT_GAS_FUNDS =
   "This wallet does not have enough CELO for gas. Enable Privy gas sponsorship for embedded wallets, or add a small CELO balance to the wallet.";
 
+const INSUFFICIENT_NETWORK_FEE_FUNDS =
+  "This wallet does not have enough balance to cover the network fee. Deposit USDT in MiniPay and try again.";
+
 const INSUFFICIENT_USDT_FUNDS =
   "You need at least 0.01 USDT on Celo in your connected wallet to look up another address.";
+
+const INSUFFICIENT_USDT_FUNDS_MINIPAY =
+  "You need at least 0.01 USDT in your MiniPay wallet to look up another address. Deposit USDT and try again.";
 
 const X402_NO_REQUIREMENTS_PREFIX =
   /^402 response has no usable x402 payment requirements\.\s*/i;
@@ -25,12 +35,17 @@ export function isGasSponsorshipDisabledError(error: unknown): boolean {
   return combined.includes("gas sponsorship is not enabled");
 }
 
-export function formatWalletTxError(error: unknown): string {
+export function formatWalletTxError(
+  error: unknown,
+  options: FormatWalletTxErrorOptions = {}
+): string {
+  const { miniPay = false } = options;
+
   if (error instanceof Error && error.message.includes("User rejected")) {
     return "Transaction cancelled.";
   }
 
-  if (isGasSponsorshipDisabledError(error)) {
+  if (!miniPay && isGasSponsorshipDisabledError(error)) {
     return GAS_SPONSORSHIP_DISABLED;
   }
 
@@ -56,9 +71,9 @@ export function formatWalletTxError(error: unknown): string {
     combined.includes("gas required exceeds allowance")
   ) {
     if (combined.includes("usdt") || combined.includes("transfer amount exceeds")) {
-      return INSUFFICIENT_USDT_FUNDS;
+      return miniPay ? INSUFFICIENT_USDT_FUNDS_MINIPAY : INSUFFICIENT_USDT_FUNDS;
     }
-    return INSUFFICIENT_GAS_FUNDS;
+    return miniPay ? INSUFFICIENT_NETWORK_FEE_FUNDS : INSUFFICIENT_GAS_FUNDS;
   }
 
   if (combined.includes("timed out while waiting for transaction")) {

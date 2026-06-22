@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 
 const painPoints = [
-  "Crypto payments don't appear on traditional bank statements",
+  "Stablecoin payments don't appear on traditional bank statements",
   "Freelancers struggle to prove recurring income",
   "Lenders have no standard way to assess wallet reputation",
   "Years of financial history remain trapped inside blockchain data"
@@ -18,7 +18,7 @@ export function ProblemSection() {
           <span className="text-btc-orange">Your lender doesn&apos;t.</span>
         </h2>
         <p className="mx-auto mt-5 max-w-3xl text-sm leading-7 text-stardust md:text-base">
-          Millions of freelancers, remote workers, creators and DAO contributors receive payments in crypto every
+          Millions of freelancers, remote workers, creators and DAO contributors receive payments in stablecoins every
           month. Yet when applying for loans, they are asked for bank statements, payslips and employment records
           that don&apos;t reflect their real financial activity.
         </p>

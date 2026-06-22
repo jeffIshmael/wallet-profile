@@ -21,6 +21,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="font-sans">
       <head>
+        <meta
+          name="talentapp:project_verification"
+          content="705b76699b662d9545371dd0fa645794a8725c2c385335f58f9ed70155587a893976062ff90895a8607a27cbb97263e15624226691ba2af7b2916ddd1a3fe651"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

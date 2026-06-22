@@ -36,7 +36,7 @@ export function useSubmitAgentFeedback(address: string | null) {
           await submitErc8004Feedback(provider, reviewerAddress, tags);
           markFeedbackSubmitted(address);
         } catch (error) {
-          throw new Error(formatWalletTxError(error));
+          throw new Error(formatWalletTxError(error, { miniPay }));
         }
         return;
       }
@@ -70,7 +70,7 @@ export function useSubmitAgentFeedback(address: string | null) {
           await waitForTxReceipt(hash as Hex);
           markFeedbackSubmitted(address);
         } catch (error) {
-          throw new Error(formatWalletTxError(error));
+          throw new Error(formatWalletTxError(error, { miniPay }));
         }
         return;
       }
@@ -84,7 +84,7 @@ export function useSubmitAgentFeedback(address: string | null) {
         await submitErc8004Feedback(provider, reviewerAddress, tags);
         markFeedbackSubmitted(address);
       } catch (error) {
-        throw new Error(formatWalletTxError(error));
+        throw new Error(formatWalletTxError(error, { miniPay: false }));
       }
     },
     [address, miniPay, wallets, smartWalletClient, getEthereumProvider]

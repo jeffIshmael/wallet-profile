@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useWalletData } from "@/hooks/useWalletData";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 import {
   formatLocalDateTime,
   formatTxAmountToken,
@@ -71,6 +72,7 @@ function TokenIcon({ token }: { token: string }) {
 }
 
 export function TransactionStatementsView() {
+  const { miniPay } = useWalletAuth();
   const { walletData } = useWalletData();
   const [period, setPeriod] = useState<Period>("3M");
   const [search, setSearch] = useState("");
@@ -271,7 +273,7 @@ export function TransactionStatementsView() {
             <option value="USDT">USDT</option>
             <option value="USDC">USDC</option>
             <option value="USDm">USDm</option>
-            <option value="CELO">CELO</option>
+            {!miniPay && <option value="CELO">CELO</option>}
           </select>
         </div>
 

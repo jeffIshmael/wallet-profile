@@ -9,7 +9,7 @@ export type PaidFetchFn = (input: RequestInfo | URL, init?: RequestInit) => Prom
 
 /** x402-aware fetch using Privy / MiniPay — no separate thirdweb sign-in. */
 export function usePaidApiFetch(): PaidFetchFn {
-  const { address, authenticated, getEthereumProvider } = useAuth();
+  const { address, authenticated, getEthereumProvider, miniPay } = useAuth();
   const paidFetchRef = useRef<PaidFetchFn | null>(null);
   const walletKeyRef = useRef<string | null>(null);
 
@@ -30,17 +30,17 @@ export function usePaidApiFetch(): PaidFetchFn {
           paidFetchRef.current = await createPaidFetch(getEthereumProvider, address);
           walletKeyRef.current = walletKey;
         } catch (error) {
-          throw new Error(formatWalletTxError(error));
+          throw new Error(formatWalletTxError(error, { miniPay }));
         }
       }
 
       try {
         return await paidFetchRef.current(input as RequestInfo, init);
       } catch (error) {
-        throw new Error(formatWalletTxError(error));
+        throw new Error(formatWalletTxError(error, { miniPay }));
       }
     },
-    [address, authenticated, getEthereumProvider]
+    [address, authenticated, getEthereumProvider, miniPay]
   );
 }
 
