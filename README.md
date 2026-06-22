@@ -8,7 +8,7 @@ The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), an [E
 
 | Resource | URL |
 |----------|-----|
-| **Live demo** | [chainalyse.xyz](https://chainalyse.xyz) |
+| **Live demo** | [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) |
 | **Demo video** | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
 | **Documentation** | [docs/](./docs/) |
 | **GitHub** | [github.com/jeffIshmael/wallet-profile](https://github.com/jeffIshmael/wallet-profile) |

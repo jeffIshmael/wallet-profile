@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://www.chainalyse.xyz/schemas/walletAnalysisRequest.schema.json",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisRequest.schema.json",
   "title": "WalletAnalysisRequest",
   "description": "Request body for OnFRA wallet financial reputation analysis on Celo.",
   "type": "object",

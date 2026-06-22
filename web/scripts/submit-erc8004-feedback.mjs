@@ -34,7 +34,7 @@ const webRoot = join(__dirname, "..");
 const REPUTATION_REGISTRY = "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63";
 const IDENTITY_REGISTRY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 const DEFAULT_AGENT_ID = 9219;
-const APP_BASE_URL = "https://www.chainalyse.xyz";
+const APP_BASE_URL = "https://wallet-profile-orpin.vercel.app";
 
 const reputationRegistryAbi = [
   {

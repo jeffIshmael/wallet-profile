@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
       <p>
         This Privacy Policy explains how Chainalyse (&quot;we&quot;) collects and uses information when you use
-        chainalyse.xyz and the Chainalyse MiniPay Mini App.
+        wallet-profile-orpin.vercel.app and the Chainalyse MiniPay Mini App.
       </p>
 
       <h2 className="pt-2 font-space text-lg font-semibold text-white">Information we process</h2>

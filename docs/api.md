@@ -2,7 +2,7 @@
 
 Chainalyse exposes OnFRA capabilities through REST API routes and ERC-8004 / MCP discovery manifests.
 
-**Base URL:** [https://www.chainalyse.xyz](https://www.chainalyse.xyz)
+**Base URL:** [https://wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
 
 ## Endpoints
 
@@ -28,7 +28,7 @@ Request and response schemas are the single source of truth in `web/public/schem
 | Report request | `/schemas/reportRequest.schema.json` |
 | Report result | `/schemas/reportResult.schema.json` |
 
-Full URLs: `https://www.chainalyse.xyz/schemas/{filename}`
+Full URLs: `https://wallet-profile-orpin.vercel.app/schemas/{filename}`
 
 ## x402 payment headers
 
@@ -53,7 +53,7 @@ Configure enforcement with `X402_ENFORCE=true` and Thirdweb credentials in the w
 ## Example: analyze wallet
 
 ```bash
-curl -X POST https://www.chainalyse.xyz/api/agent/analyze \
+curl -X POST https://wallet-profile-orpin.vercel.app/api/agent/analyze \
   -H "Content-Type: application/json" \
   -d '{"walletAddress": "0xYourWalletAddress"}'
 ```
@@ -63,7 +63,7 @@ For external wallet queries, include the x402 payment header after obtaining a p
 ## Example: verify report
 
 ```bash
-curl https://www.chainalyse.xyz/api/agent/verify/REP-X141GYYEUM
+curl https://wallet-profile-orpin.vercel.app/api/agent/verify/REP-X141GYYEUM
 ```
 
 Returns wallet address, scores, report hash, IPFS CID, and onchain attestation status.

@@ -76,7 +76,7 @@ export const reportCompiler = tool(
       aiSummary: aiSummary || "Analysis in progress.",
       verification: {
         erc804AgentIdentity: "0x804ScoreAgentContractAddressPlaceHolder",
-        verificationEndpoint: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://www.chainalyse.xyz"}/api/agent/verify/${reportId}`,
+        verificationEndpoint: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://wallet-profile-orpin.vercel.app"}/api/agent/verify/${reportId}`,
         reportHash: "",
       },
     };

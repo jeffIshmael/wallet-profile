@@ -15,7 +15,7 @@ export default function TermsPage() {
 
       <p>
         These Terms of Service (&quot;Terms&quot;) govern your use of Chainalyse, including the web app and MiniPay
-        Mini App operated at chainalyse.xyz (&quot;Chainalyse&quot;, &quot;we&quot;, &quot;us&quot;). By using
+        Mini App operated at wallet-profile-orpin.vercel.app (&quot;Chainalyse&quot;, &quot;we&quot;, &quot;us&quot;). By using
         Chainalyse you agree to these Terms.
       </p>
 

@@ -1,7 +1,7 @@
 {
   "name": "OnFRA — Chainalyse Financial Intelligence Agent",
   "version": "2026-06-08",
-  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Chainalyse. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Chainalyse dashboard at https://www.chainalyse.xyz.",
+  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Chainalyse. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Chainalyse dashboard at https://wallet-profile-orpin.vercel.app.",
   "auth": {
     "scheme": "x402",
     "chain": "celo",
@@ -118,23 +118,23 @@
   ],
   "resources": [
     {
-      "uri": "https://www.chainalyse.xyz/schemas/walletAnalysisRequest.schema.json",
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisRequest.schema.json",
       "name": "Wallet Analysis Request Schema"
     },
     {
-      "uri": "https://www.chainalyse.xyz/schemas/walletAnalysisResult.schema.json",
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisResult.schema.json",
       "name": "Wallet Analysis Result Schema"
     },
     {
-      "uri": "https://www.chainalyse.xyz/schemas/chatRequest.schema.json",
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/chatRequest.schema.json",
       "name": "Chat Request Schema"
     },
     {
-      "uri": "https://www.chainalyse.xyz/schemas/reportRequest.schema.json",
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/reportRequest.schema.json",
       "name": "Report Request Schema"
     },
     {
-      "uri": "https://www.chainalyse.xyz/schemas/reportResult.schema.json",
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/reportResult.schema.json",
       "name": "Report Result Schema"
     }
   ],
@@ -165,7 +165,7 @@
     }
   ],
   "integration": {
-    "note": "Chainalyse platform: https://www.chainalyse.xyz · Own wallet: free · External wallet query: 0.01 USDT · Verified Financial Reputation Report: 0.10 USDT · REST: analyze_wallet → POST /api/agent/analyze · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
+    "note": "Chainalyse platform: https://wallet-profile-orpin.vercel.app · Own wallet: free · External wallet query: 0.01 USDT · Verified Financial Reputation Report: 0.10 USDT · REST: analyze_wallet → POST /api/agent/analyze · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
     "routes": {
       "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },
       "chat_query": { "method": "POST", "path": "/api/agent/chat" },

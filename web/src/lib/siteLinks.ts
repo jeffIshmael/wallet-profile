@@ -8,7 +8,7 @@ import {
 /** Public links used across the app footer, README, and docs. */
 export const PLATFORM_LINKS = {
   app: APP_BASE_URL,
-  demo: "https://chainalyse.xyz",
+  demo: "https://wallet-profile-orpin.vercel.app",
   video: "https://youtu.be/7WC3lD5dDj4",
   github: "https://github.com/jeffIshmael/wallet-profile",
   docs: "https://github.com/jeffIshmael/wallet-profile/tree/main/docs",
@@ -16,6 +16,8 @@ export const PLATFORM_LINKS = {
   xHandle: "@chainalyse_xyz",
   onfra8004: `https://8004scan.io/agents/celo/${ERC8004_AGENT_ID}`,
   onchainReporter: `${CELOSCAN_BASE_URL}/address/${ONCHAIN_REPORTER_PROXY}`,
+  networkManifest: `${APP_BASE_URL}/.well-known/minipay-network-manifest.json`,
+  appIcon512: `${APP_BASE_URL}/icon-512.png`,
   onchainReporterAddress: ONCHAIN_REPORTER_PROXY
 } as const;
 

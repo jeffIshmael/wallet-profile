@@ -4,7 +4,7 @@ export const CHAIN = "celo" as const;
 export const CHAIN_ID = 42220;
 
 /** Production deployment URL */
-export const APP_BASE_URL = "https://www.chainalyse.xyz";
+export const APP_BASE_URL = "https://wallet-profile-orpin.vercel.app";
 
 export const AGENT_LOGO_PATH = "/agent_logo.png";
 

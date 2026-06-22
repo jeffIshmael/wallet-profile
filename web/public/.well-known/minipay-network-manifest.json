@@ -1,0 +1,115 @@
+{
+  "app": "Chainalyse",
+  "appUrl": "https://wallet-profile-orpin.vercel.app",
+  "alternateUrls": [],
+  "updated": "2026-06-22",
+  "chain": "celo-mainnet",
+  "chainId": 42220,
+  "description": "Network manifest for MiniPay submission — all origins, subdomains, and external resources used by the Chainalyse Mini App.",
+  "firstParty": {
+    "origins": [
+      "https://wallet-profile-orpin.vercel.app"
+    ],
+    "routes": [
+      "/",
+      "/dashboard",
+      "/dashboard/statements",
+      "/chat",
+      "/verify",
+      "/stats",
+      "/terms",
+      "/privacy",
+      "/support",
+      "/api/agent/analyze",
+      "/api/agent/chat",
+      "/api/agent/report",
+      "/api/health/integrations",
+      "/.well-known/agent.json",
+      "/.well-known/agent-card.json",
+      "/.well-known/mcp.json",
+      "/.well-known/minipay-network-manifest.json",
+      "/schemas/walletAnalysisRequest.schema.json",
+      "/schemas/walletAnalysisResult.schema.json",
+      "/schemas/chatRequest.schema.json",
+      "/schemas/reportRequest.schema.json",
+      "/schemas/reportResult.schema.json"
+    ]
+  },
+  "fontsAndStyles": [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://api.fontshare.com"
+  ],
+  "blockchain": [
+    "https://forno.celo.org",
+    "https://celoscan.io",
+    "https://api.celoscan.io"
+  ],
+  "walletAndPayments": [
+    "https://link.minipay.xyz",
+    "https://names.celo.org"
+  ],
+  "backendApis": [
+    "https://generativelanguage.googleapis.com",
+    "https://api.thirdweb.com",
+    "https://rpc.thirdweb.com",
+    "https://celo-mainnet.rpc.thirdweb.com"
+  ],
+  "auth": [
+    "https://auth.privy.io",
+    "https://privy.io"
+  ],
+  "storage": [
+    "https://red-above-locust-968.mypinata.cloud",
+    "https://ipfs.io",
+    "https://gateway.pinata.cloud"
+  ],
+  "database": [
+    "https://aws-1-eu-central-1.pooler.supabase.com"
+  ],
+  "externalLinks": [
+    "https://x.com/chainalyse_xyz",
+    "https://github.com/jeffIshmael/wallet-profile",
+    "https://8004scan.io",
+    "https://youtu.be/7WC3lD5dDj4",
+    "https://minipay.xyz",
+    "https://docs.minipay.xyz"
+  ],
+  "smartContracts": {
+    "celoMainnet": [
+      {
+        "name": "ERC-8004 Identity Registry",
+        "address": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+        "explorer": "https://celoscan.io/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+      },
+      {
+        "name": "ERC-8004 Reputation Registry",
+        "address": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+        "explorer": "https://celoscan.io/address/0x8004BAa17C55a88189AE136b182e5fdA19dE9b63"
+      },
+      {
+        "name": "OnchainReporter proxy",
+        "address": "0xE7621aF5dE3806ba26115bdC89190c65ed835C21",
+        "explorer": "https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21"
+      },
+      {
+        "name": "USDT (Celo)",
+        "address": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+        "explorer": "https://celoscan.io/address/0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
+      }
+    ],
+    "sampleTransactions": [
+      {
+        "method": "USDT transfer (x402 payment)",
+        "hash": "0x65a95a085bd2f3ccb15c451b3b30ba15998b8f39d66c157cfd775fd41356aea8",
+        "explorer": "https://celoscan.io/tx/0x65a95a085bd2f3ccb15c451b3b30ba15998b8f39d66c157cfd775fd41356aea8",
+        "note": "Reporter wallet CELO transfer — replace with USDT x402 sample from production testing"
+      }
+    ]
+  },
+  "envOverrides": {
+    "CELO_RPC_URL": "Optional custom Celo RPC (defaults to forno.celo.org)",
+    "PINATA_GATEWAY": "Custom IPFS gateway subdomain",
+    "NEXT_PUBLIC_APP_URL": "Canonical app URL for manifests"
+  }
+}
