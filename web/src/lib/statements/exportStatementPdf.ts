@@ -10,6 +10,11 @@ import {
 } from "@/lib/statements/statementFormat";
 import { getPeriodDateRange, maskWalletAddress, PERIOD_LABELS, type StatementPeriod } from "@/lib/statements/periodUtils";
 import { formatLocalDateTime } from "@/lib/format";
+import {
+  drawCurvedDocumentHeader,
+  loadLogoDataUrl,
+  REPORT_THEME
+} from "@/lib/reports/pdfShared";
 
 export type StatementExportInput = {
   walletAddress: string;
@@ -25,32 +30,13 @@ export type StatementExportInput = {
 };
 
 const THEME = {
-  bg: [26, 26, 26] as const,
-  accent: [245, 166, 35] as const,
-  text: [255, 255, 255] as const,
-  textMuted: [190, 190, 200] as const,
-  incoming: [0, 180, 140] as const,
-  outgoing: [220, 90, 50] as const,
-  body: [40, 40, 48] as const,
-  surface: [248, 249, 252] as const,
-  border: [225, 228, 235] as const
+  accent: REPORT_THEME.accent,
+  incoming: REPORT_THEME.incoming,
+  outgoing: REPORT_THEME.outgoing,
+  body: REPORT_THEME.body,
+  surface: REPORT_THEME.surface,
+  border: REPORT_THEME.border
 };
-
-async function loadLogoDataUrl(): Promise<string | null> {
-  try {
-    const res = await fetch("/logo_dark.png");
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-}
 
 function formatGeneratedAt(): string {
   return formatLedgerDateTime(new Date().toISOString());
@@ -81,32 +67,14 @@ function drawHeader(
   margin: number,
   pageWidth: number
 ): number {
-  doc.setFillColor(THEME.bg[0], THEME.bg[1], THEME.bg[2]);
-  doc.rect(0, 0, pageWidth, 38, "F");
-  doc.setFillColor(THEME.accent[0], THEME.accent[1], THEME.accent[2]);
-  doc.rect(0, 38, pageWidth, 1.2, "F");
-
-  if (logoDataUrl) {
-    doc.addImage(logoDataUrl, "PNG", margin, 8, 10, 10);
-  }
-
-  const textX = logoDataUrl ? margin + 13 : margin;
-  doc.setTextColor(THEME.text[0], THEME.text[1], THEME.text[2]);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text("Chainalyse", textX, 14);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(THEME.textMuted[0], THEME.textMuted[1], THEME.textMuted[2]);
-  doc.text("Onchain Transaction Statement · Celo Mainnet", textX, 20);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(THEME.accent[0], THEME.accent[1], THEME.accent[2]);
-  doc.text("VERIFIED ONCHAIN ACTIVITY", pageWidth - margin, 13, { align: "right" });
-
-  let y = 46;
+  let y = drawCurvedDocumentHeader({
+    doc,
+    pageWidth,
+    margin,
+    logoDataUrl,
+    subtitle: "Onchain Transaction Statement · Celo Mainnet",
+    badge: "VERIFIED ONCHAIN ACTIVITY"
+  });
   doc.setTextColor(THEME.body[0], THEME.body[1], THEME.body[2]);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);

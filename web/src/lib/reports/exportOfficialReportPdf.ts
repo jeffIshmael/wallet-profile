@@ -13,6 +13,7 @@ import {
   getSampleOfficialReport
 } from "@/lib/reports/sampleReportData";
 import {
+  drawCurvedDocumentHeader,
   ensureSpace,
   getLastTableY,
   loadLogoDataUrl,
@@ -47,32 +48,14 @@ function drawReportHeader(
   margin: number,
   pageWidth: number
 ): number {
-  doc.setFillColor(REPORT_THEME.bg[0], REPORT_THEME.bg[1], REPORT_THEME.bg[2]);
-  doc.rect(0, 0, pageWidth, 40, "F");
-  doc.setFillColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
-  doc.rect(0, 40, pageWidth, 1.2, "F");
-
-  if (logoDataUrl) {
-    doc.addImage(logoDataUrl, "PNG", margin, 8, 10, 10);
-  }
-
-  const textX = logoDataUrl ? margin + 13 : margin;
-  doc.setTextColor(REPORT_THEME.text[0], REPORT_THEME.text[1], REPORT_THEME.text[2]);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text("Chainalyse", textX, 14);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(REPORT_THEME.textMuted[0], REPORT_THEME.textMuted[1], REPORT_THEME.textMuted[2]);
-  doc.text("Official Financial Passport · Celo Mainnet", textX, 20);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(REPORT_THEME.gold[0], REPORT_THEME.gold[1], REPORT_THEME.gold[2]);
-  doc.text("VERIFIED BY OnFRA", pageWidth - margin, 13, { align: "right" });
-
-  let y = 48;
+  let y = drawCurvedDocumentHeader({
+    doc,
+    pageWidth,
+    margin,
+    logoDataUrl,
+    subtitle: "Official Financial Passport · Celo Mainnet",
+    badge: "VERIFIED BY OnFRA"
+  });
 
   if (input.isSample) {
     doc.setFillColor(245, 166, 35);
