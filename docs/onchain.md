@@ -17,7 +17,7 @@ Chainalyse registers verified financial reports on Celo mainnet and exposes OnFR
 | Agent ID | **9219** |
 | Chain | Celo mainnet (42220) |
 | 8004scan profile | [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219) |
-| Agent URI | Served from `https://wallet-profile-orpin.vercel.app/.well-known/agent.json` |
+| Agent URI | `ipfs://bafkreicnwmw3b75ncm54df54k7j7loxwzfqz5u7jsb3axsibgprl3le364` (also served at `https://wallet-profile-orpin.vercel.app/.well-known/agent.json`) |
 | Agent card | `https://wallet-profile-orpin.vercel.app/.well-known/agent-card.json` |
 | MCP manifest | `https://wallet-profile-orpin.vercel.app/.well-known/mcp.json` |
 

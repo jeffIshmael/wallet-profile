@@ -31,7 +31,7 @@ Full origin list for the submission form:
 
 Use that link in the MiniPay submission form. Re-run at [pagespeed.web.dev](https://pagespeed.web.dev/) if you redeploy and want fresh scores.
 
-> **Note:** `chainalyse.xyz` is currently down. All submission URLs use `https://wallet-profile-orpin.vercel.app` until the custom domain is restored.
+> **Note:** Canonical production URL is `https://wallet-profile-orpin.vercel.app` (app, manifests, and ERC-8004 agent metadata).
 
 ## Technical checklist
 
@@ -47,7 +47,7 @@ Use that link in the MiniPay submission form. Re-run at [pagespeed.web.dev](http
 | Support link in-app | ✅ `/support` |
 | npm `minimum-release-age` | ✅ `web/.npmrc` (7 days) |
 | 512×512 icon | ✅ `web/public/icon-512.png` |
-| Talent App domain verification | ⚠️ Re-verify on Vercel URL if Talent App was tied to chainalyse.xyz |
+| Talent App domain verification | ⚠️ Verify on `wallet-profile-orpin.vercel.app` |
 | ERC-8004 metadata | ✅ `/.well-known/agent.json` |
 
 ## Smart contracts & sample transactions

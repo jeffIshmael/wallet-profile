@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "register": "node scripts/register.mjs",
-    "set-uri": "node scripts/set-agent-uri.mjs"
+    "set-uri": "node scripts/set-agent-uri.mjs",
+    "pin-agent-json": "node scripts/pin-agent-json.mjs"
   },
   "dependencies": {
     "viem": "^2.51.3"

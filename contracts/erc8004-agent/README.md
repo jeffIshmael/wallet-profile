@@ -32,7 +32,7 @@ After on-chain `register()` assigns an `agentId`, add to `registrations` and re-
 ]
 ```
 
-**Registered:** OnFRA is agent `#9219` on Celo mainnet. Re-pin `agent.json` to IPFS and call `setAgentURI(9219, ipfs://...)` if metadata changes.
+**Registered:** OnFRA is agent `#9219` on Celo mainnet. Canonical app URL: `https://wallet-profile-orpin.vercel.app`. Re-pin `agent.json` to IPFS and call `setAgentURI(9219, ipfs://...)` when metadata changes (`npm run pin-agent-json` then `npm run set-uri`).
 
 **Reputation Registry (mainnet):** `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
 

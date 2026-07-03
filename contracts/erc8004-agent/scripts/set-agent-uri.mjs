@@ -46,6 +46,7 @@ function loadEnvFile() {
 }
 
 loadEnvFile();
+loadEnvFile(join(__dirname, "..", "..", "..", "web", ".env"));
 
 const IDENTITY_REGISTRY_MAINNET = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 const IDENTITY_REGISTRY_SEPOLIA = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
@@ -66,7 +67,7 @@ const identityRegistryAbi = [
 async function main() {
   const agentUri = process.env.AGENT_IPFS_URI;
   const agentId = Number(process.env.AGENT_ID || "9219");
-  const privateKey = process.env.PRIVATE_KEY;
+  const privateKey = process.env.PRIVATE_KEY || process.env.REPORTER_PRIVATE_KEY;
   const rpcUrl = process.env.RPC_URL || "https://forno.celo.org";
   const chainId = Number(process.env.CHAIN_ID || "42220");
 
