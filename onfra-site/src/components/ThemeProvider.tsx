@@ -1,23 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import {
   DEFAULT_THEME_ID,
   getTheme,
-  THEME_BOOT_MAP,
-  THEME_STORAGE_KEY,
   type NudeTheme,
-  type NudeThemeId,
-  NUDE_THEMES
+  type NudeThemeId
 } from "@/lib/nudeThemes";
-
-const STORAGE_KEY = THEME_STORAGE_KEY;
 
 type ThemeContextValue = {
   themeId: NudeThemeId;
   theme: NudeTheme;
-  themes: NudeTheme[];
-  setThemeId: (id: NudeThemeId) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -33,30 +26,16 @@ function applyTheme(id: NudeThemeId) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeId, setThemeIdState] = useState<NudeThemeId>(DEFAULT_THEME_ID);
-
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as NudeThemeId | null;
-    const initial =
-      stored && NUDE_THEMES.some((t) => t.id === stored) ? stored : DEFAULT_THEME_ID;
-    setThemeIdState(initial);
-    applyTheme(initial);
-  }, []);
-
-  const setThemeId = useCallback((id: NudeThemeId) => {
-    setThemeIdState(id);
-    applyTheme(id);
-    localStorage.setItem(STORAGE_KEY, id);
+    applyTheme(DEFAULT_THEME_ID);
   }, []);
 
   const value = useMemo(
     () => ({
-      themeId,
-      theme: getTheme(themeId),
-      themes: NUDE_THEMES,
-      setThemeId
+      themeId: DEFAULT_THEME_ID,
+      theme: getTheme(DEFAULT_THEME_ID)
     }),
-    [themeId, setThemeId]
+    []
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import { DEFAULT_THEME_ID, THEME_BOOT_MAP, THEME_STORAGE_KEY } from "@/lib/nudeThemes";
+import { DEFAULT_THEME_ID, THEME_BOOT_MAP } from "@/lib/nudeThemes";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -27,11 +26,9 @@ export const metadata: Metadata = {
 
 const themeBootScript = `
 (function(){
-  var themes = ${JSON.stringify(THEME_BOOT_MAP)};
-  var id = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)}) || ${JSON.stringify(DEFAULT_THEME_ID)};
-  var t = themes[id] || themes[${JSON.stringify(DEFAULT_THEME_ID)}];
+  var t = ${JSON.stringify(THEME_BOOT_MAP[DEFAULT_THEME_ID])};
   var r = document.documentElement;
-  r.setAttribute("data-theme", id);
+  r.setAttribute("data-theme", ${JSON.stringify(DEFAULT_THEME_ID)});
   r.style.setProperty("--color-nude", t.nude);
   r.style.setProperty("--color-nude-soft", t.soft);
   r.style.setProperty("--color-nude-dark", t.dark);
@@ -51,10 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider>
-          {children}
-          <ThemeSwitcher />
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
