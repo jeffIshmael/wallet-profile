@@ -33,7 +33,7 @@ export function AnalysisLoading({ step }: { step: number }) {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-md px-6 text-center"
       >
-        <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(247,147,26,0.5)]">
+        <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(184,176,200,0.5)]">
           <Image src="/logo_dark.png" alt="" width={36} height={36} className="rounded-md" aria-hidden />
         </div>
 

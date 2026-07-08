@@ -1,3 +1,9 @@
+import {
+  buildFullAnalysisPayload,
+  parseAnalyzeFields,
+  pickAnalysisFields,
+  type AnalyzeFieldKey
+} from "@/lib/agent/analysisSignals";
 import { runDashboardAnalysis } from "@/lib/agent/onfraServer";
 import { insufficientBalanceError } from "@/lib/agent/apiErrors";
 import { assertPayment, getTierPriceUsdt } from "@/lib/agent/x402";
@@ -6,54 +12,53 @@ import { resolveAnalysisTarget } from "@/lib/agent/walletQuery";
 import { badRequest, isEvmAddress, parseJsonBody } from "@/lib/agent/validate";
 import {
   getCachedWalletData,
+  getLatestAnalysisRun,
   saveAnalysisRun
 } from "@/lib/db/analysis";
 import { trackApiEvent } from "@/lib/db/events";
 import type { WalletData } from "@/types/walletData";
 
-function analysisResponse(walletAddress: string, walletData: WalletData, cached: boolean, isOwnWallet: boolean) {
-  const metrics = walletData.metrics;
-  const priceUsdt = getTierPriceUsdt("external");
-
-  return Response.json({
-    status: "completed" as const,
+function analysisResponse(
+  walletAddress: string,
+  walletData: WalletData,
+  cached: boolean,
+  isOwnWallet: boolean,
+  fields: AnalyzeFieldKey[] | null,
+  fetchedAt?: string
+) {
+  const payload = buildFullAnalysisPayload(
+    walletAddress,
+    walletData,
     cached,
     isOwnWallet,
-    walletAddress: walletAddress.toLowerCase(),
-    walletData,
-    ens: walletData.ens,
-    financialHealthScore: metrics.financialHealth.score,
-    financialHealthBreakdown: metrics.financialHealth.breakdown,
-    reputationScore: metrics.reputation.score,
-    reputationCategory: metrics.reputation.category,
-    riskCategory: metrics.risk.category,
-    incomeLabel: metrics.incomeProfile.label,
-    loanRange: metrics.loanCapacity.range,
-    loanConfidence: metrics.loanCapacity.confidence,
-    aiDashboardSummary: walletData.onfraAssessment.narrative,
-    aiAttestation: walletData.attestation.paragraph,
-    threeMonthStatement: {
-      totalInflowUsd: walletData.incomeByPeriod["3M"].inbound,
-      totalOutflowUsd: walletData.incomeByPeriod["3M"].outbound,
-      netFlowUsd: walletData.incomeByPeriod["3M"].net,
-      transactionCount: walletData.transactions.length
-    },
-    x402Billing: isOwnWallet
-      ? { chargedUsdt: "0", token: "USDT", chain: "celo", free: true }
-      : { chargedUsdt: priceUsdt, token: "USDT", chain: "celo", free: false },
-    createdAt: new Date().toISOString()
-  });
+    fetchedAt
+  );
+
+  if (fields) {
+    return Response.json(pickAnalysisFields(payload, fields));
+  }
+
+  return Response.json(payload);
 }
 
 /** Wallet analysis powered by the OnFRA LangChain agent. */
 export async function POST(req: Request) {
+  const url = new URL(req.url);
   const body = parseJsonBody<{
     walletAddress?: string;
     callerAddress?: string;
     months?: number;
     force?: boolean;
+    fields?: string | string[];
   }>(await req.json().catch(() => null));
   if (!body) return badRequest("Invalid JSON body.");
+
+  let fields: AnalyzeFieldKey[] | null = null;
+  try {
+    fields = parseAnalyzeFields(body.fields ?? url.searchParams.get("fields"));
+  } catch (error) {
+    return badRequest(error instanceof Error ? error.message : "Invalid fields.");
+  }
 
   const walletAddress = body.walletAddress?.trim();
   if (!walletAddress || !isEvmAddress(walletAddress)) {
@@ -94,20 +99,28 @@ export async function POST(req: Request) {
     if (!body.force) {
       const cached = await getCachedWalletData(walletAddress);
       if (cached) {
+        const run = await getLatestAnalysisRun(walletAddress);
         console.log(`${logPrefix} Cache hit in ${Date.now() - started}ms`);
         await trackApiEvent({
           endpoint: "analyze",
           status: "success",
           walletAddress,
           durationMs: Date.now() - started,
-          metadata: { cached: true, isExternal: target.isExternal }
+          metadata: { cached: true, isExternal: target.isExternal, fields }
         });
-        return analysisResponse(walletAddress, cached, true, target.isOwnWallet);
+        return analysisResponse(
+          walletAddress,
+          cached,
+          true,
+          target.isOwnWallet,
+          fields,
+          run?.createdAt.toISOString()
+        );
       }
     }
 
     const walletData = await runDashboardAnalysis(walletAddress, { force: body.force });
-    await saveAnalysisRun(walletAddress, walletData);
+    const run = await saveAnalysisRun(walletAddress, walletData);
 
     console.log(
       `${logPrefix} Completed fresh analysis in ${Date.now() - started}ms (txs=${walletData.totalTransactions ?? walletData.transactions?.length ?? 0})`
@@ -121,7 +134,14 @@ export async function POST(req: Request) {
       metadata: { cached: false, isExternal: target.isExternal }
     });
 
-    return analysisResponse(walletAddress, walletData, false, target.isOwnWallet);
+    return analysisResponse(
+      walletAddress,
+      walletData,
+      false,
+      target.isOwnWallet,
+      fields,
+      run.createdAt.toISOString()
+    );
   } catch (error) {
     await trackApiEvent({
       endpoint: "analyze",

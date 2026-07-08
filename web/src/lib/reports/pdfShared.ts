@@ -2,8 +2,8 @@ import jsPDF from "jspdf";
 
 export const REPORT_THEME = {
   bg: [26, 26, 26] as const,
-  accent: [245, 166, 35] as const,
-  gold: [245, 166, 35] as const,
+  accent: [184, 176, 200] as const,
+  gold: [184, 176, 200] as const,
   text: [255, 255, 255] as const,
   textMuted: [190, 190, 200] as const,
   incoming: [0, 180, 140] as const,

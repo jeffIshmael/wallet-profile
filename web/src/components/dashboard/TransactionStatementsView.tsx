@@ -56,7 +56,7 @@ const TOKEN_COLORS: Record<string, string> = {
   USDT: "#26a17b",
   USDC: "#2775ca",
   USDm: "#f5a623",
-  CELO: "#f7931a"
+  CELO: "#B8B0C8"
 };
 
 function TokenIcon({ token }: { token: string }) {

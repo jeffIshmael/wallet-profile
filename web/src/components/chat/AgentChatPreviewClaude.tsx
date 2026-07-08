@@ -93,7 +93,7 @@ export function AgentChatPreviewClaude({
                 type="button"
                 onClick={onAskAgent}
                 disabled={connecting}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(247,147,26,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 hover:shadow-[0_0_32px_-4px_rgba(247,147,26,0.65)] disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 hover:shadow-[0_0_32px_-4px_rgba(184,176,200,0.65)] disabled:cursor-wait disabled:opacity-70"
               >
                 {connecting ? "Connecting..." : "Ask Agent"}
                 <ArrowRight size={14} />
@@ -105,7 +105,7 @@ export function AgentChatPreviewClaude({
                 type="button"
                 onClick={onAskAgent}
                 disabled={connecting}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(247,147,26,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 disabled:cursor-wait disabled:opacity-70"
               >
                 {connecting ? "Connecting…" : "Ask Agent"}
                 <ArrowRight size={14} />
@@ -117,7 +117,7 @@ export function AgentChatPreviewClaude({
                 type="button"
                 onClick={onSignIn}
                 disabled={connecting}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(247,147,26,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 disabled:cursor-wait disabled:opacity-70"
               >
                 {connecting ? "Connecting..." : "Get Started"}
                 <ArrowRight size={14} />

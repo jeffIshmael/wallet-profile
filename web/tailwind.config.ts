@@ -116,9 +116,9 @@ export default {
           surface: "#0F1115"
         },
         btc: {
-          orange: "#F7931A",
-          burnt: "#EA580C",
-          gold: "#FFD600"
+          orange: "#B8B0C8",
+          burnt: "#9088A0",
+          gold: "#D8D0E8"
         },
         stardust: "#94A3B8"
       },

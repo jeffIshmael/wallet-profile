@@ -39,6 +39,51 @@
           "includeAttestation": {
             "type": "boolean",
             "default": true
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "monthlyIncome",
+                "financialHealth",
+                "reputationScore",
+                "loanCapacity",
+                "statement",
+                "assessment",
+                "walletData"
+              ]
+            },
+            "description": "Optional subset of fields instead of full walletData."
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "get_wallet_signal",
+      "description": "Read one reputation signal from cached analysis (free). Signal ids: monthly-income, financial-health, reputation-score, loan-capacity, statement, assessment. Returns 404 with hint to analyze_wallet if cache is missing.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress", "signal"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "monthly-income",
+              "financial-health",
+              "reputation-score",
+              "loan-capacity",
+              "statement",
+              "assessment"
+            ]
           }
         }
       }
@@ -68,6 +113,30 @@
                 "content": { "type": "string" }
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "name": "screen_wallet",
+      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness (trust.isTrustworthy), wallet reputation, average monthly income estimate, and loan capacity range (with confidence). Requires callerAddress (lender wallet) and x402 payment of 0.01 USDT.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress", "callerAddress"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Borrower wallet to screen."
+          },
+          "callerAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Lender wallet paying via x402."
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
           }
         }
       }
@@ -118,12 +187,24 @@
   ],
   "resources": [
     {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenRequest.schema.json",
+      "name": "Lender Screen Request Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenResult.schema.json",
+      "name": "Lender Screen Result Schema"
+    },
+    {
       "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisRequest.schema.json",
       "name": "Wallet Analysis Request Schema"
     },
     {
       "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisResult.schema.json",
       "name": "Wallet Analysis Result Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletSignalResult.schema.json",
+      "name": "Wallet Signal Result Schema"
     },
     {
       "uri": "https://wallet-profile-orpin.vercel.app/schemas/chatRequest.schema.json",
@@ -156,6 +237,14 @@
       }
     },
     {
+      "prompt": "Should we approve this borrower wallet for a microloan?",
+      "tool": "screen_wallet",
+      "input": {
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "callerAddress": "0x0000000000000000000000000000000000000001"
+      }
+    },
+    {
       "prompt": "Purchase a Verified Financial Reputation Report for a loan application",
       "tool": "generate_report",
       "input": {
@@ -165,9 +254,11 @@
     }
   ],
   "integration": {
-    "note": "Chainalyse platform: https://wallet-profile-orpin.vercel.app · Own wallet: free · External wallet query: 0.01 USDT · Verified Financial Reputation Report: 0.10 USDT · REST: analyze_wallet → POST /api/agent/analyze · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
+    "note": "OnFRA lender infrastructure: https://wallet-profile-orpin.vercel.app/developers · Lender screen: 0.01 USDT · Full analyze: 0.01 USDT · Verified report: 0.10 USDT · REST: screen_wallet → POST /api/lender/screen · analyze_wallet → POST /api/agent/analyze · get_wallet_signal → GET /api/wallet/{address}/signals/{signal} · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
     "routes": {
+      "screen_wallet": { "method": "POST", "path": "/api/lender/screen" },
       "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },
+      "get_wallet_signal": { "method": "GET", "path": "/api/wallet/{address}/signals/{signal}" },
       "chat_query": { "method": "POST", "path": "/api/agent/chat" },
       "generate_report": { "method": "POST", "path": "/api/agent/report" },
       "verify_report": { "method": "GET", "path": "/api/agent/verify/{reportId}" }

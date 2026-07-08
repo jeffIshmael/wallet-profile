@@ -50,4 +50,7 @@ web/generated/
 web/prisma/*.db
 web/prisma/*.db-journal
 
+# Standalone publishable repos (separate git remotes)
+onfra-skill/
+
 /video

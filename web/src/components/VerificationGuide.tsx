@@ -23,7 +23,7 @@ function HighlightBox() {
   const { highlight } = REGION;
   return (
     <div
-      className="pointer-events-none absolute z-[5] rounded-sm border-2 border-btc-orange bg-btc-orange/15 shadow-[0_0_20px_rgba(247,147,26,0.55)]"
+      className="pointer-events-none absolute z-[5] rounded-sm border-2 border-btc-orange bg-btc-orange/15 shadow-[0_0_20px_rgba(184,176,200,0.55)]"
       style={{
         top: `${highlight.top}%`,
         left: `${highlight.left}%`,
@@ -113,7 +113,7 @@ export function VerificationGuide({ imageSrc = REPORT_IMAGE }: VerificationGuide
         Page 1 of your financial passport — look in the grey box near the top.
       </p>
 
-      <div className="relative mt-5 overflow-hidden rounded-xl border border-white/10 bg-white p-3 shadow-[0_0_40px_-12px_rgba(247,147,26,0.35)] sm:p-4">
+      <div className="relative mt-5 overflow-hidden rounded-xl border border-white/10 bg-white p-3 shadow-[0_0_40px_-12px_rgba(184,176,200,0.35)] sm:p-4">
         <div className="relative w-full overflow-hidden rounded-lg">
           <div className="relative aspect-[1158/1670] w-full">
             <Image

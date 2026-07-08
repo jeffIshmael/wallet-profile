@@ -31,7 +31,7 @@ type ScoreCardProps = {
 
 function scoreTint(score: number) {
   if (score >= 80) return "bg-[rgba(34,211,164,0.04)]";
-  if (score >= 50) return "bg-[rgba(245,166,35,0.04)]";
+  if (score >= 50) return "bg-[rgba(184,176,200,0.04)]";
   return "bg-[rgba(239,68,68,0.04)]";
 }
 
@@ -101,7 +101,7 @@ export function ScoreCard({
             value={score}
             max={maxScore}
             showScoreFooter={showGaugeFooter}
-            accentColor="#f7931a"
+            accentColor="#B8B0C8"
             centerContent={gaugeCenter}
           />
         )}

@@ -79,9 +79,53 @@ function normalizeMentoSymbol(symbol: string): string {
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 const CELO_PRICE_TTL_MS = 5 * 60 * 1000;
 const MAX_DISCOVERED_TOKENS = 24;
-const DEFAULT_FETCH_TIMEOUT_MS = 20_000;
+const DEFAULT_FETCH_TIMEOUT_MS = 15_000;
+const ENS_LOOKUP_TIMEOUT_MS = 2_500;
+const NFT_TX_SCAN_LIMIT = 250;
+
+/** MiniPay-heavy wallets — scan these first; skip the full Mento catalog unless seen in history. */
+const PRIMARY_STABLECOIN_ADDRESSES = new Set([
+  "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e", // USDT
+  "0xceba9300f2b948710d2653dd7b07f33a8b32118c", // USDC
+  "0x765de816845861e75a25fca122bb6898b8b1282a", // USDm
+]);
 
 type CacheEntry<T> = { data: T; timestamp: number };
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), timeoutMs))
+  ]);
+}
+
+function deriveTransactionBounds(transactions: TransactionDetails[]): {
+  firstTransaction: TransactionDetails | null;
+  lastTransaction: TransactionDetails | null;
+} {
+  if (transactions.length === 0) {
+    return { firstTransaction: null, lastTransaction: null };
+  }
+
+  let first = transactions[0];
+  let last = transactions[0];
+  let firstMs = new Date(first.timestamp).getTime();
+  let lastMs = firstMs;
+
+  for (const tx of transactions) {
+    const ts = new Date(tx.timestamp).getTime();
+    if (ts < firstMs) {
+      first = tx;
+      firstMs = ts;
+    }
+    if (ts > lastMs) {
+      last = tx;
+      lastMs = ts;
+    }
+  }
+
+  return { firstTransaction: first, lastTransaction: last };
+}
 
 async function fetchJsonWithTimeout(url: string, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS): Promise<any> {
   const controller = new AbortController();
@@ -207,23 +251,23 @@ export async function getCeloPrice(): Promise<number> {
 }
 
 export async function getEnsName(address: string): Promise<string | null> {
-  // 1. Try Mainnet ENS
   try {
-    const mainnetName = await mainnetClient.getEnsName({ address: address as `0x${string}` });
-    if (mainnetName) return mainnetName;
-  } catch (e) {
-    // Ignore error
+    const [mainnetName, baseName] = await Promise.all([
+      withTimeout(
+        mainnetClient.getEnsName({ address: address as `0x${string}` }).catch(() => null),
+        ENS_LOOKUP_TIMEOUT_MS,
+        null
+      ),
+      withTimeout(
+        baseClient.getEnsName({ address: address as `0x${string}` }).catch(() => null),
+        ENS_LOOKUP_TIMEOUT_MS,
+        null
+      )
+    ]);
+    return mainnetName || baseName;
+  } catch {
+    return null;
   }
-
-  // 2. Try Base Basenames
-  try {
-    const baseName = await baseClient.getEnsName({ address: address as `0x${string}` });
-    if (baseName) return baseName;
-  } catch (e) {
-    // Ignore error
-  }
-
-  return null;
 }
 
 export async function getWalletAge(address: string): Promise<{ months: number; days: number }> {
@@ -321,8 +365,11 @@ async function fetchWalletBalancesUncached(address: string) {
     }
   }
 
-  // 3. Merge with stablecoin config contracts to ensure we scan them
+  // 3. Ensure primary stablecoins are scanned; add others only if already in transfer history
   for (const [stableAddr, info] of Object.entries(STABLECOINS)) {
+    if (!PRIMARY_STABLECOIN_ADDRESSES.has(stableAddr) && !discoveredTokens.has(stableAddr)) {
+      continue;
+    }
     if (!discoveredTokens.has(stableAddr)) {
       discoveredTokens.set(stableAddr, {
         symbol: info.symbol,
@@ -517,13 +564,27 @@ async function fetchWalletTransactionsUncached(address: string, celoPrice: numbe
   const addrLower = address.toLowerCase();
   const monthsAgoSec = Math.floor((Date.now() - months * 30 * 24 * 60 * 60 * 1000) / 1000);
 
-  // 1. Fetch normal transactions
+  // 1. Fetch normal + token transfers in parallel (biggest latency win on Blockscout)
+  let normalJson: any = null;
+  let tokenJson: any = null;
   try {
-    const json: any = await fetchJsonWithTimeout(
-      `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=desc&page=1&offset=100`
-    );
-    if (json && json.status === "1" && Array.isArray(json.result)) {
-      for (const tx of json.result) {
+    [normalJson, tokenJson] = await Promise.all([
+      fetchJsonWithTimeout(
+        `https://celo.blockscout.com/api?module=account&action=txlist&address=${address}&sort=desc&page=1&offset=100`,
+        12_000
+      ),
+      fetchJsonWithTimeout(
+        `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&sort=desc&page=1&offset=100`,
+        12_000
+      )
+    ]);
+  } catch (e) {
+    console.warn("Failed to fetch transactions from Blockscout:", e);
+  }
+
+  try {
+    if (normalJson && normalJson.status === "1" && Array.isArray(normalJson.result)) {
+      for (const tx of normalJson.result) {
         if (parseInt(tx.timeStamp) < monthsAgoSec) {
           continue;
         }
@@ -547,16 +608,12 @@ async function fetchWalletTransactionsUncached(address: string, celoPrice: numbe
       }
     }
   } catch (e) {
-    console.warn("Failed to fetch normal transactions:", e);
+    console.warn("Failed to parse normal transactions:", e);
   }
 
-  // 2. Fetch token transfers
   try {
-    const json: any = await fetchJsonWithTimeout(
-      `https://celo.blockscout.com/api?module=account&action=tokentx&address=${address}&sort=desc&page=1&offset=100`
-    );
-    if (json && json.status === "1" && Array.isArray(json.result)) {
-      for (const tx of json.result) {
+    if (tokenJson && tokenJson.status === "1" && Array.isArray(tokenJson.result)) {
+      for (const tx of tokenJson.result) {
         if (parseInt(tx.timeStamp) < monthsAgoSec) {
           continue;
         }
@@ -793,7 +850,9 @@ export async function getNftExposure(address: string): Promise<{ nftExposure: nu
 
 async function fetchNftExposureUncached(address: string): Promise<{ nftExposure: number; nftCount: number }> {
   try {
-    const res = await fetch(`https://celo.blockscout.com/api?module=account&action=tokennfttx&address=${address}&offset=1000`);
+    const res = await fetch(
+      `https://celo.blockscout.com/api?module=account&action=tokennfttx&address=${address}&offset=${NFT_TX_SCAN_LIMIT}`
+    );
     const json: any = await res.json();
     if (json && json.status === "1" && Array.isArray(json.result)) {
       const nftInventory = new Set<string>();
@@ -843,13 +902,16 @@ export function invalidateWalletOnchainCache(address: string): void {
 export async function warmWalletDataCache(address: string, months: number = 12) {
   const normalized = address.toLowerCase();
   const balances = await getWalletBalances(normalized);
-  const [ens, walletAge, nft, txBounds, transactions] = await Promise.all([
+  const celoPrice = balances.celoPrice;
+
+  const [ens, walletAge, nft, transactions] = await Promise.all([
     getEnsName(normalized),
     getWalletAge(normalized),
     getNftExposure(normalized),
-    getWalletFirstAndLastTransactions(normalized, balances.celoPrice),
-    getWalletTransactions(normalized, balances.celoPrice, months)
+    getWalletTransactions(normalized, celoPrice, months)
   ]);
+
+  const { firstTransaction, lastTransaction } = deriveTransactionBounds(transactions);
 
   const protocolSet = new Set<string>();
   for (const t of balances.tokens) {
@@ -868,8 +930,8 @@ export async function warmWalletDataCache(address: string, months: number = 12) 
     ens,
     walletAgeMonths: walletAge.months,
     walletAgeDays: walletAge.days,
-    firstTransaction: txBounds.firstTransaction,
-    lastTransaction: txBounds.lastTransaction,
+    firstTransaction,
+    lastTransaction,
     stablecoinBalance: balances.stablecoinBalance,
     volatileBalance: balances.volatileBalance,
     defiExposure: balances.defiExposure,

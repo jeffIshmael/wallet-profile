@@ -6,19 +6,19 @@ import { AppAuthProvider } from "@/providers/AuthProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Chainalyse",
-  description: "Onchain reputation and financial health dashboard for Celo and MiniPay users",
+  title: "OnFRA App",
+  description: "Connect your Celo wallet for onchain financial reputation, scores, and verified passports.",
   metadataBase: new URL("https://wallet-profile-orpin.vercel.app"),
   icons: {
     icon: [{ url: "/icon-512.png", sizes: "512x512", type: "image/png" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
   },
   openGraph: {
-    title: "Chainalyse",
-    description: "Turn your MiniPay wallet into lender-ready proof of income on Celo.",
+    title: "OnFRA",
+    description: "Onchain financial reputation for Celo wallets — scores, income proof, and verified passports.",
     url: "https://wallet-profile-orpin.vercel.app",
-    siteName: "Chainalyse",
-    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Chainalyse" }]
+    siteName: "OnFRA",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "OnFRA" }]
   }
 };
 

@@ -13,7 +13,7 @@ type LandingNavProps = {
   authenticated: boolean;
   address: string | null;
   connecting?: boolean;
-  active?: "home" | "verify" | "stats" | "dashboard";
+  active?: "home" | "verify" | "stats" | "dashboard" | "developers";
 };
 
 function navLinkClass(isActive: boolean) {
@@ -89,6 +89,9 @@ export function LandingNav({
           )}
           <Link href="/verify" className={navLinkClass(active === "verify")}>
             Verify
+          </Link>
+          <Link href="/developers" className={navLinkClass(active === "developers")}>
+            OnFRA
           </Link>
           <Link href="/stats" className={navLinkClass(active === "stats")}>
             Stats

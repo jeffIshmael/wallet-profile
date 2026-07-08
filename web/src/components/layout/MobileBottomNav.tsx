@@ -83,7 +83,7 @@ function FeaturedDashboardLink({ active }: { active: boolean }) {
     >
       <span
         className={clsx(
-          "relative z-10 -mt-5 grid h-14 w-14 place-items-center rounded-full border-2 shadow-[0_0_24px_-4px_rgba(247,147,26,0.55)] transition",
+          "relative z-10 -mt-5 grid h-14 w-14 place-items-center rounded-full border-2 shadow-[0_0_24px_-4px_rgba(184,176,200,0.55)] transition",
           active
             ? "border-btc-orange bg-btc-orange text-white"
             : "border-btc-orange/50 bg-void-surface text-btc-orange hover:border-btc-orange hover:bg-btc-orange/15"

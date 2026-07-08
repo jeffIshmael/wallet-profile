@@ -9,6 +9,10 @@ import { walletCache } from "../memory/wallet_cache.js";
 import { ChatGoogle } from "@langchain/google";
 import { computePeriodFlow, fullOnchainDataCache } from "../lib/getWalletDetails.js";
 
+const GEMINI_SUMMARY_TIMEOUT_MS = Number(process.env.GEMINI_SUMMARY_TIMEOUT_MS ?? 8_000);
+const SKIP_GEMINI_SUMMARY =
+  process.env.SKIP_GEMINI_SUMMARY === "1" || process.env.SKIP_GEMINI_SUMMARY === "true";
+
 export interface DashboardOutput {
   walletAddress: string;
   ens: string | null;
@@ -152,7 +156,7 @@ export async function runAnalysisChain(
     (rawData.volatileBalance ?? 0) === 0 &&
     !rawData.firstTransaction;
 
-  if (apiKey && !isInactiveWallet) {
+  if (apiKey && !isInactiveWallet && !SKIP_GEMINI_SUMMARY) {
     try {
       console.log(`[AnalysisChain] Generating AI summary using ChatGoogle...`);
       const model = new ChatGoogle({
@@ -175,7 +179,10 @@ export async function runAnalysisChain(
       const response = await Promise.race([
         model.invoke(formattedPrompt),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Gemini summary timed out after 20s")), 20_000)
+          setTimeout(
+            () => reject(new Error(`Gemini summary timed out after ${GEMINI_SUMMARY_TIMEOUT_MS}ms`)),
+            GEMINI_SUMMARY_TIMEOUT_MS
+          )
         )
       ]);
       const text = String((response as { content?: unknown }).content ?? "");
@@ -205,6 +212,8 @@ export async function runAnalysisChain(
     }
   } else if (isInactiveWallet) {
     console.log(`[AnalysisChain] Skipping Gemini for inactive wallet ${address}`);
+  } else if (SKIP_GEMINI_SUMMARY) {
+    console.log(`[AnalysisChain] Skipping Gemini (SKIP_GEMINI_SUMMARY enabled)`);
   }
 
   // Fallback Rule-based generator (always runs if no API key or if API call fails)

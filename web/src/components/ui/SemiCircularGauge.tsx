@@ -17,7 +17,7 @@ export function SemiCircularGauge({
   max = 100,
   scoreLabel,
   showScoreFooter = false,
-  accentColor = "#f7931a",
+  accentColor = "#B8B0C8",
   centerContent
 }: SemiCircularGaugeProps) {
   const animated = useCountUp(value);

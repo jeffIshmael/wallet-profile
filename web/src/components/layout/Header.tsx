@@ -2,7 +2,7 @@
 
 import { Copy, Wallet } from "lucide-react";
 import { DashboardHeaderActions } from "@/components/layout/DashboardHeaderActions";
-import { ChainalyseBrand } from "@/components/layout/ChainalyseBrand";
+import { OnfraBrand } from "@/components/layout/OnfraBrand";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ThemeToggleButton } from "@/providers/ThemeProvider";
@@ -24,7 +24,7 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
       <div
         className={`relative mx-auto flex w-full items-center gap-2 px-4 sm:gap-4 sm:px-5 ${compact ? "h-12" : "h-14"}`}
       >
-        <ChainalyseBrand size={compact ? "sm" : "md"} className="shrink-0" />
+        <OnfraBrand size={compact ? "sm" : "md"} className="shrink-0" />
 
         {dashboardActions ? (
           <DashboardHeaderActions

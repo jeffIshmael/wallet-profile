@@ -1,9 +1,10 @@
 {
-  "name": "chainalyse",
+  "name": "onfra",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "web"
+    "web",
+    "onfra-site"
   ],
   "overrides": {
     "@types/react": "^18.3.23",
@@ -11,7 +12,9 @@
   },
   "scripts": {
     "dev": "npm run dev --workspace=web",
+    "dev:site": "npm run dev --workspace=onfra-site",
     "build": "npm run build --workspace=web",
+    "build:site": "npm run build --workspace=onfra-site",
     "start": "npm run start --workspace=web",
     "lint": "npm run lint --workspace=web"
   },

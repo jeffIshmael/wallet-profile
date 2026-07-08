@@ -94,7 +94,7 @@ export function DashboardShell({
           <button
             type="button"
             onClick={() => onChatOpenChange?.(true)}
-            className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-btc-orange/30 bg-void-surface px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_24px_-4px_rgba(247,147,26,0.4)] transition hover:border-btc-orange/60 hover:bg-btc-orange/10"
+            className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-btc-orange/30 bg-void-surface px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_24px_-4px_rgba(184,176,200,0.4)] transition hover:border-btc-orange/60 hover:bg-btc-orange/10"
             aria-label="Open AI chat"
           >
             <Sparkles size={16} className="text-btc-orange" />

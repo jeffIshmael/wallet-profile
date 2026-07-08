@@ -7,7 +7,7 @@ import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 export const MOBILE_NAV_HEIGHT = "4.5rem";
 
-const HIDE_MOBILE_NAV_PATHS = ["/chat"];
+const HIDE_MOBILE_NAV_PATHS = ["/chat", "/"];
 
 function MobileBottomNavGate() {
   const pathname = usePathname();

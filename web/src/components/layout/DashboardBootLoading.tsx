@@ -17,7 +17,7 @@ export function DashboardBootLoading() {
       />
 
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
-        <div className="relative mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(247,147,26,0.5)]">
+        <div className="relative mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(184,176,200,0.5)]">
           <Image src="/logo_dark.png" alt="" width={36} height={36} className="rounded-md" aria-hidden />
           <Loader2
             size={18}

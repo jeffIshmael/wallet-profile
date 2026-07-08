@@ -1,41 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Design4LandingPage } from "@/components/landing/design-4/Design4LandingPage";
-import { useStoredAnalysis } from "@/hooks/useStoredAnalysis";
+import { useEffect } from "react";
+import { SignInScreen } from "@/components/auth/SignInScreen";
+import { DashboardBootLoading } from "@/components/layout/DashboardBootLoading";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
-import { clearAnalysisSession } from "@/lib/dashboardSession";
 
-export default function HomePage() {
+export default function AppEntryPage() {
   const router = useRouter();
-  const { ready, authenticated, login, logout, address, connectingMiniPay } = useWalletAuth();
-  const storedStatus = useStoredAnalysis(ready ? address : null);
+  const { ready, authenticated } = useWalletAuth();
 
-  function handleAnalyseWallet() {
-    if (storedStatus === "yes") {
-      router.push("/dashboard");
-      return;
+  useEffect(() => {
+    if (ready && authenticated) {
+      router.replace("/dashboard");
     }
-    router.push("/dashboard?analyze=1");
+  }, [ready, authenticated, router]);
+
+  if (ready && authenticated) {
+    return <DashboardBootLoading />;
   }
 
-  function handleTryChat() {
-    router.push("/chat");
-  }
-
-  return (
-    <Design4LandingPage
-      authenticated={ready && authenticated}
-      address={ready ? address : null}
-      connecting={connectingMiniPay}
-      storedAnalysisStatus={storedStatus}
-      onSignIn={login}
-      onDisconnect={() => {
-        clearAnalysisSession();
-        logout();
-      }}
-      onAnalyseWallet={handleAnalyseWallet}
-      onTryChat={handleTryChat}
-    />
-  );
+  return <SignInScreen />;
 }

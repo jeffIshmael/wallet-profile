@@ -20,10 +20,14 @@ type AuthContextValue = {
   ready: boolean;
   authenticated: boolean;
   login: () => void;
+  loginWithGoogle: () => void;
+  loginWithEmail: () => void;
+  loginWithWallet: () => void;
   logout: () => void;
   address: string | null;
   miniPay: boolean;
   connectingMiniPay: boolean;
+  privyEnabled: boolean;
   /** EIP-1193 provider for the already-connected app wallet (Privy / MiniPay). */
   getEthereumProvider: () => Promise<EIP1193Provider | undefined>;
 };
@@ -136,6 +140,36 @@ function MiniPayBridge({ children }: { children: React.ReactNode }) {
         }
         setDemoSignedIn(true);
       },
+      loginWithGoogle: () => {
+        if (isMiniPay()) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((address) => setMiniPayAddress(address))
+            .finally(() => setConnectingMiniPay(false));
+          return;
+        }
+        setDemoSignedIn(true);
+      },
+      loginWithEmail: () => {
+        if (isMiniPay()) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((address) => setMiniPayAddress(address))
+            .finally(() => setConnectingMiniPay(false));
+          return;
+        }
+        setDemoSignedIn(true);
+      },
+      loginWithWallet: () => {
+        if (isMiniPay()) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((address) => setMiniPayAddress(address))
+            .finally(() => setConnectingMiniPay(false));
+          return;
+        }
+        setDemoSignedIn(true);
+      },
       logout: () => {
         setMiniPayAddress(null);
         setDemoSignedIn(false);
@@ -143,6 +177,7 @@ function MiniPayBridge({ children }: { children: React.ReactNode }) {
       address: miniPayAddress,
       miniPay,
       connectingMiniPay,
+      privyEnabled: false,
       getEthereumProvider
     }),
     [miniPay, miniPayAddress, connectingMiniPay, demoSignedIn, getEthereumProvider]
@@ -233,6 +268,48 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
         }
         privyLogin();
       },
+      loginWithGoogle: () => {
+        if (miniPay) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((nextAddress) => setMiniPayAddress(nextAddress))
+            .finally(() => setConnectingMiniPay(false));
+          return;
+        }
+        if (!ready) {
+          pendingLogin.current = true;
+          return;
+        }
+        privyLogin({ loginMethods: ["google"] });
+      },
+      loginWithEmail: () => {
+        if (miniPay) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((nextAddress) => setMiniPayAddress(nextAddress))
+            .finally(() => setConnectingMiniPay(false));
+          return;
+        }
+        if (!ready) {
+          pendingLogin.current = true;
+          return;
+        }
+        privyLogin({ loginMethods: ["email"] });
+      },
+      loginWithWallet: () => {
+        if (miniPay) {
+          setConnectingMiniPay(true);
+          connectInjectedWallet()
+            .then((nextAddress) => setMiniPayAddress(nextAddress))
+            .finally(() => setConnectingMiniPay(false));
+          return;
+        }
+        if (!ready) {
+          pendingLogin.current = true;
+          return;
+        }
+        privyLogin({ loginMethods: ["wallet"] });
+      },
       logout: () => {
         setMiniPayAddress(null);
         privyLogout();
@@ -240,6 +317,7 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       address,
       miniPay,
       connectingMiniPay,
+      privyEnabled: true,
       getEthereumProvider
     }),
     [
@@ -270,11 +348,11 @@ export function AppAuthProvider({ children }: { children: React.ReactNode }) {
       appId={appId}
       config={{
         appearance: {
-          theme: "light",
-          accentColor: "#1A56FF",
+          theme: "dark",
+          accentColor: "#B8B0C8",
           showWalletLoginFirst: false
         },
-        loginMethods: ["email", "wallet"],
+        loginMethods: ["email", "wallet", "google"],
         embeddedWallets: {
           ethereum: {
             // Only auto-create embedded wallets for email/social users — not MetaMask logins.

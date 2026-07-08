@@ -20,7 +20,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const analyzeRequested = searchParams.get("analyze") === "1";
   const chatRequested = searchParams.get("chat") === "1";
-  const { address } = useWalletAuth();
+  const { ready, authenticated, address } = useWalletAuth();
   const sessionCache = address ? loadWalletPayload(address) : null;
   const storedStatus = useStoredAnalysis(address);
   const { analyzeWallet, isAnalyzing, walletData, isHydrating, loadStoredWallet } = useWalletData();
@@ -28,6 +28,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [analysisStep, setAnalysisStep] = useState(0);
   const autoAnalyzeStarted = useRef(false);
   const autoLoadStarted = useRef(false);
+
+  useEffect(() => {
+    if (ready && !authenticated) {
+      router.replace("/");
+    }
+  }, [ready, authenticated, router]);
 
   useEffect(() => {
     autoAnalyzeStarted.current = false;
@@ -137,6 +143,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     };
   }, [phase]);
 
+  if (!ready || !authenticated) {
+    return null;
+  }
+
   if (phase === "boot" || isBooting) {
     return <DashboardBootLoading />;
   }
@@ -162,7 +172,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <WalletDataProvider>
-      <Suspense fallback={<DashboardBootLoading />}>
+      <Suspense fallback={null}>
         <DashboardLayoutInner>{children}</DashboardLayoutInner>
       </Suspense>
     </WalletDataProvider>

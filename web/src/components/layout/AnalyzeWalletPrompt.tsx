@@ -30,7 +30,7 @@ export function AnalyzeWalletPrompt({
       <div className="pointer-events-none absolute -left-20 top-20 h-64 w-64 rounded-full bg-btc-orange/10 blur-[120px]" />
 
       <div className="relative z-10 w-full max-w-md text-center">
-        <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(247,147,26,0.5)]">
+        <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl border border-btc-orange/40 bg-btc-orange/10 shadow-[0_0_30px_-8px_rgba(184,176,200,0.5)]">
           <Wallet size={28} className="text-btc-orange" />
         </div>
 
@@ -53,7 +53,7 @@ export function AnalyzeWalletPrompt({
         <button
           type="button"
           onClick={hasStoredAnalysis ? onGoToDashboard : onAnalyze}
-          className="mt-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-8 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(247,147,26,0.4)] transition hover:bg-btc-orange/90 hover:scale-105"
+          className="mt-8 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange/80 px-8 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_20px_-5px_rgba(184,176,200,0.4)] transition hover:bg-btc-orange/90 hover:scale-105"
         >
           {hasStoredAnalysis ? (
             <>

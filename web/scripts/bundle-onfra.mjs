@@ -10,7 +10,8 @@ const outDir = path.join(webRoot, "src", "lib", "agent", "onfra-dist");
 
 const entries = {
   dashboard_bundle: path.join(agentDist, "chains", "dashboard_bundle.js"),
-  chat_agent: path.join(agentDist, "chains", "chat_agent.js")
+  chat_agent: path.join(agentDist, "chains", "chat_agent.js"),
+  warm_cache: path.join(agentDist, "chains", "warm_cache.js")
 };
 
 for (const [name, entry] of Object.entries(entries)) {

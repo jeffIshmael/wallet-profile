@@ -181,7 +181,7 @@ export function AttestationModal({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="attestation-modal-title"
-        className="relative z-10 max-h-[min(90dvh,720px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-void-surface p-5 shadow-[0_0_40px_-10px_rgba(247,147,26,0.2)]"
+        className="relative z-10 max-h-[min(90dvh,720px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-void-surface p-5 shadow-[0_0_40px_-10px_rgba(184,176,200,0.2)]"
       >
         <div className="flex items-start justify-between gap-3">
           <div>

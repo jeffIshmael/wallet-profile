@@ -113,6 +113,14 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
     }
 
     void hydrate();
+
+    // Prefetch onchain data while the user reads the dashboard prompt (same-server cache hit).
+    void fetch("/api/agent/warm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ walletAddress: normalized })
+    }).catch(() => undefined);
+
     return () => {
       cancelled = true;
     };

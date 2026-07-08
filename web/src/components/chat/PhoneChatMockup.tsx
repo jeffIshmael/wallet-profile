@@ -180,8 +180,8 @@ export function PhoneChatMockup({ id, size = "default" }: PhoneChatMockupProps) 
   return (
     <div id={id} className={`mx-auto w-full ${s.shell}`}>
       <div
-        className={`${s.frame} border-white/15 bg-black shadow-[0_24px_80px_-20px_rgba(247,147,26,0.35)] ${
-          size === "lg" ? "shadow-[0_32px_100px_-20px_rgba(247,147,26,0.45)]" : ""
+        className={`${s.frame} border-white/15 bg-black shadow-[0_24px_80px_-20px_rgba(184,176,200,0.35)] ${
+          size === "lg" ? "shadow-[0_32px_100px_-20px_rgba(184,176,200,0.45)]" : ""
         }`}
       >
         <div className={`overflow-hidden ${s.screen} border border-white/10 bg-void-surface`}>

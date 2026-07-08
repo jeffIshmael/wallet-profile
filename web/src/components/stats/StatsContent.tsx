@@ -244,7 +244,12 @@ export function StatsContent() {
                     <XAxis dataKey="label" tick={{ fill: "#94a3b8", fontSize: 11 }} />
                     <YAxis allowDecimals={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
                     <Tooltip contentStyle={chartTooltipStyle} />
-                    <Bar dataKey="count" name="Analyses" fill="#f7931a" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="count"
+                      name="Analyses"
+                      fill="#B8B0C8"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -260,7 +265,13 @@ export function StatsContent() {
                     <YAxis allowDecimals={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
                     <Tooltip contentStyle={chartTooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11, color: "#94a3b8" }} />
-                    <Bar dataKey="analyze" name="Analyze" stackId="api" fill="#f7931a" radius={[0, 0, 0, 0]} />
+                    <Bar
+                      dataKey="analyze"
+                      name="Analyze"
+                      stackId="api"
+                      fill="#B8B0C8"
+                      radius={[0, 0, 0, 0]}
+                    />
                     <Bar dataKey="chat" name="Chat" stackId="api" fill="#60a5fa" />
                     <Bar dataKey="report" name="Report" stackId="api" fill="#34d399" radius={[4, 4, 0, 0]} />
                   </BarChart>
