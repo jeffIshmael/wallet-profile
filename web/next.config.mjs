@@ -14,6 +14,7 @@ const nextConfig = {
       "/api/agent/analyze": ["./web/src/lib/agent/onfra-dist/**/*"],
       "/api/agent/report": ["./web/src/lib/agent/onfra-dist/**/*"],
       "/api/agent/chat": ["./web/src/lib/agent/onfra-dist/**/*"],
+      "/api/agent/warm": ["./web/src/lib/agent/onfra-dist/**/*"],
       "/api/**/*": [
         "./web/generated/prisma/**/*",
         "./node_modules/@prisma/client/**/*",

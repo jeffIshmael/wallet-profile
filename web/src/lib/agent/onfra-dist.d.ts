@@ -17,3 +17,7 @@ declare module "@/lib/agent/onfra-dist/chat_agent.js" {
     }
   ): Promise<ChatAgentResult>;
 }
+
+declare module "@/lib/agent/onfra-dist/warm_cache.js" {
+  export function warmWalletDataCache(address: string, months?: number): Promise<unknown>;
+}

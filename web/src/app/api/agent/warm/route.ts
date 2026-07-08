@@ -1,12 +1,8 @@
 import { badRequest, isEvmAddress, parseJsonBody } from "@/lib/agent/validate";
 
-type WarmModule = {
-  warmWalletDataCache: (address: string, months?: number) => Promise<unknown>;
-};
-
-async function loadWarmModule(): Promise<WarmModule> {
+async function loadWarmModule() {
   try {
-    return (await import("@/lib/agent/onfra-dist/warm_cache.js")) as WarmModule;
+    return await import("@/lib/agent/onfra-dist/warm_cache.js");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
