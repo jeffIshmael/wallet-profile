@@ -50,10 +50,10 @@ export function VerifySection() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] uppercase tracking-widest text-btc-orange">Verify report</p>
           <h1 className="mt-3 font-space text-3xl font-bold text-white md:text-4xl">
-            Confirm a Chainalyse financial passport
+            Confirm a Onfra financial passport
           </h1>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-stardust md:text-base">
-            Paste the verification code from your PDF to confirm it was issued by Chainalyse and registered
+            Paste the verification code from your PDF to confirm it was issued by Onfra and registered
             onchain.
           </p>
         </div>

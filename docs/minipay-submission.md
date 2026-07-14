@@ -1,14 +1,14 @@
 # MiniPay & Proof of Ship — Submission Pack
 
-Prepared for [Chainalyse](https://wallet-profile-orpin.vercel.app). Use this document when filling the [MiniPay Mini App submission form](https://minipay.to/mini-apps) and [Proof of Ship S2](https://www.celopg.eco/programs/proof-of-ship-s2).
+Prepared for [Onfra](https://wallet-profile-orpin.vercel.app). Use this document when filling the [MiniPay Mini App submission form](https://minipay.to/mini-apps) and [Proof of Ship S2](https://www.celopg.eco/programs/proof-of-ship-s2).
 
 ## Listing fields (copy-paste)
 
 | Field | Value |
 |-------|-------|
-| **App name** | Chainalyse |
+| **App name** | Onfra |
 | **Tagline** | Turn your MiniPay wallet into lender-ready proof of income — scores, statements, and AI insights on Celo. |
-| **Publisher** | Chainalyse |
+| **Publisher** | Onfra |
 | **Category** | finance |
 | **App URL** | https://wallet-profile-orpin.vercel.app |
 | **Support URL** | https://wallet-profile-orpin.vercel.app/support |

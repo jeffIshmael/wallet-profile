@@ -3,12 +3,14 @@ import {
   createWalletClient,
   custom,
   encodeFunctionData,
+  concat,
   http,
   parseUnits,
   type Address,
   type EIP1193Provider,
   type Hash
 } from "viem";
+import { toDataSuffix } from "@celo/attribution-tags";
 import { celo } from "@/lib/chains/celo";
 import { USDT_CELO_MAINNET } from "@/lib/blockchain/constants";
 import { isMiniPay, openMiniPayDeposit } from "@/lib/minipay";
@@ -63,11 +65,14 @@ export async function payUsdtViaDirectTransfer(
     );
   }
 
-  const data = encodeFunctionData({
+  const transferData = encodeFunctionData({
     abi: TRANSFER_ABI,
     functionName: "transfer",
     args: [payTo, parseUnits(amountUsdt, 6)]
   });
+
+  const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
+  const data = concat([transferData, toDataSuffix(attributionTag)]);
 
   let hash: Hash;
 

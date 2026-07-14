@@ -118,7 +118,7 @@ export function VerificationGuide({ imageSrc = REPORT_IMAGE }: VerificationGuide
           <div className="relative aspect-[1158/1670] w-full">
             <Image
               src={imageSrc}
-              alt="Chainalyse financial passport report — page 1"
+              alt="Onfra financial passport report — page 1"
               fill
               sizes="(max-width: 650px) 100vw, 650px"
               priority

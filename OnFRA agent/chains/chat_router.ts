@@ -5,6 +5,7 @@ export type QueryIntent =
   | "reputation"
   | "risk"
   | "tokens"
+  | "statement"
   | "general";
 
 export function isExplainerQuestion(message: string): boolean {
@@ -31,7 +32,7 @@ export function isVerifiedReportExplainer(message: string): boolean {
 
 export function answerVerifiedReportExplainer(isOwnWallet: boolean): string {
   const lines = [
-    "A Verified Financial Reputation Report — the Chainalyse Financial Passport — is a lender-ready PDF that turns onchain wallet activity into proof you can share with lenders, underwriters, or partners.",
+    "A Verified Financial Reputation Report — the Onfra Financial Passport — is a lender-ready PDF that turns onchain wallet activity into proof you can share with lenders, underwriters, or partners.",
     "",
     "Each report includes:",
     "• A 6-month transaction statement",
@@ -78,7 +79,7 @@ export function isSupportedChainsQuestion(message: string): boolean {
 
 export function answerSupportedChainsExplainer(): string {
   return [
-    "Today Chainalyse analyzes wallet activity on Celo mainnet only — transactions, balances, income patterns, scores, and verified reports all use Celo onchain data.",
+    "Today Onfra analyzes wallet activity on Celo mainnet only — transactions, balances, income patterns, scores, and verified reports all use Celo onchain data.",
     "",
     "We do not yet analyze Base network activity for financial health, reputation, or loan capacity. Base and additional EVM chains are on the roadmap.",
     "",
@@ -99,6 +100,9 @@ export function classifyQuery(message: string): QueryIntent {
     /\b(receive|received|spend|spent|send|sent)\b.*\b(more|most|mainly)\b/.test(q)
   ) {
     return "tokens";
+  }
+  if (/\b(statement|ledger|history pdf|download statement)\b/.test(q)) {
+    return "statement";
   }
   if (/\b(reputation|trust|trustworthy)\b/.test(q)) return "reputation";
   if (/\b(income|monthly inflow|earn|earning|salary|recurring|subscription)\b/.test(q)) {
@@ -249,6 +253,20 @@ export function answerFromCachedDashboard(
   const you = "Your";
 
   switch (intent) {
+    case "statement": {
+      const addr = dashboard.walletAddress;
+      const lines = [
+        "I can generate a verified onchain transaction statement for your wallet, pin it to IPFS, and provide a shareable PDF link.",
+        "",
+        "Select the period you'd like to generate:",
+        `• [Generate 3-Month Statement (IPFS)](/api/agent/statement/generate?walletAddress=${addr}&period=3M)`,
+        `• [Generate 6-Month Statement (IPFS)](/api/agent/statement/generate?walletAddress=${addr}&period=6M)`,
+        `• [Generate 12-Month Statement / 1 Year (IPFS)](/api/agent/statement/generate?walletAddress=${addr}&period=12M)`,
+        "",
+        "You can also filter, search, and download your statement locally on the Transaction Statements page of your dashboard."
+      ];
+      return lines.join("\n");
+    }
     case "financial_health": {
       const { score, breakdown } = metrics.financialHealth;
       const [weakestLabel, weakestScore] = weakestBreakdown(breakdown);
@@ -360,9 +378,9 @@ export function answerFromCachedDashboard(
         ].join("\n");
       }
 
-      if (/\b(who are you|what are you|onfra|chainalyse|wallet analyst)\b/i.test(message)) {
+      if (/\b(who are you|what are you|onfra|onfra|wallet analyst)\b/i.test(message)) {
         return [
-          "I'm OnFRA — your OnChain Financial Reputation Agent on Chainalyse.",
+          "I'm OnFRA — your OnChain Financial Reputation Agent on Onfra.",
           "",
           "I read your Celo wallet activity and explain:",
           "• Financial health and what's dragging your score",
@@ -463,7 +481,7 @@ export function buildDashboardContextForGemini(dashboard: CachedDashboard): stri
     .join("\n");
 }
 
-export const INTENT_TOOL: Record<Exclude<QueryIntent, "general" | "tokens">, string> = {
+export const INTENT_TOOL: Record<Exclude<QueryIntent, "general" | "tokens" | "statement">, string> = {
   financial_health: "compute_financial_health",
   loan_capacity: "loan_capacity_estimator",
   income: "income_stability_analysis",

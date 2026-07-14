@@ -19,7 +19,7 @@ const webRoot = join(__dirname, "..");
 const PROXY = process.env.ONCHAIN_REPORTER_PROXY_ADDRESS?.trim() || "0xE7621aF5dE3806ba26115bdC89190c65ed835C21";
 const SAMPLE_WALLET = "0xe3B6DE2bAc405cd0106C063e3215f641F7C6A057";
 const SAMPLE_REPORT_ID = "REP-SAMPLE0001";
-const SAMPLE_IPFS_CID = "bafybei7sample0001chainalysefinancialpassport";
+const SAMPLE_IPFS_CID = "bafybei7sample0001onfrafinancialpassport";
 
 const abi = [
   {

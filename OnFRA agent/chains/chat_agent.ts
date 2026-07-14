@@ -42,7 +42,7 @@ const TOOL_STATUS: Record<string, string> = {
 };
 
 const TOOL_RUNNERS: Record<
-  Exclude<QueryIntent, "general" | "tokens">,
+  Exclude<QueryIntent, "general" | "tokens" | "statement">,
   { tool: { invoke: (input: Record<string, string>) => Promise<string> }; format: (data: Record<string, unknown>, address: string) => string }
 > = {
   financial_health: {
@@ -123,7 +123,7 @@ async function answerGeneralWithGemini(
   try {
     const result = await Promise.race([
       model.invoke(
-        `You are OnFRA, an onchain financial reputation assistant on Celo (Chainalyse).
+        `You are OnFRA, an onchain financial reputation assistant on Celo (Onfra).
 Answer the user's question using ONLY the wallet profile below. Be concise, friendly, and practical.
 Plain text only — no markdown, no asterisks. Use "• " for bullet lists when helpful.
 Keep all numbers exactly as given. If data is insufficient, say what you can infer and suggest a clearer follow-up.
@@ -232,6 +232,22 @@ export async function runChatAgent(
   if (intent === "tokens") {
     return {
       text: "I need your dashboard analysis to break down token flows. Run Analyse My Wallet first, then ask again.",
+      toolsUsed: [],
+      source: "cache"
+    };
+  }
+
+  if (intent === "statement") {
+    const addr = context.targetWallet || context.callerWallet;
+    return {
+      text: [
+        "I can generate a verified onchain transaction statement, pin it to IPFS, and provide a shareable PDF link.",
+        "",
+        "Click one of the links below to generate your statement:",
+        `• [Generate 3-Month Statement (IPFS)](/api/agent/statement/generate?walletAddress=${addr}&period=3M)`,
+        `• [Generate 6-Month Statement (IPFS)](/api/agent/statement/generate?walletAddress=${addr}&period=6M)`,
+        `• [Generate 12-Month Statement / 1 Year (IPFS)](/api/agent/statement/generate?walletAddress=${addr}&period=12M)`
+      ].join("\n"),
       toolsUsed: [],
       source: "cache"
     };

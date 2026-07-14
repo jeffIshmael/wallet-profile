@@ -300,7 +300,7 @@ export function ChatSidebar({
       const reply =
         payload.response ??
         payload.error ??
-        "Chainalyse AI could not respond right now. Please try again.";
+        "Onfra AI could not respond right now. Please try again.";
 
       if (payload.sessionId) setSessionId(payload.sessionId);
       finishUserMessage(reply);
@@ -330,7 +330,7 @@ export function ChatSidebar({
 
         {!overlay && !fullPage && (
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-sora text-base font-bold text-white">Chainalyse AI</h2>
+            <h2 className="font-sora text-base font-bold text-white">Onfra AI</h2>
           </div>
         )}
 

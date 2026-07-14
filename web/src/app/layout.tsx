@@ -58,6 +58,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AppAuthProvider>
             <MobileAppShell>{children}</MobileAppShell>
           </AppAuthProvider>
+          {/* @ts-expect-error AppToaster type incompatibility between React 18 and Next.js */}
           <AppToaster />
         </ThemeProvider>
       </body>

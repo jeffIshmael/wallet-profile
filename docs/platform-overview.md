@@ -15,13 +15,13 @@ As a result, reliable earners with years of verifiable blockchain history still 
 
 ## The solution
 
-Chainalyse analyzes onchain activity on Celo and transforms it into lender-ready financial intelligence: health scores, reputation ratings, income stability, loan capacity estimates, transaction statements, and verified financial passports.
+Onfra analyzes onchain activity on Celo and transforms it into lender-ready financial intelligence: health scores, reputation ratings, income stability, loan capacity estimates, transaction statements, and verified financial passports.
 
 Instead of asking users for payslips and bank statements, lenders can evaluate a wallet's financial behavior through transparent blockchain data.
 
 ## Powered by OnFRA
 
-**OnFRA** (Onchain Financial Reputation Agent) is the AI layer behind Chainalyse. It is registered as [ERC-8004 agent #9219 on Celo mainnet](https://8004scan.io/agents/celo/9219) and exposes analyze, chat, report, and verify capabilities through the Chainalyse web app and REST API.
+**OnFRA** (Onchain Financial Reputation Agent) is the AI layer behind Onfra. It is registered as [ERC-8004 agent #9219 on Celo mainnet](https://8004scan.io/agents/celo/9219) and exposes analyze, chat, report, and verify capabilities through the Onfra web app and REST API.
 
 ## User journey
 
@@ -31,7 +31,7 @@ Instead of asking users for payslips and bank statements, lenders can evaluate a
 4. **Inspect transactions** — Underlying onchain evidence behind every score.
 5. **Download statements** — PDF transaction statements for a selected period.
 6. **Generate financial passport** — Verified report with scores, insights, borrowing recommendations, and a verification code.
-7. **Verify onchain** — Lenders paste the verification code at `/verify` to confirm the report was issued by Chainalyse and registered onchain.
+7. **Verify onchain** — Lenders paste the verification code at `/verify` to confirm the report was issued by Onfra and registered onchain.
 8. **Chat with OnFRA** — Ask natural-language questions about the wallet, report, risk, or loan readiness.
 
 ## Key features
@@ -59,7 +59,7 @@ Conversational interface to query wallet financial reputation in natural languag
 
 ### MiniPay native experience
 
-Chainalyse runs inside Celo MiniPay with auto wallet connection, mobile bottom navigation, and direct USDT payments for premium features.
+Onfra runs inside Celo MiniPay with auto wallet connection, mobile bottom navigation, and direct USDT payments for premium features.
 
 ## Who it helps
 
@@ -83,5 +83,5 @@ Payments settle in USDT on Celo via x402.
 
 - **Demo:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
 - **Video walkthrough:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
-- **X:** [@chainalyse_xyz](https://x.com/chainalyse_xyz)
+- **X:** [@onfra_xyz](https://x.com/onfra_xyz)
 - **OnFRA agent:** [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219)

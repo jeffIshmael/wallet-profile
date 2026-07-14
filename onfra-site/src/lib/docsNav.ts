@@ -22,7 +22,8 @@ export const DOCS_NAV: DocsNavSection[] = [
       { title: "REST API", href: "/docs/rest-api" },
       { title: "Lender screening", href: "/docs/lenders" },
       { title: "Signal endpoints", href: "/docs/signals" },
-      { title: "x402 payments", href: "/docs/x402" }
+      { title: "x402 payments", href: "/docs/x402" },
+      { title: "Onchain & Attribution", href: "/docs/onchain" }
     ]
   },
   {

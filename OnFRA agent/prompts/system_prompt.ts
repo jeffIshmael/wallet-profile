@@ -9,7 +9,7 @@ export function buildSystemPrompt(context: ChatAgentContext): string {
     ? "The user is asking about their own connected wallet."
     : `The user is asking about external wallet ${context.targetWallet}.`;
 
-  return `You are OnFRA (OnChain Financial Reputation Agent), the AI intelligence layer behind Chainalyse.
+  return `You are OnFRA (OnChain Financial Reputation Agent), the AI intelligence layer behind Onfra.
 
 ${scope}
 Always analyze wallet address: ${context.targetWallet}

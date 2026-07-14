@@ -3,7 +3,9 @@
 import { useWallets } from "@privy-io/react-auth";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { useCallback } from "react";
-import type { Hex } from "viem";
+import { concat, type Hex } from "viem";
+import { toDataSuffix } from "@celo/attribution-tags";
+
 import {
   buildGiveFeedbackCall,
   markFeedbackSubmitted,
@@ -57,10 +59,12 @@ export function useSubmitAgentFeedback(address: string | null) {
 
         try {
           const { to, data } = await buildGiveFeedbackCall(onChainReviewer, tags);
+          const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
+          const taggedData = concat([data, toDataSuffix(attributionTag)]);
           const hash = await smartWalletClient.sendTransaction(
             {
               to,
-              data,
+              data: taggedData,
               value: 0n,
               type: "legacy"
             },

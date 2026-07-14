@@ -14,8 +14,11 @@ function StatementsPageContent() {
 
 export default function TransactionStatementsRoute() {
   return (
-    <Suspense fallback={null}>
-      <StatementsPageContent />
-    </Suspense>
+    <>
+      {/* @ts-expect-error Suspense type incompatibility between React 18 and Next.js */}
+      <Suspense fallback={null}>
+        <StatementsPageContent />
+      </Suspense>
+    </>
   );
 }

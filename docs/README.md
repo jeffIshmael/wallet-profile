@@ -1,6 +1,6 @@
-# Chainalyse Documentation
+# Onfra Documentation
 
-Chainalyse is an onchain financial reputation platform for the Celo ecosystem. Users connect a wallet, receive AI-powered financial intelligence, generate verified financial passports, and verify reports onchain. The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), an [ERC-8004 agent on Celo mainnet (#9219)](https://8004scan.io/agents/celo/9219).
+Onfra is an onchain financial reputation platform for the Celo ecosystem. Users connect a wallet, receive AI-powered financial intelligence, generate verified financial passports, and verify reports onchain. The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), an [ERC-8004 agent on Celo mainnet (#9219)](https://8004scan.io/agents/celo/9219).
 
 ## Quick links
 
@@ -9,7 +9,7 @@ Chainalyse is an onchain financial reputation platform for the Celo ecosystem. U
 | **Live demo** | [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) |
 | **Demo video** | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
 | **GitHub** | [github.com/jeffIshmael/wallet-profile](https://github.com/jeffIshmael/wallet-profile) |
-| **X / Twitter** | [@chainalyse_xyz](https://x.com/chainalyse_xyz) |
+| **X / Twitter** | [@onfra_xyz](https://x.com/onfra_xyz) |
 | **OnFRA on 8004scan** | [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219) |
 | **OnchainReporter contract** | [celoscan.io](https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21) |
 
@@ -21,7 +21,7 @@ Chainalyse is an onchain financial reputation platform for the Celo ecosystem. U
 | [Architecture](./architecture.md) | Monorepo layout, data flow, and integrations |
 | [Onchain](./onchain.md) | Smart contracts, ERC-8004 agent, verification, and x402 payments |
 | [API reference](./api.md) | REST endpoints, schemas, and agent discovery manifests |
-| [MiniPay guide](./minipay.md) | Using Chainalyse inside Celo MiniPay |
+| [MiniPay guide](./minipay.md) | Using Onfra inside Celo MiniPay |
 | [Scoring methodology](../OnFRA%20agent/METHODOLOGY.md) | Formulas and rules behind financial health and reputation scores |
 
 ## Repository packages

@@ -195,7 +195,7 @@ function drawFooter(doc: jsPDF, margin: number, pageWidth: number) {
     doc.text("Transaction data can be independently verified on celoscan.io.", margin, footerY + 3.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(THEME.accent[0], THEME.accent[1], THEME.accent[2]);
-    doc.text("Chainalyse", pageWidth - margin, footerY, { align: "right" });
+    doc.text("Onfra", pageWidth - margin, footerY, { align: "right" });
     doc.setFont("helvetica", "normal");
     doc.setTextColor(110, 110, 120);
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, footerY + 3.5, { align: "right" });
@@ -206,10 +206,10 @@ export function buildStatementFilename(walletAddress: string, period: StatementP
   const { start, end } = getPeriodDateRange(period);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   const masked = maskWalletAddress(walletAddress);
-  return `Chainalyse_Statement_${fmt(end)}_to_${fmt(start)}_${masked}.pdf`;
+  return `Onfra_Statement_${fmt(end)}_to_${fmt(start)}_${masked}.pdf`;
 }
 
-export async function exportStatementPdf(input: StatementExportInput): Promise<void> {
+export async function buildStatementPdfBytes(input: StatementExportInput): Promise<Uint8Array> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -262,7 +262,7 @@ export async function exportStatementPdf(input: StatementExportInput): Promise<v
       1: { cellWidth: 24 },
       2: { cellWidth: 26, fontStyle: "bold" },
       3: { cellWidth: 18, halign: "right", textColor: [0, 130, 100] as [number, number, number] },
-      4: { cellWidth: 18, halign: "right", textColor: [180, 90, 0] as [number, number, number] },
+      4: { cellWidth: 18, halign: "right", textColor: [144, 136, 160] as [number, number, number] },
       5: { cellWidth: "auto", fontSize: 5.5, fontStyle: "normal" }
     }
   });
@@ -271,5 +271,18 @@ export async function exportStatementPdf(input: StatementExportInput): Promise<v
   drawExecutiveSummary(doc, analytics.executiveSummary, y, margin, pageWidth);
 
   drawFooter(doc, margin, pageWidth);
-  doc.save(buildStatementFilename(input.walletAddress, input.period));
+  
+  const pdfOutput = doc.output("arraybuffer");
+  return new Uint8Array(pdfOutput);
+}
+
+export async function exportStatementPdf(input: StatementExportInput): Promise<void> {
+  const bytes = await buildStatementPdfBytes(input);
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = buildStatementFilename(input.walletAddress, input.period);
+  a.click();
+  URL.revokeObjectURL(url);
 }

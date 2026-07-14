@@ -7,7 +7,7 @@ export const REPORT_THEME = {
   text: [255, 255, 255] as const,
   textMuted: [190, 190, 200] as const,
   incoming: [0, 180, 140] as const,
-  outgoing: [220, 90, 50] as const,
+  outgoing: [144, 136, 160] as const,
   body: [40, 40, 48] as const,
   surface: [248, 249, 252] as const,
   border: [225, 228, 235] as const
@@ -60,52 +60,34 @@ function fillBandBetweenCurves(
   fillPolygon(doc, [...topEdge, ...bottomEdge.slice().reverse()], color);
 }
 
-/** Smooth swoosh header — orange top stripe, navy wave, right orange trim, left accent. */
 function drawCurvedHeaderGraphics(doc: jsPDF, pageWidth: number, headerHeight: number) {
-  const navy = REPORT_THEME.bg;
-  const orange = REPORT_THEME.accent;
-  const white = [255, 255, 255] as const;
+  const deepPurple = [45, 30, 80] as const;
+  const lavender = [150, 130, 190] as const;
+  const lightPurple = [210, 200, 230] as const;
   const w = pageWidth;
 
-  doc.setFillColor(white[0], white[1], white[2]);
+  // Solid deep purple background for the header
+  doc.setFillColor(deepPurple[0], deepPurple[1], deepPurple[2]);
   doc.rect(0, 0, w, headerHeight, "F");
 
-  const orangeBottom = sampleCurve(
-    { x: 0, y: 1.2 },
-    { x: w * 0.42, y: 2.4 },
-    { x: w * 0.78, y: 2 },
-    { x: w, y: 1.3 }
+  // Top swoosh (lavender)
+  const topSwoosh = sampleCurve(
+    { x: 0, y: 10 },
+    { x: w * 0.4, y: 20 },
+    { x: w * 0.8, y: 5 },
+    { x: w, y: 15 }
   );
-  fillBandBetweenCurves(doc, [{ x: 0, y: 0 }, { x: w, y: 0 }], orangeBottom, orange);
+  fillBandBetweenCurves(doc, [{ x: 0, y: 0 }, { x: w, y: 0 }], topSwoosh, lavender);
 
-  const navyTop = offsetCurveY(orangeBottom, 0.35);
-  const navyBottom = sampleCurve(
-    { x: 0, y: 13.5 },
-    { x: w * 0.26, y: 18 },
-    { x: w * 0.64, y: 21.5 },
-    { x: w, y: 12.5 }
+  // Bottom swoosh (light purple trim)
+  const bottomSwooshTop = sampleCurve(
+    { x: 0, y: headerHeight - 15 },
+    { x: w * 0.3, y: headerHeight - 5 },
+    { x: w * 0.7, y: headerHeight - 20 },
+    { x: w, y: headerHeight - 10 }
   );
-  fillBandBetweenCurves(doc, navyTop, navyBottom, navy);
-
-  const navyBottomRight = sliceCurveFrom(navyBottom, 0.48);
-  const orangeTrimBottom = offsetCurveY(navyBottomRight, 1.1);
-  fillBandBetweenCurves(doc, navyBottomRight, orangeTrimBottom, orange);
-
-  const leftAccentTop = sampleCurve(
-    { x: 0, y: headerHeight - 4.5 },
-    { x: w * 0.06, y: headerHeight - 9 },
-    { x: w * 0.17, y: headerHeight - 9.5 },
-    { x: w * 0.3, y: headerHeight - 5 }
-  );
-  fillBandBetweenCurves(
-    doc,
-    leftAccentTop,
-    [
-      { x: 0, y: headerHeight },
-      { x: w * 0.3, y: headerHeight }
-    ],
-    navy
-  );
+  const bottomSwooshBottom = offsetCurveY(bottomSwooshTop, 3);
+  fillBandBetweenCurves(doc, bottomSwooshTop, bottomSwooshBottom, lightPurple);
 }
 
 export type DocumentHeaderOptions = {
@@ -113,7 +95,7 @@ export type DocumentHeaderOptions = {
   pageWidth: number;
   margin: number;
   logoDataUrl: string | null;
-  /** Second line under the Chainalyse wordmark (orange). */
+  /** Second line under the Onfra wordmark (orange). */
   subtitle: string;
   /** Small badge shown on the navy swoosh (top-right). */
   badge: string;
@@ -132,23 +114,23 @@ export function drawCurvedDocumentHeader({
   drawCurvedHeaderGraphics(doc, pageWidth, headerHeight);
 
   const brandRight = pageWidth - margin;
-  const logoSize = 12;
-  const brandBlockRight = logoDataUrl ? brandRight - logoSize - 4 : brandRight;
-  const brandY = headerHeight - 11;
+  const logoSize = 24; // Increased from 12
+  const brandBlockRight = logoDataUrl ? brandRight - logoSize - 6 : brandRight;
+  const brandY = headerHeight - 22; // Moved higher so it sits on the deep purple background
 
   if (logoDataUrl) {
-    doc.addImage(logoDataUrl, "PNG", brandRight - logoSize, brandY, logoSize, logoSize);
+    doc.addImage(logoDataUrl, "PNG", brandRight - logoSize, brandY - 8, logoSize, logoSize);
   }
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.setTextColor(REPORT_THEME.bg[0], REPORT_THEME.bg[1], REPORT_THEME.bg[2]);
-  doc.text("CHAINALYSE", brandBlockRight, brandY + 4.5, { align: "right" });
+  doc.setTextColor(255, 255, 255);
+  doc.text("ONFRA", brandBlockRight, brandY + 2, { align: "right" });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(6.8);
   doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
-  doc.text(subtitle.toUpperCase(), brandBlockRight, brandY + 9.5, { align: "right" });
+  doc.text(subtitle.toUpperCase(), brandBlockRight, brandY + 7, { align: "right" });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(5.8);

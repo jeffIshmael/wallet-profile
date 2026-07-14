@@ -12,7 +12,7 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
       <header className="border-b border-white/10 px-6 py-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <Link href="/" className="font-dancing text-xl text-btc-orange transition hover:opacity-90">
-            Chainalyse
+            Onfra
           </Link>
           <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">{title}</p>
         </div>

@@ -86,7 +86,7 @@ export function DashboardShell({
           <div
             className={`min-w-0 flex-1 px-3 py-3 sm:px-4 ${scrollable ? "overflow-y-auto" : "overflow-hidden"}`}
           >
-            {children}
+            {children as any}
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export function DashboardShell({
             aria-label="Open AI chat"
           >
             <Sparkles size={16} className="text-btc-orange" />
-            <span className="hidden sm:inline">Chainalyse AI</span>
+            <span className="hidden sm:inline">Onfra AI</span>
             <MessageCircle size={16} className="text-btc-orange sm:hidden" />
           </button>
         )}

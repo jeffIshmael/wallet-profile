@@ -1,4 +1,4 @@
-# Chainalyse Demo Video Script
+# Onfra Demo Video Script
 
 Target length: 2:40-3:00  
 Format: judge demo / product walkthrough  
@@ -20,17 +20,17 @@ This keeps the recording clean and avoids needing one perfect take.
 
 ### 0:00-0:25 — Problem + Landing Page
 
-**Show:** Chainalyse landing page. Scroll slightly to show Celo support and OnFRA if useful.
+**Show:** Onfra landing page. Scroll slightly to show Celo support and OnFRA if useful.
 
 **Narration:**
 
-This is Chainalyse, powered by OnFRA: an onchain financial reputation agent for the Celo ecosystem.
+This is Onfra, powered by OnFRA: an onchain financial reputation agent for the Celo ecosystem.
 
 The problem we are solving is simple: your wallet knows your income, but your lender does not.
 
 Millions of freelancers, creators, remote workers, and DAO contributors receive payments in crypto, but when they apply for loans, they are still asked for bank statements, payslips, or employment records that do not reflect their real financial history.
 
-Chainalyse turns wallet activity into lender-ready financial intelligence.
+Onfra turns wallet activity into lender-ready financial intelligence.
 
 ### 0:25-0:50 — Connect Wallet + Start Analysis
 
@@ -40,7 +40,7 @@ Chainalyse turns wallet activity into lender-ready financial intelligence.
 
 The user starts by connecting their wallet.
 
-Once connected, Chainalyse lets OnFRA analyze their onchain activity on Celo, including income patterns, savings behavior, wallet maturity, transaction history, and financial consistency.
+Once connected, Onfra lets OnFRA analyze their onchain activity on Celo, including income patterns, savings behavior, wallet maturity, transaction history, and financial consistency.
 
 Instead of manually filling out financial forms, the wallet becomes the source of truth.
 
@@ -74,7 +74,7 @@ This matters because the analysis is grounded in transparent onchain data. The d
 
 From here, the user can download a transaction statement for their wallet activity.
 
-More importantly, they can generate an official Chainalyse financial passport: a lender-ready report that includes scores, income insights, borrowing recommendations, and a verification code.
+More importantly, they can generate an official Onfra financial passport: a lender-ready report that includes scores, income insights, borrowing recommendations, and a verification code.
 
 This is what the user can share when they need to prove financial reputation from crypto income.
 
@@ -86,7 +86,7 @@ This is what the user can share when they need to prove financial reputation fro
 
 The report is not just a static PDF.
 
-It can be registered onchain and verified later using the report code. A lender can paste the code, confirm the wallet, scores, report hash, and registry data, and know the report was issued by Chainalyse.
+It can be registered onchain and verified later using the report code. A lender can paste the code, confirm the wallet, scores, report hash, and registry data, and know the report was issued by Onfra.
 
 That makes the financial passport portable and verifiable.
 
@@ -108,7 +108,7 @@ They can ask questions about the wallet, the report, transactions, risk, or loan
 
 So the complete flow is: connect a wallet, analyze financial behavior, generate a financial passport, verify it onchain, and ask the OnFRA agent for deeper insight.
 
-Chainalyse turns crypto income into financial reputation: readable for users, useful for lenders, and verifiable onchain.
+Onfra turns crypto income into financial reputation: readable for users, useful for lenders, and verifiable onchain.
 
 ## Must-Show Judge Moments
 
@@ -117,7 +117,7 @@ Chainalyse turns crypto income into financial reputation: readable for users, us
 - Dashboard with financial health, reputation, income stability, and loan capacity.
 - Transaction evidence behind the scores.
 - Downloadable transaction statement.
-- Official Chainalyse financial passport/report.
+- Official Onfra financial passport/report.
 - Report verification code.
 - Onchain verification result.
 - OnFRA agent chat.

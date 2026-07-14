@@ -1,10 +1,10 @@
 # MiniPay Guide
 
-Chainalyse is optimized for use inside [Celo MiniPay](https://minipay.xyz) — the stablecoin wallet built into Opera Mini and available as a standalone app.
+Onfra is optimized for use inside [Celo MiniPay](https://minipay.xyz) — the stablecoin wallet built into Opera Mini and available as a standalone app.
 
 ## Auto wallet connection
 
-When opened inside MiniPay, Chainalyse detects the injected Ethereum provider and auto-connects the user's wallet. No separate sign-in step is required.
+When opened inside MiniPay, Onfra detects the injected Ethereum provider and auto-connects the user's wallet. No separate sign-in step is required.
 
 The auth bridge lives in `web/src/providers/AuthProvider.tsx` (`MiniPayBridge`).
 
@@ -53,7 +53,7 @@ MiniPay users pay for premium features (external wallet queries, verified report
 - **Demo:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
 - **Video walkthrough:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
 - **OnFRA agent:** [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219)
-- **X:** [@chainalyse_xyz](https://x.com/chainalyse_xyz)
+- **X:** [@onfra_xyz](https://x.com/onfra_xyz)
 
 ## MiniPay submission
 

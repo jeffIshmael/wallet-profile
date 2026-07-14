@@ -1,10 +1,7 @@
-import { createThirdwebClient } from "thirdweb";
 import {
   assertMiniPayTransferPayment,
   getMiniPayTxHeader
 } from "@/lib/x402/minipaySettlement";
-import { celo } from "thirdweb/chains";
-import { facilitator, settlePayment, type ThirdwebX402Facilitator } from "thirdweb/x402";
 import {
   AUTH_SCHEME,
   CHAIN,
@@ -15,11 +12,8 @@ import {
   USDT_CELO_MAINNET
 } from "@/lib/blockchain/constants";
 import {
-  getThirdwebClientId,
-  getThirdwebSecretKey,
   getX402PayToAddress,
   getX402SettlementMode,
-  isX402Configured,
   isX402Enforced
 } from "@/lib/agent/env";
 
@@ -29,8 +23,6 @@ const TIER_AMOUNTS: Record<X402PriceTier, string> = {
   external: PRICING.externalWalletQueryUsdt,
   report: PRICING.verifiedReportUsdt
 };
-
-let cachedFacilitator: ThirdwebX402Facilitator | null | undefined;
 
 function usdtToAtomic(amount: string): string {
   const [whole, frac = ""] = amount.split(".");
@@ -42,10 +34,11 @@ function decodePaymentRequiredError(
   responseHeaders?: Record<string, string>
 ): string | null {
   const encoded =
-    responseHeaders?.["PAYMENT-REQUIRED"] ?? responseHeaders?.["payment-required"];
+    responseHeaders?.["PAYMENT-REQUIRED"] ?? responseHeaders?.["payment-required"] ?? responseHeaders?.["Payment-Required"];
   if (!encoded) return null;
   try {
-    const json = JSON.parse(Buffer.from(encoded, "base64").toString("utf8")) as {
+    const rawBytes = Buffer.from(encoded, "base64");
+    const json = JSON.parse(rawBytes.toString("utf8")) as {
       error?: string;
       message?: string;
     };
@@ -53,40 +46,6 @@ function decodePaymentRequiredError(
   } catch {
     return null;
   }
-}
-
-function tierPrice(tier: X402PriceTier) {
-  return {
-    amount: usdtToAtomic(TIER_AMOUNTS[tier]),
-    asset: {
-      address: USDT_CELO_MAINNET,
-      decimals: 6
-    }
-  };
-}
-
-function getFacilitator(): ThirdwebX402Facilitator | null {
-  if (cachedFacilitator !== undefined) return cachedFacilitator;
-
-  const secretKey = getThirdwebSecretKey();
-  const payTo = getX402PayToAddress();
-  if (!secretKey || !payTo) {
-    cachedFacilitator = null;
-    return null;
-  }
-
-  const client = createThirdwebClient({
-    secretKey,
-    clientId: getThirdwebClientId()
-  });
-
-  cachedFacilitator = facilitator({
-    client,
-    serverWalletAddress: payTo,
-    waitUntil: getX402SettlementMode()
-  });
-
-  return cachedFacilitator;
 }
 
 export function getPaymentHeader(req: Request): string | null {
@@ -148,10 +107,9 @@ export async function assertPayment(
     return null;
   }
 
-  const twFacilitator = getFacilitator();
   const payTo = getX402PayToAddress();
-  if (!twFacilitator || !payTo) {
-    console.warn(`${logPrefix} X402_ENFORCE is enabled but Thirdweb facilitator is not configured.`);
+  if (!payTo) {
+    console.warn(`${logPrefix} X402_ENFORCE is enabled but payout address is not configured.`);
     return paymentRequiredResponse(tier);
   }
 
@@ -173,62 +131,90 @@ export async function assertPayment(
   const settlementMode = getX402SettlementMode();
   const priceUsdt = TIER_AMOUNTS[tier];
   const paymentHeader = getPaymentHeader(req);
-  console.log(
-    `${logPrefix} Settling payment: price=${priceUsdt} USDT, payTo=${payTo.slice(0, 10)}…, mode=${settlementMode}, hasPaymentHeader=${Boolean(paymentHeader)}`
-  );
 
-  const resourceUrl = new URL(req.url).toString();
-  const settleStarted = Date.now();
-  const result = await settlePayment({
-    resourceUrl,
-    method: req.method.toUpperCase(),
-    paymentData: paymentHeader,
-    payTo,
-    network: celo,
-    price: tierPrice(tier),
-    facilitator: twFacilitator,
-    routeConfig: {
-      description: `Chainalyse ${tier}`,
-      mimeType: "application/json"
-    }
-  });
+  if (!paymentHeader) {
+    console.log(`${logPrefix} No payment header found. Returning 402 Payment Required.`);
+    return paymentRequiredResponse(tier);
+  }
 
-  if (result.status === 200) {
+  if (settlementMode === "simulated") {
     console.log(
-      `${logPrefix} Payment settled in ${Date.now() - settleStarted}ms (mode=${settlementMode}, price=${priceUsdt} USDT).` +
-        (settlementMode === "simulated"
-          ? " Simulated settlement — no real USDT is transferred."
-          : " Real USDT transfer confirmed on Celo.")
+      `${logPrefix} Payment settled (simulated mode — no real USDT is transferred, hasPaymentHeader=true, price=${priceUsdt} USDT).`
     );
     return null;
   }
 
-  const settlementError = decodePaymentRequiredError(result.responseHeaders);
+  console.log(
+    `${logPrefix} Settling payment: price=${priceUsdt} USDT, payTo=${payTo.slice(0, 10)}…, mode=${settlementMode}, hasPaymentHeader=true`
+  );
+
+  const settleStarted = Date.now();
+  let resultStatus = 402;
+  let resultHeaders: Record<string, string> = {};
+  let responseBody: any = null;
+
+  try {
+    const settleResponse = await fetch("https://api.x402.celo.org/settle", {
+      method: "POST",
+      headers: {
+        "X-API-Key": process.env.X402_API_KEY || "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        payment: paymentHeader,
+        network: "celo"
+      })
+    });
+
+    resultStatus = settleResponse.status;
+    settleResponse.headers.forEach((value, key) => {
+      resultHeaders[key] = value;
+    });
+
+    const text = await settleResponse.text();
+    if (text) {
+      try {
+        responseBody = JSON.parse(text);
+      } catch {
+        // Not JSON
+      }
+    }
+  } catch (error) {
+    console.error(`${logPrefix} Error calling Celo x402 facilitator:`, error);
+  }
+
+  if (resultStatus === 200 || resultStatus === 201) {
+    console.log(
+      `${logPrefix} Payment settled in ${Date.now() - settleStarted}ms (price=${priceUsdt} USDT).`
+    );
+    return null;
+  }
+
+  const settlementError = decodePaymentRequiredError(resultHeaders);
   console.warn(
-    `${logPrefix} Payment required (HTTP ${result.status}) after ${Date.now() - settleStarted}ms` +
+    `${logPrefix} Payment required (HTTP ${resultStatus}) after ${Date.now() - settleStarted}ms` +
       (settlementError ? ` — ${settlementError}` : " — client must sign and retry.")
   );
 
-  const body =
-    "responseBody" in result && result.responseBody && Object.keys(result.responseBody).length > 0
-      ? { code: "PAYMENT_REQUIRED", ...result.responseBody }
-      : {
-          error: "Payment Required",
-          code: "PAYMENT_REQUIRED",
-          scheme: AUTH_SCHEME,
-          priceUsdt: TIER_AMOUNTS[tier],
-          currency: USDT_CELO_MAINNET,
-          chain: CHAIN,
-          chainId: CHAIN_ID,
-          paymentHeader: PAYMENT_HEADER,
-          freeForOwnWallet: tier === "external"
-        };
+  const body = responseBody && typeof responseBody === "object"
+    ? { code: "PAYMENT_REQUIRED", ...responseBody }
+    : {
+        error: "Payment Required",
+        code: "PAYMENT_REQUIRED",
+        scheme: AUTH_SCHEME,
+        priceUsdt: TIER_AMOUNTS[tier],
+        currency: USDT_CELO_MAINNET,
+        chain: CHAIN,
+        chainId: CHAIN_ID,
+        paymentHeader: PAYMENT_HEADER,
+        freeForOwnWallet: tier === "external"
+      };
 
   return new Response(JSON.stringify(body), {
-    status: result.status,
+    status: resultStatus,
     headers: {
       "Content-Type": "application/json",
-      ...result.responseHeaders
+      ...resultHeaders
     }
   });
 }

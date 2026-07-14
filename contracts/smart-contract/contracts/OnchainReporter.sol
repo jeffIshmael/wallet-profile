@@ -7,7 +7,7 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 /// @title OnchainReporter
-/// @notice OnFRA financial attestation registry for verified Chainalyse reports.
+/// @notice OnFRA financial attestation registry for verified Onfra reports.
 /// @dev Upgradeable (UUPS). Report IDs are opaque codes: REP- + 10 uppercase alphanumeric chars.
 contract OnchainReporter is
     Initializable,

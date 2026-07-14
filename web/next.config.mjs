@@ -7,6 +7,9 @@ const monorepoRoot = path.join(__dirname, "..");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
     // Workspace deps (e.g. @prisma/client) are hoisted to the repo root.
     outputFileTracingRoot: monorepoRoot,

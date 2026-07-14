@@ -1,11 +1,11 @@
 {
-  "app": "Chainalyse",
+  "app": "Onfra",
   "appUrl": "https://wallet-profile-orpin.vercel.app",
   "alternateUrls": [],
   "updated": "2026-06-22",
   "chain": "celo-mainnet",
   "chainId": 42220,
-  "description": "Network manifest for MiniPay submission — all origins, subdomains, and external resources used by the Chainalyse Mini App.",
+  "description": "Network manifest for MiniPay submission — all origins, subdomains, and external resources used by the Onfra Mini App.",
   "firstParty": {
     "origins": [
       "https://wallet-profile-orpin.vercel.app"
@@ -68,7 +68,7 @@
     "https://aws-1-eu-central-1.pooler.supabase.com"
   ],
   "externalLinks": [
-    "https://x.com/chainalyse_xyz",
+    "https://x.com/onfra_xyz",
     "https://github.com/jeffIshmael/wallet-profile",
     "https://8004scan.io",
     "https://youtu.be/7WC3lD5dDj4",

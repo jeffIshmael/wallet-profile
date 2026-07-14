@@ -4,7 +4,7 @@ export function SolutionSection() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-12 lg:flex-row lg:items-stretch lg:gap-10">
           <div className="w-full max-w-xs shrink-0 rounded-2xl border border-white/10 bg-black/40 p-5 md:p-6">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">Chainalyse</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">Onfra</p>
             <p className="mt-3 font-mono text-lg text-btc-orange">0x7A3...91F</p>
             <ul className="mt-6 space-y-3 border-t border-white/10 pt-6">
               <li className="flex items-center gap-2 text-sm text-stardust">
@@ -31,7 +31,7 @@ export function SolutionSection() {
               <span className="text-btc-orange/60">financial reputation.</span>
             </h2>
             <p className="mt-5 text-sm leading-7 text-stardust md:text-base">
-              Chainalyse analyzes onchain activity and transforms it into lender-ready financial insights, reputation
+              Onfra analyzes onchain activity and transforms it into lender-ready financial insights, reputation
               scores, income verification and borrowing recommendations.
             </p>
             <p className="mt-4 text-sm leading-7 text-stardust md:text-base">

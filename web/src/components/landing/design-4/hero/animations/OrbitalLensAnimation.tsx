@@ -187,7 +187,7 @@ export function OrbitalLensAnimation() {
       </div>
 
       <div className="border-t border-white/5 px-4 py-2.5 text-center font-mono text-[8px] uppercase tracking-widest text-stardust/50">
-        Wallet → Chainalyse → Intelligence
+        Wallet → Onfra → Intelligence
       </div>
     </div>
   );

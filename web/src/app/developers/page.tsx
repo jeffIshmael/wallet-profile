@@ -20,13 +20,71 @@ const SCREEN_EXAMPLE = `curl -X POST ${APP_BASE_URL}/api/lender/screen \\
 
 const VERIFY_EXAMPLE = `curl ${APP_BASE_URL}/api/agent/verify/REP-X141GYYEUM`;
 
+// EIP-3009 signing example shown on the developers page
+const X402_SIGNING_EXAMPLE = [
+  "import { privateKeyToAccount } from 'viem/accounts';",
+  "import { createWalletClient, http, toHex, parseUnits, keccak256 } from 'viem';",
+  "import { celo } from 'viem/chains';",
+  "",
+  "// Config",
+  "const USDC = '0xcebA9300f2b948710d2653dD7B07f33A8B32118C'; // Celo mainnet USDC",
+  `const ONFRA_API = '${APP_BASE_URL}';`,
+  "",
+  "const account = privateKeyToAccount(process.env.AGENT_PRIVATE_KEY);",
+  "const client = createWalletClient({ chain: celo, transport: http(), account });",
+  "",
+  "// 1. Discover the recipient treasury address",
+  "const { publicPayTo } = await fetch(`${ONFRA_API}/api/x402/config`).then(r => r.json());",
+  "",
+  "// 2. Sign EIP-3009 transferWithAuthorization",
+  "const nonce = keccak256(toHex(Date.now()));",
+  "const validBefore = BigInt(Math.floor(Date.now() / 1000) + 300); // 5 min",
+  "const value = parseUnits('0.01', 6); // 0.01 USDC",
+  "",
+  "const signature = await client.signTypedData({",
+  "  domain: { name: 'USDC', version: '2', chainId: 42220, verifyingContract: USDC },",
+  "  types: {",
+  "    TransferWithAuthorization: [",
+  "      { name: 'from',        type: 'address' },",
+  "      { name: 'to',          type: 'address' },",
+  "      { name: 'value',       type: 'uint256' },",
+  "      { name: 'validAfter',  type: 'uint256' },",
+  "      { name: 'validBefore', type: 'uint256' },",
+  "      { name: 'nonce',       type: 'bytes32' },",
+  "    ],",
+  "  },",
+  "  primaryType: 'TransferWithAuthorization',",
+  "  message: { from: account.address, to: publicPayTo, value,",
+  "             validAfter: 0n, validBefore, nonce },",
+  "});",
+  "",
+  "// 3. Attach signature and call OnFRA",
+  "const payment = JSON.stringify({",
+  "  from: account.address, to: publicPayTo,",
+  "  value: value.toString(), validAfter: '0',",
+  "  validBefore: validBefore.toString(), nonce, signature, token: USDC,",
+  "});",
+  "",
+  "const res = await fetch(`${ONFRA_API}/api/lender/screen`, {",
+  "  method: 'POST',",
+  "  headers: { 'Content-Type': 'application/json', 'X-PAYMENT': payment },",
+  "  body: JSON.stringify({ walletAddress: '0xBorrower...', callerAddress: account.address }),",
+  "});",
+  "",
+  "const { trust, reputationScore, loanCapacity } = await res.json();",
+  "// trust.isTrustworthy → boolean",
+  "// reputationScore     → 0-100",
+  "// loanCapacity        → { min, max, currency, confidence }",
+].join("\n");
+
+
 export default function DevelopersPage() {
   return (
     <div className="min-h-screen bg-void font-inter text-white">
       <header className="border-b border-white/10 px-6 py-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
           <Link href="/" className="font-dancing text-xl text-btc-orange transition hover:opacity-90">
-            Chainalyse
+            Onfra
           </Link>
           <p className="font-mono text-[10px] uppercase tracking-widest text-stardust">OnFRA · Lenders</p>
         </div>
@@ -37,7 +95,7 @@ export default function DevelopersPage() {
         <h1 className="mt-2 font-space text-3xl font-bold md:text-4xl">OnFRA for lenders</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-stardust">
           OnFRA is financial-reputation infrastructure on Celo — not a consumer app. Lenders call the API to screen
-          borrower wallets <em>before</em> extending credit. Chainalyse is the reference UI; your integration uses
+          borrower wallets <em>before</em> extending credit. Onfra is the reference UI; your integration uses
           OnFRA directly.
         </p>
 
@@ -199,6 +257,26 @@ export default function DevelopersPage() {
           </p>
         </section>
 
+        <section className="mt-8">
+          <h3 className="font-space text-lg font-semibold">x402 payment — backend signing</h3>
+          <p className="mt-2 text-sm text-stardust">
+            Paid endpoints require an{" "}
+            <strong className="text-white">EIP-3009 transferWithAuthorization</strong>{" "}
+            signature in the{" "}
+            <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs text-white">X-PAYMENT</code>{" "}
+            header. Settlement is handled by the{" "}
+            <strong className="text-white">Celo x402 facilitator</strong> — no gas required from your side.
+          </p>
+          <ul className="mt-3 space-y-1 text-xs text-stardust">
+            <li>· Set <code className="text-white/80">AGENT_PRIVATE_KEY</code> to a Celo wallet funded with USDC or USDT</li>
+            <li>· USDC domain: <code className="text-white/80">name: &quot;USDC&quot;, version: &quot;2&quot;</code></li>
+            <li>· USDT domain: <code className="text-white/80">name: &quot;Tether USD&quot;, version: &quot;1&quot;</code></li>
+          </ul>
+          <pre className="mt-3 overflow-x-auto rounded-2xl border border-white/10 bg-black/60 p-4 font-mono text-xs leading-6 text-stardust">
+            {X402_SIGNING_EXAMPLE}
+          </pre>
+        </section>
+
         <section className="mt-10 rounded-2xl border border-white/10 bg-black/40 p-6">
           <h2 className="font-space text-xl font-semibold">Discovery &amp; agent protocols</h2>
           <ul className="mt-4 space-y-2 text-sm">
@@ -242,9 +320,9 @@ export default function DevelopersPage() {
         </section>
 
         <p className="mt-10 text-center text-xs text-stardust">
-          Chainalyse is the borrower-facing reference app.{" "}
+          Onfra is the borrower-facing reference app.{" "}
           <Link href="/" className="text-btc-orange hover:underline">
-            Back to Chainalyse
+            Back to Onfra
           </Link>
         </p>
       </main>

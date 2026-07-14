@@ -1,10 +1,5 @@
-import { createThirdwebClient } from "thirdweb";
-import { facilitator } from "thirdweb/x402";
-import { USDT_CELO_MAINNET } from "@/lib/blockchain/constants";
 import {
   getGeminiApiKey,
-  getThirdwebClientId,
-  getThirdwebSecretKey,
   getX402PayToAddress,
   getX402SettlementMode,
   isX402Configured,
@@ -50,14 +45,14 @@ export async function checkGeminiIntegration(): Promise<IntegrationStatus> {
   }
 }
 
-export async function checkThirdwebIntegration(): Promise<
-  IntegrationStatus & { payTo?: string; clientIdConfigured?: boolean }
+export async function checkX402Integration(): Promise<
+  IntegrationStatus & { payTo?: string; apiKeyConfigured?: boolean }
 > {
-  const secretKey = getThirdwebSecretKey();
+  const apiKey = process.env.X402_API_KEY?.trim();
   const payTo = getX402PayToAddress();
 
-  if (!secretKey) {
-    return { configured: false, ok: false, error: "THIRDWEB_SECRET_KEY is not set." };
+  if (!apiKey) {
+    return { configured: false, ok: false, error: "X402_API_KEY is not set." };
   }
 
   if (!payTo) {
@@ -69,46 +64,54 @@ export async function checkThirdwebIntegration(): Promise<
   }
 
   try {
-    const client = createThirdwebClient({
-      secretKey,
-      clientId: getThirdwebClientId()
+    const res = await fetch("https://api.x402.celo.org/settle", {
+      method: "POST",
+      headers: {
+        "X-API-Key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        payment: "",
+        network: "celo"
+      })
     });
-    const twFacilitator = facilitator({
-      client,
-      serverWalletAddress: payTo,
-      waitUntil: getX402SettlementMode()
-    });
-    await twFacilitator.supported({
-      chainId: 42220,
-      tokenAddress: USDT_CELO_MAINNET
-    });
+
+    if (res.status === 401 || res.status === 403) {
+      return {
+        configured: true,
+        ok: false,
+        payTo,
+        apiKeyConfigured: true,
+        error: "X402_API_KEY is invalid or unauthorized."
+      };
+    }
 
     return {
       configured: true,
       ok: true,
       payTo,
-      clientIdConfigured: Boolean(getThirdwebClientId())
+      apiKeyConfigured: true
     };
   } catch (error) {
     return {
       configured: true,
       ok: false,
       payTo,
-      clientIdConfigured: Boolean(getThirdwebClientId()),
-      error: error instanceof Error ? error.message : "Thirdweb check failed."
+      apiKeyConfigured: true,
+      error: error instanceof Error ? error.message : "Celo x402 facilitator unreachable."
     };
   }
 }
 
 export async function getIntegrationsSummary() {
-  const [gemini, thirdweb] = await Promise.all([
+  const [gemini, x402Status] = await Promise.all([
     checkGeminiIntegration(),
-    checkThirdwebIntegration()
+    checkX402Integration()
   ]);
 
   return {
     gemini,
-    thirdweb,
+    x402Status,
     x402: {
       enforce: isX402Enforced(),
       configured: isX402Configured(),
@@ -116,3 +119,4 @@ export async function getIntegrationsSummary() {
     }
   };
 }
+

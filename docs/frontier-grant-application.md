@@ -1,4 +1,4 @@
-# Celo Frontier Grant Application — Chainalyse (OnFRA)
+# Celo Frontier Grant Application — Onfra (OnFRA)
 
 Copy-paste answers for [frontier.prezenti.xyz](https://frontier.prezenti.xyz).  
 Optional file upload: attach `docs/project-brief.md` or link to the GitHub repo.
@@ -8,11 +8,11 @@ Optional file upload: attach `docs/project-brief.md` or link to the GitHub repo.
 ## Describe your project
 
 ```
-Chainalyse is an onchain financial reputation platform for the Celo ecosystem, powered by OnFRA (Onchain Financial Reputation Agent).
+Onfra is an onchain financial reputation platform for the Celo ecosystem, powered by OnFRA (Onchain Financial Reputation Agent).
 
 The problem: millions of freelancers, remote workers, creators, and DAO contributors earn and save in stablecoins, but lenders still ask for bank statements and payslips that don't reflect their real onchain financial history. Reliable earners cannot prove income despite years of verifiable wallet activity.
 
-The solution: Chainalyse connects a Celo wallet, OnFRA analyzes transaction history and stablecoin flows, and the user receives lender-ready financial intelligence — health scores, reputation ratings, income stability, loan capacity, portfolio risk, AI summaries, PDF statements, and verified financial passports with onchain attestation.
+The solution: Onfra connects a Celo wallet, OnFRA analyzes transaction history and stablecoin flows, and the user receives lender-ready financial intelligence — health scores, reputation ratings, income stability, loan capacity, portfolio risk, AI summaries, PDF statements, and verified financial passports with onchain attestation.
 
 OnFRA is registered as ERC-8004 agent #9219 on Celo mainnet and is discoverable via agent.json, agent-card.json (A2A), and MCP manifests. Other agents and builders can call OnFRA programmatically through REST API endpoints (/api/agent/analyze, /chat, /report, /verify) with x402 micropayments in USDT on Celo.
 
@@ -30,7 +30,7 @@ The product is live, open source (MIT), and MiniPay-native.
 ```
 OnFRA is enabling infrastructure, not just a standalone consumer app.
 
-Other builders and agents can integrate Chainalyse/OnFRA as financial-reputation infrastructure for Celo wallets:
+Other builders and agents can integrate Onfra/OnFRA as financial-reputation infrastructure for Celo wallets:
 
 1. ERC-8004 discovery — OnFRA (#9219) is registered on the Celo Identity Registry with public agent.json, A2A agent-card.json, and MCP manifests at /.well-known/. Any agent registry crawler or orchestrator can discover and invoke financial analysis, chat, report generation, and verification capabilities.
 
@@ -46,7 +46,7 @@ Use cases for other builders:
 - MFI mini-apps that request proof-of-income attestations
 - Agent orchestrators that chain OnFRA analysis into broader financial workflows
 
-Chainalyse is the reference UI and distribution layer; OnFRA is the reusable financial-intelligence and attestation infrastructure underneath.
+Onfra is the reference UI and distribution layer; OnFRA is the reusable financial-intelligence and attestation infrastructure underneath.
 ```
 
 ---
@@ -54,7 +54,7 @@ Chainalyse is the reference UI and distribution layer; OnFRA is the reusable fin
 ## Verifiable onchain activity
 
 ```
-Chainalyse has live, verifiable onchain activity on Celo mainnet:
+Onfra has live, verifiable onchain activity on Celo mainnet:
 
 Deployed infrastructure:
 - OnchainReporter (UUPS proxy): 0xE7621aF5dE3806ba26115bdC89190c65ed835C21
@@ -75,7 +75,7 @@ Sample verifiable transactions:
 
 Sample report (full PDF on IPFS): PASTE_IPFS_LINK_HERE
 
-Verification: anyone can confirm a published attestation at https://wallet-profile-orpin.vercel.app/verify by pasting a REP-{id} code, or by calling verifyReport() on the OnchainReporter contract on Celoscan. The verify flow checks onchain registry data (wallet, scores, report hash, publish timestamp) — it does not serve the full report document. The PDF itself is pinned to IPFS; the onchain record is the tamper-evident proof that Chainalyse issued that report at that hash.
+Verification: anyone can confirm a published attestation at https://wallet-profile-orpin.vercel.app/verify by pasting a REP-{id} code, or by calling verifyReport() on the OnchainReporter contract on Celoscan. The verify flow checks onchain registry data (wallet, scores, report hash, publish timestamp) — it does not serve the full report document. The PDF itself is pinned to IPFS; the onchain record is the tamper-evident proof that Onfra issued that report at that hash.
 ```
 
 ---
@@ -96,15 +96,15 @@ API docs: https://github.com/jeffIshmael/wallet-profile/tree/main/docs/api.md
 ## How do you plan on getting agents to use your product, and what does the activation path look like for the first 10 to 100 users?
 
 ```
-OnFRA serves two audiences that reinforce each other: humans using Chainalyse, and other agents querying OnFRA programmatically. Both paths grow the same ERC-8004 reputation — making OnFRA easier to find and trust over time.
+OnFRA serves two audiences that reinforce each other: humans using Onfra, and other agents querying OnFRA programmatically. Both paths grow the same ERC-8004 reputation — making OnFRA easier to find and trust over time.
 
 Current traction: 10 wallets analyzed, 8 verified reports onchain (each report = one Celoscan tx). July target: 100 wallets · 60 reports.
 
 The reputation flywheel (how usage leads to discovery):
-Every interaction with OnFRA — whether a user chatting in Chainalyse or an agent calling our API — can end in an ERC-8004 reputation feedback transaction on Celo. After a chat session, users rate OnFRA (helpful, accurate, clear, etc.) via giveFeedback() on the Reputation Registry. Those onchain ratings accumulate on 8004scan and signal trust to other agents evaluating whether to chain us. More usage → more ratings → higher discoverability → more agent integrations → more usage.
+Every interaction with OnFRA — whether a user chatting in Onfra or an agent calling our API — can end in an ERC-8004 reputation feedback transaction on Celo. After a chat session, users rate OnFRA (helpful, accurate, clear, etc.) via giveFeedback() on the Reputation Registry. Those onchain ratings accumulate on 8004scan and signal trust to other agents evaluating whether to chain us. More usage → more ratings → higher discoverability → more agent integrations → more usage.
 
-Path A — Humans via Chainalyse (drives volume + ratings):
-1. User discovers Chainalyse (MiniPay, X, lender referral, ecosystem program)
+Path A — Humans via Onfra (drives volume + ratings):
+1. User discovers Onfra (MiniPay, X, lender referral, ecosystem program)
 2. Connects wallet — free
 3. Analyzes wallet and chats with OnFRA about scores, income, loan readiness — free for own wallet
 4. Rates OnFRA after chat — onchain ERC-8004 feedback builds reputation
@@ -122,7 +122,7 @@ Activation for the first 10 → 100 users (mixed):
 
 Done (users 1–10):
 - OnFRA live on ERC-8004 (#9219) with agent.json, agent-card, MCP manifests
-- Chainalyse UI with free analysis, chat, and ERC-8004 rating flow
+- Onfra UI with free analysis, chat, and ERC-8004 rating flow
 - OnchainReporter deployed; 8 real attestations on Celoscan
 - x402 USDT payments for external queries and reports
 
@@ -131,7 +131,7 @@ Next (users 10–100):
 - Grow agent usage through hackathons, integration docs, and targeting builders who need financial-reputation tooling to chain
 - Improve OnFRA conversational quality so both humans and agents get outputs worth rating and propagating
 - Expand to multi-chain so OnFRA covers wallets earning across networks in one unified response
-- Polish Chainalyse UI to improve connect → analyze → chat → rate → report conversion
+- Polish Onfra UI to improve connect → analyze → chat → rate → report conversion
 
 Example chains:
 - Human: freelancer analyzes wallet in MiniPay → chats with OnFRA → rates agent → buys passport for loan application
@@ -143,12 +143,12 @@ Example chains:
 ## What is your distribution strategy, and what examples can you point to from this project or prior work?
 
 ```
-Our distribution strategy is mixed: grow human usage through Chainalyse to build onchain reputation, and grow agent integrations so OnFRA gets chained in automated workflows. Both paths feed the same discovery loop — the more OnFRA is used and rated, the easier it is for other agents to find and trust us on ERC-8004.
+Our distribution strategy is mixed: grow human usage through Onfra to build onchain reputation, and grow agent integrations so OnFRA gets chained in automated workflows. Both paths feed the same discovery loop — the more OnFRA is used and rated, the easier it is for other agents to find and trust us on ERC-8004.
 
-The core insight: agents finding our product is not only about registry listings. Every Chainalyse chat session and every API query is an opportunity for ERC-8004 reputation feedback on Celo. Ratings from real usage make OnFRA stand out on 8004scan compared to agents with no track record. Human distribution and agent distribution are not separate strategies — they compound.
+The core insight: agents finding our product is not only about registry listings. Every Onfra chat session and every API query is an opportunity for ERC-8004 reputation feedback on Celo. Ratings from real usage make OnFRA stand out on 8004scan compared to agents with no track record. Human distribution and agent distribution are not separate strategies — they compound.
 
-1. Human distribution (Chainalyse → ratings → discoverability)
-- MiniPay listing puts Chainalyse in front of Celo's stablecoin-native users
+1. Human distribution (Onfra → ratings → discoverability)
+- MiniPay listing puts Onfra in front of Celo's stablecoin-native users
 - Marketing to freelancers, creators, remote workers, and DAO contributors where onchain income is common
 - Lender & MFI outreach — borrowers generate reports; lenders verify onchain at /verify
 - Free own-wallet analysis + chat as the hook; 0.10 USDT verified passport as conversion
@@ -167,11 +167,11 @@ The core insight: agents finding our product is not only about registry listings
 - Multi-chain: unified wallet profile across chains so one OnFRA call serves users and agents beyond Celo-only wallets
 
 Examples we have actually done:
-- Live ERC-8004 agent (#9219) with manifests, MCP, and reputation feedback flow in Chainalyse chat
+- Live ERC-8004 agent (#9219) with manifests, MCP, and reputation feedback flow in Onfra chat
 - 10 wallets analyzed, 8 onchain report attestations (verifiable Celoscan txs)
 - x402 agent payments in USDT on Celo
 - Open-source repo (MIT) with API schemas and scoring methodology
-- Demo video (youtu.be/7WC3lD5dDj4) and X presence (@chainalyse_xyz)
+- Demo video (youtu.be/7WC3lD5dDj4) and X presence (@onfra_xyz)
 - MiniPay integration with auto-connect and mobile chat
 - $120k raised to date
 
@@ -204,7 +204,7 @@ If none apply formally beyond Proof of Ship / Celo PG prep, select **D** and **E
 ## Clear contribution to the ecosystem
 
 ```
-Chainalyse makes Celo more capable as a platform for AI and agent activity in three ways:
+Onfra makes Celo more capable as a platform for AI and agent activity in three ways:
 
 1. Financial-reputation infrastructure for agents
 Celo has millions of stablecoin-native users, but no standard way for agents to assess wallet financial behavior. OnFRA (#9219) fills that gap — any agent on Celo can discover, pay (x402 USDT), and invoke wallet analysis, chat, and verified attestation without building scoring infrastructure from scratch.
@@ -216,7 +216,7 @@ OnFRA is a live ERC-8004 agent on Celo mainnet with agent.json, A2A agent-card, 
 The OnchainReporter contract publishes verified financial report hashes on Celo mainnet. This connects agent-generated intelligence to tamper-evident onchain proof — enabling lending agents, MFI apps, and underwriting workflows to trust agent output without a centralized intermediary.
 
 4. MiniPay + x402 agent commerce
-Chainalyse demonstrates agent micropayments in USDT on Celo (0.01–0.10 USDT per request) inside MiniPay — showing how agents can monetize capabilities natively in Celo's mobile wallet ecosystem.
+Onfra demonstrates agent micropayments in USDT on Celo (0.01–0.10 USDT per request) inside MiniPay — showing how agents can monetize capabilities natively in Celo's mobile wallet ecosystem.
 
 Together, these make Celo a place where agents don't just transact — they can assess financial reputation, issue verifiable attestations, and get paid for it onchain.
 ```
@@ -264,7 +264,7 @@ Funding:
 - $120k USD raised from grants/investors to date
 
 Mission:
-We believe stablecoins are becoming how people earn, save, and send money — especially on Celo/MiniPay. Chainalyse gives that onchain history meaning as provable financial reputation.
+We believe stablecoins are becoming how people earn, save, and send money — especially on Celo/MiniPay. Onfra gives that onchain history meaning as provable financial reputation.
 
 Next priorities (product is built; focus is growth):
 1. Distribution — MiniPay listing, ecosystem programs, lender/MFI pilots
@@ -276,7 +276,7 @@ MiniPay submission prepared: network manifest, PageSpeed report, device test scr
 
 Karma profile: registered for grant ecosystem visibility.
 
-Contact: @chainalyse_xyz on X
+Contact: @onfra_xyz on X
 ```
 
 ---

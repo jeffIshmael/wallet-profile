@@ -50,7 +50,7 @@ export function normalizeVerificationCode(code: string): string {
   return trimmed;
 }
 
-/** Whether the pasted value looks like a Chainalyse verification code. */
+/** Whether the pasted value looks like a Onfra verification code. */
 export function isValidVerificationCodeFormat(code: string): boolean {
   const trimmed = code.trim();
   if (!trimmed) return false;

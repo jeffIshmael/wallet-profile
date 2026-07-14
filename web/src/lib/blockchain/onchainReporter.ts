@@ -1,10 +1,13 @@
 import {
   createPublicClient,
   createWalletClient,
+  encodeFunctionData,
+  concat,
   http,
   type Address,
   type Hex
 } from "viem";
+import { toDataSuffix } from "@celo/attribution-tags";
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { onchainReporterAbi } from "@/lib/blockchain/abi/onchainReporter";
@@ -96,8 +99,7 @@ export async function publishFinancialReportOnchain(
   const walletClient = getOnchainReporterWalletClient();
   const publicClient = getOnchainReporterPublicClient();
 
-  const hash = await walletClient.writeContract({
-    address: ONCHAIN_REPORTER_PROXY,
+  const callData = encodeFunctionData({
     abi: onchainReporterAbi,
     functionName: "publishFinancialReport",
     args: [
@@ -109,6 +111,15 @@ export async function publishFinancialReportOnchain(
       reportId,
       reportHash
     ]
+  });
+
+  const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
+  const taggedData = concat([callData, toDataSuffix(attributionTag)]);
+
+  const hash = await walletClient.sendTransaction({
+    account: walletClient.account,
+    to: ONCHAIN_REPORTER_PROXY,
+    data: taggedData
   });
 
   await publicClient.waitForTransactionReceipt({ hash });

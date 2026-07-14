@@ -14,8 +14,11 @@ function DashboardPageContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={null}>
-      <DashboardPageContent />
-    </Suspense>
+    <>
+      {/* @ts-expect-error Suspense type incompatibility between React 18 and Next.js */}
+      <Suspense fallback={null}>
+        <DashboardPageContent />
+      </Suspense>
+    </>
   );
 }

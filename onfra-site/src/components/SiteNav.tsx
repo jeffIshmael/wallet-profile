@@ -27,8 +27,8 @@ export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "da
             light ? "text-on-nude" : "text-ink"
           )}
         >
-          <Sparkles size={16} className={light ? "text-nude-dark" : "text-nude"} strokeWidth={1.5} />
-          <span>OnFRA</span>
+          <img src="/logo_dark.png" alt="OnFRA" className="h-10 w-10 rounded-full " />
+          <span className="ml-1">OnFRA</span>
         </Link>
 
         <nav

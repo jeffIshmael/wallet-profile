@@ -3,7 +3,7 @@
 import { ChevronDown, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChainalyseBrand } from "@/components/layout/ChainalyseBrand";
+import { OnfraBrand } from "@/components/layout/OnfraBrand";
 import { useWalletDisplay } from "@/hooks/useWalletDisplay";
 
 type LandingNavProps = {
@@ -64,7 +64,7 @@ export function LandingNav({
   return (
     <header className="fixed left-0 right-0 top-0 z-50 flex justify-center px-4 pt-4">
       <nav className="flex w-full max-w-4xl items-center justify-between gap-3 rounded-full border border-white/10 bg-black/90 px-4 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl md:gap-6 md:px-6">
-        <ChainalyseBrand size="lg" href="/" theme="dark" />
+        <OnfraBrand size="lg" href="/" theme="dark" />
 
         <div className="hidden items-center gap-6 text-sm md:flex">
           {active === "home" ? (

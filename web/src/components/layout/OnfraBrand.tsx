@@ -57,6 +57,3 @@ export function OnfraBrand({
 
   return <div className="shrink-0">{content}</div>;
 }
-
-/** @deprecated use OnfraBrand */
-export const ChainalyseBrand = OnfraBrand;

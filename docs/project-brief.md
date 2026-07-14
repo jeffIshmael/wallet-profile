@@ -1,8 +1,8 @@
-# Chainalyse (OnFRA) — Project Brief
+# Onfra (OnFRA) — Project Brief
 
 ## Description
 
-**Chainalyse** is an onchain financial reputation platform that turns wallet activity into lender-ready financial intelligence. Users connect a wallet, receive AI-powered scores and insights, download transaction statements, generate verified financial passports, and share attestations that lenders can verify onchain.
+**Onfra** is an onchain financial reputation platform that turns wallet activity into lender-ready financial intelligence. Users connect a wallet, receive AI-powered scores and insights, download transaction statements, generate verified financial passports, and share attestations that lenders can verify onchain.
 
 The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), a LangChain-based AI agent registered as [ERC-8004 agent #9219 on Celo mainnet](https://8004scan.io/agents/celo/9219). OnFRA analyzes transaction history, cash flow patterns, wallet age, and asset composition to produce:
 
@@ -14,7 +14,7 @@ The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), a Lan
 - AI-generated financial summaries
 - Verified PDF financial passports with onchain attestation
 
-Chainalyse ships as a production-ready monorepo: a Next.js web app (with MiniPay native support), the OnFRA agent backend, and Solidity contracts (`OnchainReporter` attestation registry on Celo mainnet). It exposes REST APIs, ERC-8004 agent discovery manifests, and x402 micropayments for premium features.
+Onfra ships as a production-ready monorepo: a Next.js web app (with MiniPay native support), the OnFRA agent backend, and Solidity contracts (`OnchainReporter` attestation registry on Celo mainnet). It exposes REST APIs, ERC-8004 agent discovery manifests, and x402 micropayments for premium features.
 
 **Live demo:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)  
 **Demo video:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
@@ -40,7 +40,7 @@ The gap is not a lack of data — wallets already contain rich financial evidenc
 
 ## Solution
 
-Chainalyse analyzes onchain activity on Celo and transforms it into lender-ready financial intelligence. Instead of asking users for payslips and bank statements, lenders can evaluate a wallet's financial behavior through transparent blockchain data.
+Onfra analyzes onchain activity on Celo and transforms it into lender-ready financial intelligence. Instead of asking users for payslips and bank statements, lenders can evaluate a wallet's financial behavior through transparent blockchain data.
 
 ### How it works
 
@@ -50,7 +50,7 @@ Chainalyse analyzes onchain activity on Celo and transforms it into lender-ready
 4. **Evidence** — Inspect underlying transactions that support every score.
 5. **Statements** — Download PDF transaction statements for a selected period.
 6. **Financial passport** — Generate a verified report with scores, insights, borrowing recommendations, and a verification code (`REP-{id}`).
-7. **Verify onchain** — Lenders paste the code at `/verify` to confirm the report was issued by Chainalyse and registered on the `OnchainReporter` contract on Celo mainnet.
+7. **Verify onchain** — Lenders paste the code at `/verify` to confirm the report was issued by Onfra and registered on the `OnchainReporter` contract on Celo mainnet.
 8. **Chat with OnFRA** — Ask the agent anything in natural language: your scores, income patterns, loan readiness, risk exposure, or what a report means. **Questions about your own wallet are free.** Want to look up someone else? Point OnFRA at any external wallet address and ask anything about it for **0.01 USDT** via x402. Need a lender-ready document? OnFRA can generate a verified financial passport for **0.10 USDT** — for your wallet or any address you specify.
 
 ### What makes it credible
@@ -76,13 +76,13 @@ Chainalyse analyzes onchain activity on Celo and transforms it into lender-ready
 
 ## Mission Summary
 
-Chainalyse exists to **turn crypto income into financial reputation** — readable for users, useful for lenders, and verifiable onchain.
+Onfra exists to **turn crypto income into financial reputation** — readable for users, useful for lenders, and verifiable onchain.
 
 More people every day are choosing stablecoins not just to get paid, but to save, send money home, and build a financial life outside traditional banking. We believe that future is already arriving: wages, remittances, and everyday savings will increasingly live onchain in dollar-pegged assets — especially in mobile-first markets like Celo. When that happens, bank statements and payslips stop being the story. Wallets become the ledger of record.
 
-Our mission is to make that onchain history count. Chainalyse gives stablecoin earners and savers a way to prove their financial reputation — income consistency, savings discipline, wallet maturity — in language lenders, underwriters, and platforms already understand. We start where this shift is most visible: the Celo ecosystem, where millions of users already earn and hold in stablecoins through apps like MiniPay.
+Our mission is to make that onchain history count. Onfra gives stablecoin earners and savers a way to prove their financial reputation — income consistency, savings discipline, wallet maturity — in language lenders, underwriters, and platforms already understand. We start where this shift is most visible: the Celo ecosystem, where millions of users already earn and hold in stablecoins through apps like MiniPay.
 
-OnFRA is the AI layer that bridges raw blockchain data and real-world financial decisions. Chainalyse is the product that delivers that intelligence to users and partners through a polished experience, verifiable reports, and open integration surfaces (API, ERC-8004, x402).
+OnFRA is the AI layer that bridges raw blockchain data and real-world financial decisions. Onfra is the product that delivers that intelligence to users and partners through a polished experience, verifiable reports, and open integration surfaces (API, ERC-8004, x402).
 
 **Core principles:**
 
@@ -106,12 +106,12 @@ The product is **built and live**. The next phase focuses on **distribution**, *
 
 We plan to get there through a mix of product-led growth and targeted distribution:
 
-- **MiniPay launch** — List Chainalyse in the MiniPay app store so Celo wallet users can discover and analyze their wallets in one tap, with USDT micropayments built in for reports.
+- **MiniPay launch** — List Onfra in the MiniPay app store so Celo wallet users can discover and analyze their wallets in one tap, with USDT micropayments built in for reports.
 - **Free own-wallet analysis** — Lower the barrier to first use: connect, analyze, and chat with OnFRA about your wallet at no cost, then upsell the verified financial passport (0.10 USDT) once users see their scores.
-- **Content & demos** — Share the [demo video](https://youtu.be/7WC3lD5dDj4), post wallet-analysis walkthroughs on [@chainalyse_xyz](https://x.com/chainalyse_xyz), and target freelancer, creator, and DAO communities where stablecoin income is common.
+- **Content & demos** — Share the [demo video](https://youtu.be/7WC3lD5dDj4), post wallet-analysis walkthroughs on [@onfra_xyz](https://x.com/onfra_xyz), and target freelancer, creator, and DAO communities where stablecoin income is common.
 - **Ecosystem visibility** — Participate in Celo builder programs (e.g. Proof of Ship S2), hackathon showcases, and grant ecosystems like Karma to reach builders and early adopters who will test and share the product.
 - **Report-driven use cases** — Position the verified financial passport for loan applications, gig-platform onboarding, and cross-border income proof — use cases where users have a clear reason to pay for the 0.10 USDT attestation, not just the free dashboard.
-- **Lender & MFI outreach** — Pilot with microfinance platforms and fintech lenders who can refer borrowers to generate Chainalyse reports, driving both wallet analyses and paid attestations from the B2B side.
+- **Lender & MFI outreach** — Pilot with microfinance platforms and fintech lenders who can refer borrowers to generate Onfra reports, driving both wallet analyses and paid attestations from the B2B side.
 
 ### 1. Distribution & go-to-market
 
@@ -123,7 +123,7 @@ OnFRA is the intelligence layer behind every score, chat response, and report. M
 
 ### 3. Multi-chain integration
 
-Chainalyse currently analyzes **Celo mainnet** (chain ID 42220). Many stablecoin earners receive payments across multiple networks, so expanding chain coverage is a natural next step. We will prioritize chains with high freelancer and creator payment volume (e.g. Base, Ethereum L2s, Polygon), extend OnFRA's data-fetch and scoring pipelines to aggregate activity across chains, and build a unified cross-chain profile in the dashboard. Attestation infrastructure will follow — deploying or adapting `OnchainReporter` on additional chains and registering OnFRA as an ERC-8004 agent wherever registries are available.
+Onfra currently analyzes **Celo mainnet** (chain ID 42220). Many stablecoin earners receive payments across multiple networks, so expanding chain coverage is a natural next step. We will prioritize chains with high freelancer and creator payment volume (e.g. Base, Ethereum L2s, Polygon), extend OnFRA's data-fetch and scoring pipelines to aggregate activity across chains, and build a unified cross-chain profile in the dashboard. Attestation infrastructure will follow — deploying or adapting `OnchainReporter` on additional chains and registering OnFRA as an ERC-8004 agent wherever registries are available.
 
 ### 4. UI & experience improvements
 
@@ -154,6 +154,6 @@ Chainalyse currently analyzes **Celo mainnet** (chain ID 42220). Many stablecoin
 | Demo video | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
 | Documentation | [docs/](./README.md) |
 | GitHub | [github.com/jeffIshmael/wallet-profile](https://github.com/jeffIshmael/wallet-profile) |
-| X / Twitter | [@chainalyse_xyz](https://x.com/chainalyse_xyz) |
+| X / Twitter | [@onfra_xyz](https://x.com/onfra_xyz) |
 | OnFRA (ERC-8004) | [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219) |
 | OnchainReporter | [celoscan.io](https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21) |

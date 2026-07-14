@@ -1,6 +1,6 @@
 # OnchainReporter — Smart Contract
 
-Upgradeable (UUPS) financial attestation registry for Chainalyse verified reports on Celo.
+Upgradeable (UUPS) financial attestation registry for Onfra verified reports on Celo.
 
 ## Contract
 

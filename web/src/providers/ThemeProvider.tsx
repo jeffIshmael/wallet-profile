@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("chainalyse-theme") as Theme | null;
+    const stored = localStorage.getItem("onfra-theme") as Theme | null;
     const initial = stored === "light" ? "light" : "dark";
     setTheme(initial);
     document.documentElement.classList.toggle("light-theme", initial === "light");
@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   function toggleTheme() {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem("chainalyse-theme", next);
+      localStorage.setItem("onfra-theme", next);
       document.documentElement.classList.toggle("light-theme", next === "light");
       return next;
     });

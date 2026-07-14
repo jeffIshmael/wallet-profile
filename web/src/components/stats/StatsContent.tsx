@@ -165,7 +165,7 @@ export function StatsContent() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-16 sm:px-6">
       <PageHeader
         title="Platform Stats"
-        subtitle="Live usage metrics from the Chainalyse database — analyses, reports, chat activity, and API calls."
+        subtitle="Live usage metrics from the Onfra database — analyses, reports, chat activity, and API calls."
       />
 
       {loading && <p className="text-sm text-stardust">Loading stats…</p>}

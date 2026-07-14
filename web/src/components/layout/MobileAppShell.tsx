@@ -32,8 +32,9 @@ export function MobileAppShell({ children }: MobileAppShellProps) {
       <div
         className={showNav ? "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0" : undefined}
       >
-        {children}
+        {children as any}
       </div>
+      {/* @ts-expect-error Suspense type incompatibility between React 18 and Next.js */}
       <Suspense fallback={null}>
         <MobileBottomNavGate />
       </Suspense>

@@ -2,7 +2,7 @@
 
 ## Monorepo structure
 
-Chainalyse is an npm workspaces monorepo with three packages:
+Onfra is an npm workspaces monorepo with three packages:
 
 | Package | Stack | Role |
 |---------|-------|------|
@@ -98,10 +98,11 @@ See [Onchain](./onchain.md) for deployed addresses and verification flow.
 | Service | Purpose |
 |---------|---------|
 | **Privy** | Wallet authentication (web browser) |
-| **MiniPay** | In-wallet auto-connect and USDT payments |
+| **MiniPay** | In-wallet auto-connect and stablecoin payments |
 | **Supabase (PostgreSQL)** | Analysis cache, chat, reports, platform stats |
 | **Google Gemini** | AI summaries, chat, report narrative |
-| **Thirdweb** | Celo RPC, x402 payment settlement |
+| **Thirdweb** | Celo RPC and wallet data (onchain reads) |
+| **Celo x402 Facilitator** | Gasless EIP-3009 payment settlement (`api.x402.celo.org`) |
 | **Pinata** | IPFS pinning for report PDFs |
 | **Celo Forno RPC** | OnchainReporter reads and transaction publishing |
 
@@ -114,5 +115,21 @@ Key variables (see `web/.env.local.example`):
 - `GEMINI_API_KEY` — OnFRA AI
 - `REPORTER_PRIVATE_KEY` — backend relayer for onchain report publishing
 - `ONCHAIN_REPORTER_PROXY_ADDRESS` — deployed proxy on Celo
-- `THIRDWEB_SECRET_KEY` / `THIRDWEB_CLIENT_ID` — x402 settlement
+- `X402_API_KEY` — Celo x402 facilitator API key (replaces Thirdweb secret)
+- `X402_PAY_TO` — treasury wallet address that receives x402 payments
+- `X402_ENFORCE` — set `true` to require real payments in production
+- `NEXT_PUBLIC_ATTRIBUTION_TAG` — ERC-8021 attribution tag code (e.g. `onfra`)
 - `PINATA_*` — IPFS pinning for reports
+
+## ERC-8021 attribution
+
+Every on-chain transaction emitted by the web app (onchain reports, ERC-8004 feedback, MiniPay transfers, direct USDT payments) appends a trailing ERC-8021 attribution tag to the calldata using `@celo/attribution-tags`:
+
+```typescript
+import { toDataSuffix } from "@celo/attribution-tags";
+import { concat } from "viem";
+
+const taggedData = concat([callData, toDataSuffix("onfra")]);
+```
+
+Smart contracts ignore trailing calldata; off-chain indexers use it to attribute transactions back to the originating dApp.

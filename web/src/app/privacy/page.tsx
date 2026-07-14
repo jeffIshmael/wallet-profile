@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Chainalyse",
-  description: "Privacy Policy for the Chainalyse Mini App and web platform."
+  title: "Privacy Policy | Onfra",
+  description: "Privacy Policy for the Onfra Mini App and web platform."
 };
 
 export default function PrivacyPage() {
@@ -14,8 +14,8 @@ export default function PrivacyPage() {
       <p className="text-xs text-stardust/80">Last updated: {updated}</p>
 
       <p>
-        This Privacy Policy explains how Chainalyse (&quot;we&quot;) collects and uses information when you use
-        wallet-profile-orpin.vercel.app and the Chainalyse MiniPay Mini App.
+        This Privacy Policy explains how Onfra (&quot;we&quot;) collects and uses information when you use
+        wallet-profile-orpin.vercel.app and the Onfra MiniPay Mini App.
       </p>
 
       <h2 className="pt-2 font-space text-lg font-semibold text-white">Information we process</h2>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
 
       <h2 className="pt-2 font-space text-lg font-semibold text-white">Third parties</h2>
       <p>
-        Chainalyse relies on infrastructure providers (hosting, RPC, AI APIs, authentication) and public block explorers.
+        Onfra relies on infrastructure providers (hosting, RPC, AI APIs, authentication) and public block explorers.
         Onchain transactions are public by design. Optional features may link to external services (for example Celoscan
         or 8004scan).
       </p>
@@ -66,8 +66,8 @@ export default function PrivacyPage() {
       <h2 className="pt-2 font-space text-lg font-semibold text-white">Contact</h2>
       <p>
         Privacy questions: visit <a href="/support" className="text-btc-orange hover:underline">Support</a> or contact{" "}
-        <a href="https://x.com/chainalyse_xyz" className="text-btc-orange hover:underline" target="_blank" rel="noreferrer">
-          @chainalyse_xyz
+        <a href="https://x.com/onfra_xyz" className="text-btc-orange hover:underline" target="_blank" rel="noreferrer">
+          @onfra_xyz
         </a>
         .
       </p>

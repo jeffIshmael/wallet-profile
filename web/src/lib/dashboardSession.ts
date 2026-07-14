@@ -1,7 +1,7 @@
 import type { WalletData } from "@/types/walletData";
 
-export const ANALYSIS_DONE_KEY = "chainalyse-analysis-done";
-export const WALLET_DATA_KEY = "chainalyse-wallet-data";
+export const ANALYSIS_DONE_KEY = "onfra-analysis-done";
+export const WALLET_DATA_KEY = "onfra-wallet-data";
 
 type StoredWalletPayload = {
   address: string;

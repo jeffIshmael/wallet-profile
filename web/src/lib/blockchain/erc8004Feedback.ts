@@ -1,4 +1,5 @@
-import { createPublicClient, createWalletClient, custom, encodeFunctionData, http, keccak256, toBytes, type EIP1193Provider } from "viem";
+import { createPublicClient, createWalletClient, custom, encodeFunctionData, concat, http, keccak256, toBytes, type EIP1193Provider } from "viem";
+import { toDataSuffix } from "@celo/attribution-tags";
 import { celo } from "@/lib/chains/celo";
 import { isMiniPay } from "@/lib/minipay";
 import { feeTokenFromPreferred, sendMiniPayTransaction } from "@/lib/minipay/transactions";
@@ -44,7 +45,7 @@ function buildFeedbackPayload(
     tag: FEEDBACK_TAG,
     tags,
     tagLabels,
-    comment: `Chainalyse AI chat feedback: ${tagLabels.join(", ")}.`,
+    comment: `Onfra AI chat feedback: ${tagLabels.join(", ")}.`,
     reviewer: reviewerAddress,
     servicesUsed: ["chat_query"],
     platform: getAppBaseUrl(),
@@ -120,6 +121,8 @@ export async function submitErc8004Feedback(
   tags: AgentFeedbackTagId[]
 ): Promise<{ hash: `0x${string}`; score: number }> {
   const { to, data, score } = await buildGiveFeedbackCall(reviewerAddress, tags);
+  const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
+  const taggedData = concat([data, toDataSuffix(attributionTag)]);
 
   const publicClient = createPublicClient({
     chain: celo,
@@ -137,7 +140,7 @@ export async function submitErc8004Feedback(
     const hash = await sendMiniPayTransaction(provider, {
       account: reviewerAddress,
       to,
-      data,
+      data: taggedData,
       feeToken
     });
     await publicClient.waitForTransactionReceipt({ hash });
@@ -147,7 +150,7 @@ export async function submitErc8004Feedback(
   const hash = await walletClient.sendTransaction({
     account: reviewerAddress,
     to,
-    data
+    data: taggedData
   });
 
   await publicClient.waitForTransactionReceipt({ hash });
@@ -156,9 +159,9 @@ export async function submitErc8004Feedback(
 
 export function hasSubmittedFeedback(address: string): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem(`chainalyse-feedback:${address.toLowerCase()}`) === "1";
+  return localStorage.getItem(`onfra-feedback:${address.toLowerCase()}`) === "1";
 }
 
 export function markFeedbackSubmitted(address: string) {
-  localStorage.setItem(`chainalyse-feedback:${address.toLowerCase()}`, "1");
+  localStorage.setItem(`onfra-feedback:${address.toLowerCase()}`, "1");
 }

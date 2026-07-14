@@ -481,7 +481,7 @@ function drawReportFooter(doc: jsPDF, input: OfficialReportInput, margin: number
     doc.setFontSize(6.5);
     doc.setTextColor(110, 110, 120);
     doc.text(
-      "This report is generated from verified onchain transfer events on Celo Mainnet and published by Chainalyse.",
+      "This report is generated from verified onchain transfer events on Celo Mainnet and published by Onfra.",
       margin,
       footerY
     );
@@ -492,7 +492,7 @@ function drawReportFooter(doc: jsPDF, input: OfficialReportInput, margin: number
     doc.text(footerMeta, margin, footerY + 3.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
-    doc.text("Chainalyse", pageWidth - margin, footerY, { align: "right" });
+    doc.text("Onfra", pageWidth - margin, footerY, { align: "right" });
     doc.setFont("helvetica", "normal");
     doc.setTextColor(110, 110, 120);
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, footerY + 3.5, { align: "right" });

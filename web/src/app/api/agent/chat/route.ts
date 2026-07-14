@@ -133,10 +133,10 @@ export async function POST(req: Request) {
         code: "AGENT_ERROR",
         error:
           error instanceof Error && error.message.includes("unavailable")
-            ? "Chainalyse AI is temporarily busy. Your dashboard data is still available — please try again in a moment."
+            ? "Onfra AI is temporarily busy. Your dashboard data is still available — please try again in a moment."
             : error instanceof Error
               ? error.message
-              : "Chainalyse AI is temporarily unavailable. Please try again."
+              : "Onfra AI is temporarily unavailable. Please try again."
       },
       { status: 503 }
     );

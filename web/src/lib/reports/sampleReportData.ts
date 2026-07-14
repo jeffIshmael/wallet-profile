@@ -307,10 +307,10 @@ export function getSampleOfficialReport(): OfficialReportInput {
 }
 
 export function buildSampleReportFilename(): string {
-  return "Chainalyse_Sample_Financial_Passport.pdf";
+  return "Onfra_Sample_Financial_Passport.pdf";
 }
 
 export function buildOfficialReportFilename(reportId: string, walletAddress: string): string {
   const short = walletAddress.slice(2, 10);
-  return `Chainalyse_Report_${reportId}_${short}.pdf`;
+  return `Onfra_Report_${reportId}_${short}.pdf`;
 }

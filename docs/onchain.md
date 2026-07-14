@@ -1,6 +1,6 @@
 # Onchain Integration
 
-Chainalyse registers verified financial reports on Celo mainnet and exposes OnFRA as an ERC-8004 discoverable agent.
+Onfra registers verified financial reports on Celo mainnet and exposes OnFRA as an ERC-8004 discoverable agent.
 
 ## Deployed contracts (Celo mainnet)
 
@@ -23,7 +23,7 @@ Chainalyse registers verified financial reports on Celo mainnet and exposes OnFR
 
 ## OnchainReporter
 
-The `OnchainReporter` contract is an upgradeable financial attestation registry. After a user purchases a verified financial passport, the Chainalyse backend relayer calls `publishFinancialReport()` with:
+The `OnchainReporter` contract is an upgradeable financial attestation registry. After a user purchases a verified financial passport, the Onfra backend relayer calls `publishFinancialReport()` with:
 
 - Wallet subject and buyer addresses
 - Reputation and financial health scores (0–100)
@@ -67,21 +67,42 @@ See [`contracts/erc8004-agent/README.md`](../contracts/erc8004-agent/README.md) 
 
 ## x402 micropayments
 
-Premium actions use [x402](https://www.x402.org/) micropayments in USDT on Celo:
+Premium actions use [x402](https://www.x402.org/) micropayments in USDC/USDT on Celo:
 
 | Action | Price |
 |--------|-------|
 | External wallet analysis / chat | 0.01 USDT |
 | Verified financial passport | 0.10 USDT |
 
-Settlement is handled via Thirdweb. MiniPay users can pay directly from their wallet balance.
+Settlement is handled by the **Celo x402 facilitator** (`https://api.x402.celo.org/settle`). Payment uses **EIP-3009 `transferWithAuthorization`** — the caller signs an off-chain token authorization, which the facilitator submits on-chain and pays the gas.
+
+### Caller requirements
+
+Browser users: wallet popup signs automatically (Privy / MiniPay).
+
+Backend / agent callers need:
+1. A wallet with USDC or USDT on Celo mainnet
+2. A **private key** to sign the EIP-3009 authorization (`AGENT_PRIVATE_KEY` env var)
+3. The recipient address (`X402_PAY_TO` from `GET /api/x402/config`)
+
+See [api.md](./api.md#backend--agent-callers-private-key-signing) for a complete TypeScript integration example.
+
+## ERC-8021 attribution tags
+
+All on-chain transactions (reports, feedback, transfers) append a trailing ERC-8021 attribution suffix to identify Onfra as the originating dApp:
+
+```
+tx.data = encodedCalldata + toDataSuffix("onfra")
+```
+
+Smart contracts ignore trailing calldata — EVM execution stops at the function selector boundary. Off-chain sequencers and attribution indexers read the suffix to credit the dApp.
 
 ## Report lifecycle
 
 1. User requests a verified report via dashboard or API
-2. x402 payment is verified (0.10 USDT)
+2. x402 payment is verified (0.10 USDT/USDC)
 3. OnFRA compiles report content and renders PDF
 4. PDF is pinned to IPFS (Pinata)
-5. Backend relayer publishes attestation to OnchainReporter on Celo
+5. Backend relayer publishes attestation to OnchainReporter on Celo (with ERC-8021 tag)
 6. User receives verification code, IPFS link, and Celoscan transaction hash
 7. Lenders verify at `/verify` or via onchain/API calls

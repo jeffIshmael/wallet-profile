@@ -61,7 +61,7 @@ export function isX402ProductionSettlement(): boolean {
 }
 
 export function isX402Configured(): boolean {
-  return Boolean(getThirdwebSecretKey() && getX402PayToAddress());
+  return Boolean(process.env.X402_API_KEY?.trim() && getX402PayToAddress());
 }
 
 export function isX402Enforced(): boolean {

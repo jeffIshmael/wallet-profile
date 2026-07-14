@@ -1,7 +1,7 @@
 {
-  "name": "OnFRA — Chainalyse Financial Intelligence Agent",
+  "name": "OnFRA — Onfra Financial Intelligence Agent",
   "version": "2026-06-08",
-  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Chainalyse. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Chainalyse dashboard at https://wallet-profile-orpin.vercel.app.",
+  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Onfra. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Onfra dashboard at https://wallet-profile-orpin.vercel.app.",
   "auth": {
     "scheme": "x402",
     "chain": "celo",
@@ -164,7 +164,7 @@
     },
     {
       "name": "verify_report",
-      "description": "Confirm a Verified Financial Reputation Report verification code (WP-...) or report ID (REP-...) was issued by OnFRA on Chainalyse.",
+      "description": "Confirm a Verified Financial Reputation Report verification code (WP-...) or report ID (REP-...) was issued by OnFRA on Onfra.",
       "inputSchema": {
         "type": "object",
         "required": ["reportId"],

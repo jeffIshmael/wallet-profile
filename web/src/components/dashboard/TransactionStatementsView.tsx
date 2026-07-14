@@ -1,5 +1,4 @@
 "use client";
-
 import {
   ArrowDown,
   ArrowUp,
@@ -170,7 +169,7 @@ export function TransactionStatementsView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `chainalyse-statements-${period}-${formatStatementPeriodRange(period).replace(/\//g, "-").replace(/ /g, "_")}.csv`;
+    a.download = `onfra-statements-${period}-${formatStatementPeriodRange(period).replace(/\//g, "-").replace(/ /g, "_")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -193,7 +192,9 @@ export function TransactionStatementsView() {
               <button
                 type="button"
                 onClick={exportCsv}
-                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-stardust hover:text-white"
+                disabled={periodTransactions.length === 0}
+                title={periodTransactions.length === 0 ? "No transactions in this period to export" : undefined}
+                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-stardust hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download size={12} />
                 Export CSV
@@ -201,7 +202,9 @@ export function TransactionStatementsView() {
               <button
                 type="button"
                 onClick={exportPdf}
-                className="inline-flex items-center gap-1 rounded-lg border border-btc-orange/30 bg-btc-orange/10 px-2.5 py-1.5 text-[10px] font-semibold text-btc-orange hover:bg-btc-orange/20"
+                disabled={periodTransactions.length === 0}
+                title={periodTransactions.length === 0 ? "No transactions in this period to export" : undefined}
+                className="inline-flex items-center gap-1 rounded-lg border border-btc-orange/30 bg-btc-orange/10 px-2.5 py-1.5 text-[10px] font-semibold text-btc-orange hover:bg-btc-orange/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FileText size={12} />
                 Export PDF
@@ -366,6 +369,7 @@ export function TransactionStatementsView() {
           }}
         />
         <div className="mt-2 h-[180px]">
+          {/* @ts-expect-error ResponsiveContainer type incompatibility between React 18 and Next.js */}
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={[...monthlyFlow]} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />

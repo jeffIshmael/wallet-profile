@@ -1,7 +1,7 @@
 const steps = [
   {
     title: "Connect Your Wallet",
-    description: "Securely connect your wallet and allow Chainalyse to analyze your onchain financial history."
+    description: "Securely connect your wallet and allow Onfra to analyze your onchain financial history."
   },
   {
     title: "OnFRA Analyzes Activity",
@@ -60,7 +60,7 @@ export function HowItWorksSection() {
           From wallet activity to lender-ready proof of income
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-7 text-stardust md:text-base">
-          Chainalyse transforms years of blockchain activity into a professional financial profile that lenders can
+          Onfra transforms years of blockchain activity into a professional financial profile that lenders can
           understand.
         </p>
 

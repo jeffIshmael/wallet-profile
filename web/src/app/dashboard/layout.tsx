@@ -172,6 +172,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <WalletDataProvider>
+      {/* @ts-expect-error Suspense type incompatibility between React 18 and Next.js */}
       <Suspense fallback={null}>
         <DashboardLayoutInner>{children}</DashboardLayoutInner>
       </Suspense>

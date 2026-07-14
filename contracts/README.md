@@ -1,6 +1,6 @@
 # Contracts
 
-Solidity contracts and onchain tooling for Chainalyse, split into two packages:
+Solidity contracts and onchain tooling for Onfra, split into two packages:
 
 | Package | Stack | Purpose |
 |---------|-------|---------|
