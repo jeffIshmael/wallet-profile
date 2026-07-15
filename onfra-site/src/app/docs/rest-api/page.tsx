@@ -4,7 +4,8 @@ import {
   DocsCode,
   DocsH2,
   DocsH3,
-  DocsTable
+  DocsTable,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { API_URL } from "@/lib/links";
@@ -21,7 +22,10 @@ export default function RestApiDocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Integrate" title="REST API" />
-      <h1 className="docs-title">REST API</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">REST API</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         All routes are served from <code>{API_URL}</code>. Paid routes settle in USDT on Celo via x402.
       </p>
@@ -52,7 +56,7 @@ export default function RestApiDocsPage() {
                 <code>/api/agent/analyze</code>
               </td>
               <td>Full wallet analysis</td>
-              <td>Free own · 0.01 external</td>
+              <td>0.01 USDT</td>
             </tr>
             <tr>
               <td>POST</td>
@@ -60,7 +64,7 @@ export default function RestApiDocsPage() {
                 <code>/api/agent/chat</code>
               </td>
               <td>Natural-language wallet queries</td>
-              <td>Free own · 0.01 external</td>
+              <td>0.01 USDT</td>
             </tr>
             <tr>
               <td>POST</td>
@@ -69,6 +73,14 @@ export default function RestApiDocsPage() {
               </td>
               <td>Verified REP passport + attestation</td>
               <td>0.10 USDT</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td>
+                <code>/api/agent/statement</code>
+              </td>
+              <td>Generate transaction statement PDF</td>
+              <td>0.01 USDT</td>
             </tr>
             <tr>
               <td>GET</td>
@@ -84,23 +96,23 @@ export default function RestApiDocsPage() {
                 <code>/api/wallet/{"{address}"}/signals</code>
               </td>
               <td>List signals + cache status</td>
-              <td>Free</td>
+              <td>0.01 USDT</td>
             </tr>
             <tr>
               <td>GET</td>
               <td>
                 <code>/api/wallet/{"{address}"}/signals/{"{signal}"}</code>
               </td>
-              <td>One cached reputation signal</td>
-              <td>Free</td>
+              <td>One reputation signal</td>
+              <td>0.01 USDT</td>
             </tr>
             <tr>
               <td>GET</td>
               <td>
                 <code>/api/wallet/{"{address}"}/analysis</code>
               </td>
-              <td>Cached full walletData</td>
-              <td>Free</td>
+              <td>Full walletData</td>
+              <td>0.01 USDT</td>
             </tr>
           </tbody>
         </DocsTable>
@@ -119,6 +131,15 @@ export default function RestApiDocsPage() {
         <p>
           Returns financial health score, reputation score, income label, loan range, AI summary,
           attestation, and full <code>walletData</code> when no <code>fields</code> filter is set.
+        </p>
+
+        <DocsH2 id="statement">Generate statement</DocsH2>
+        <DocsCode>{`curl -X POST ${API_URL}/api/agent/statement \\
+  -H "Content-Type: application/json" \\
+  -H "X-PAYMENT: <x402-signature>" \\
+  -d '{"walletAddress":"0xYourWallet...", "period": "3M"}'`}</DocsCode>
+        <p>
+          Generates a verified transaction statement PDF and pins it to IPFS. By default, it covers the last 3 months. You can specify the number of months by passing the <code>period</code> field in the request body. Allowed values are: <code>1M</code>, <code>3M</code>, <code>6M</code>, or <code>12M</code>.
         </p>
 
         <DocsH2 id="verify">Verify report</DocsH2>

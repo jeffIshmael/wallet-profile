@@ -3,7 +3,8 @@ import {
   DocsBreadcrumb,
   DocsCode,
   DocsH2,
-  DocsH3
+  DocsH3,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { API_URL } from "@/lib/links";
@@ -21,7 +22,10 @@ export default function GettingStartedPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Overview" title="Getting started" />
-      <h1 className="docs-title">Integrating OnFRA</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">Integrating OnFRA</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         OnFRA turns Celo wallet activity into financial reputation — income estimates, health scores,
         loan capacity, and verified REP passports. Use the REST API, MCP tools, or agent skill.

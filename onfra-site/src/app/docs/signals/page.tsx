@@ -4,7 +4,8 @@ import {
   DocsCode,
   DocsH2,
   DocsH3,
-  DocsTable
+  DocsTable,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { API_URL } from "@/lib/links";
@@ -21,10 +22,13 @@ export default function SignalsDocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Integrate" title="Signal endpoints" />
-      <h1 className="docs-title">Signal endpoints</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">Signal endpoints</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
-        After a wallet is analyzed, read individual reputation fields from cache for free. One x402
-        charge per wallet refresh window on <code>analyze</code>, not per signal read.
+        After a wallet is analyzed, you can read individual reputation fields from the cache. Every API query, 
+        including fetching cached signals, requires an x402 payment of 0.01 USDT.
       </p>
 
       <div className="docs-prose">
@@ -34,8 +38,8 @@ export default function SignalsDocsPage() {
           Subsequent GET requests return cached slices until the TTL expires. Missing cache returns{" "}
           <code>404</code> with a hint to call <code>analyze</code> first.
         </p>
-        <DocsCode>{`curl ${API_URL}/api/wallet/0xYourWallet.../signals`}</DocsCode>
-        <p>Lists available signal IDs and whether valid cache exists for the wallet.</p>
+        <DocsCode>{`curl -H "X-PAYMENT: <x402-signature>" ${API_URL}/api/wallet/0xYourWallet.../signals`}</DocsCode>
+        <p>Lists available signal IDs and whether valid cache exists for the wallet. Costs 0.01 USDT.</p>
 
         <DocsH2 id="signal-ids">Signal IDs</DocsH2>
         <DocsTable>
@@ -86,7 +90,7 @@ export default function SignalsDocsPage() {
         </DocsTable>
 
         <DocsH2 id="read-signal">Read one signal</DocsH2>
-        <DocsCode>{`curl ${API_URL}/api/wallet/0xYourWallet.../signals/loan-capacity`}</DocsCode>
+        <DocsCode>{`curl -H "X-PAYMENT: <x402-signature>" ${API_URL}/api/wallet/0xYourWallet.../signals/loan-capacity`}</DocsCode>
         <p>Response shape:</p>
         <DocsCode>{`{
   "signal": "loan-capacity",

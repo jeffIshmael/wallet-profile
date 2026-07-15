@@ -2,6 +2,9 @@
 
 import { Loader2, Send, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MascotAnimator } from "@/components/chat/MascotAnimator";
+import { ChatHistoryList } from "@/components/chat/ChatHistoryList";
 import { AgentChatHeader } from "@/components/chat/AgentChatHeader";
 import { AgentChatPinnedNotice } from "@/components/chat/AgentChatPinnedNotice";
 import { AgentRatingModal } from "@/components/chat/AgentRatingModal";
@@ -23,7 +26,7 @@ import { formatReportChatReply } from "@/lib/reports/formatReportChatReply";
 import { dispatchReportsUpdated } from "@/lib/reports/reportsEvents";
 import type { ReportCompletedResult } from "@/types/reportProgress";
 
-type ChatMessage = { role: "user" | "ai"; text: string; isError?: boolean; createdAt?: string };
+type ChatMessage = { role: "user" | "ai"; text: string; isError?: boolean; createdAt?: string; isNew?: boolean };
 
 /** First prompt at 5 messages, then every 10 messages after that. */
 const RATING_FIRST_PROMPT_AT = 5;
@@ -61,6 +64,7 @@ export function ChatSidebar({
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"chat" | "history">("chat");
   const [ratingOpen, setRatingOpen] = useState(false);
   const [userMessageCount, setUserMessageCount] = useState(0);
   const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -158,9 +162,11 @@ export function ChatSidebar({
   }
 
   function finishUserMessage(reply: string, isError = false) {
+    // Mark all existing messages as not new
+    setMessages((current) => current.map(m => ({ ...m, isNew: false })));
     setMessages((current) => [
       ...current,
-      { role: "ai", text: reply, isError, createdAt: messageTimestamp() }
+      { role: "ai", text: reply, isError, createdAt: messageTimestamp(), isNew: !isError }
     ]);
     const nextCount = userMessageCount + 1;
     setUserMessageCount(nextCount);
@@ -334,6 +340,36 @@ export function ChatSidebar({
           </div>
         )}
 
+        <div className="mb-4 flex gap-1 rounded-full bg-white/5 p-1 border border-white/5 w-fit">
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+              activeTab === "chat"
+                ? "bg-white text-void shadow-sm"
+                : "text-stardust hover:text-white hover:bg-white/10"
+            }`}
+          >
+            Agent Chat
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+              activeTab === "history"
+                ? "bg-white text-void shadow-sm"
+                : "text-stardust hover:text-white hover:bg-white/10"
+            }`}
+          >
+            History
+          </button>
+        </div>
+
+        {activeTab === "history" ? (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ChatHistoryList />
+          </div>
+        ) : (
+          <>
+
         <div
           ref={messagesScrollRef}
           className={`flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto ${fullPage ? "px-4 py-3" : ""}`}
@@ -348,51 +384,81 @@ export function ChatSidebar({
           )}
 
           {messages.length === 0 && !loadingHistory && (
-            <p className="text-xs leading-5 text-stardust">
-              Ask about your financial health, reputation, loan capacity, or portfolio risk.
-            </p>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-10 text-center mt-4"
+            >
+              <MascotAnimator status="idle" size={80} />
+              <h3 className="mt-6 font-sora text-lg font-bold text-white">Meet OnFRA Agent</h3>
+              <p className="mt-2 text-xs leading-relaxed text-stardust max-w-[250px]">
+                Analyze wallets, explain transactions, and estimate loan capacity securely.
+              </p>
+            </motion.div>
           )}
 
+          <AnimatePresence initial={false}>
           {messages.map((message, index) => (
-            <div
+            <motion.div
               key={`${message.role}-${index}`}
-              className={`flex max-w-[95%] flex-col gap-1 ${message.role === "user" ? "ml-auto items-end" : "mr-auto items-start"}`}
+              initial={{ opacity: 0, scale: 0.97, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`flex w-full flex-col gap-1 ${message.role === "user" ? "ml-auto items-end" : "mr-auto items-start"}`}
             >
+              {message.role === "ai" && !message.isError && (
+                <div className="flex items-center gap-2 px-1 pb-1">
+                  <div className="h-5 w-5 overflow-hidden rounded-full border border-white/10 bg-white/5">
+                    <img src="/apple-icon.png" alt="OnFRA Agent" className="h-full w-full object-cover" />
+                  </div>
+                  <span className="text-xs font-semibold text-white">OnFRA Agent</span>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => copyMessage(message.text)}
                 title="Click to copy"
                 className={
                   message.role === "user"
-                    ? "rounded-lg bg-btc-orange px-3 py-2 text-left text-xs font-medium text-white break-words [overflow-wrap:anywhere] transition hover:bg-btc-orange/90"
+                    ? "rounded-[18px] rounded-br-sm bg-white/10 border border-white/5 px-4 py-2.5 text-left text-[13px] font-medium text-white break-words [overflow-wrap:anywhere] shadow-sm transition hover:bg-white/15"
                     : message.isError
-                      ? "rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-left text-xs leading-5 text-danger break-words [overflow-wrap:anywhere]"
-                      : "rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-left text-xs leading-5 text-stardust break-words [overflow-wrap:anywhere] transition hover:border-white/20"
+                      ? "rounded-[18px] border border-danger/30 bg-danger/10 px-4 py-2.5 text-left text-[13px] leading-relaxed text-danger break-words [overflow-wrap:anywhere]"
+                      : "px-1 py-1 text-left text-[13px] leading-relaxed text-stardust break-words [overflow-wrap:anywhere] transition cursor-text selection:bg-primary/30"
                 }
               >
                 {message.role === "user" || message.isError ? (
                   message.text
                 ) : (
-                  <ChatMessageBody text={message.text} />
+                  <ChatMessageBody text={message.text} simulateStreaming={message.isNew} />
                 )}
               </button>
               {message.createdAt && (
                 <time
                   dateTime={message.createdAt}
-                  className="px-1 text-[10px] text-stardust/60"
+                  className="px-2 text-[10px] text-stardust/50 font-medium"
                 >
                   {formatMessageTime(message.createdAt)}
                 </time>
               )}
-            </div>
+            </motion.div>
           ))}
 
           {sending && loadingStatus && (
-            <div className="mr-auto flex max-w-[95%] items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-stardust">
-              <Loader2 size={12} className="animate-spin text-btc-orange" />
-              <span>{loadingStatus}</span>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mr-auto flex max-w-[90%] items-center gap-3 px-1 py-1"
+            >
+              <MascotAnimator status="thinking" size={24} />
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-white text-xs">OnFRA Agent</span>
+                <span className="text-stardust text-[10px] flex items-center gap-1.5 font-medium">
+                  <span className="animate-pulse text-primary">●</span> {loadingStatus}
+                </span>
+              </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         {messages.length === 0 && (
@@ -403,7 +469,7 @@ export function ChatSidebar({
                 type="button"
                 onClick={() => send(prompt)}
                 disabled={!address || sending}
-                className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-stardust transition hover:border-btc-orange/40 hover:text-white disabled:opacity-50"
+                className="rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[11px] font-medium text-stardust shadow-sm transition hover:border-primary/40 hover:text-primary hover:bg-primary/10 disabled:opacity-50"
               >
                 {prompt}
               </button>
@@ -412,10 +478,10 @@ export function ChatSidebar({
         )}
 
         <form
-          className={`mt-3 flex items-center gap-2 rounded-xl border p-2 ${
+          className={`mt-3 flex items-center gap-2 rounded-[24px] border p-1.5 ${
             fullPage
               ? "mx-4 mb-[max(1rem,env(safe-area-inset-bottom))] border-white/20 bg-void-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-              : "border-white/10 bg-black/30"
+              : "border-white/10 bg-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] backdrop-blur-md"
           }`}
           onSubmit={(event) => {
             event.preventDefault();
@@ -431,16 +497,16 @@ export function ChatSidebar({
             onChange={(event) => setInput(event.target.value)}
             placeholder={address ? "Ask OnFRA about your wallet..." : "Connect wallet to chat"}
             disabled={!address || sending}
-            className={`min-w-0 flex-1 text-xs text-white outline-none placeholder:text-stardust ${
+            className={`min-w-0 flex-1 text-[13px] text-white outline-none placeholder:text-stardust/60 px-3 ${
               fullPage
-                ? "rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2"
-                : "bg-transparent px-1"
+                ? "rounded-full border border-white/10 bg-white/[0.06] py-2.5"
+                : "bg-transparent py-2"
             }`}
           />
           {sending ? (
             <button
               type="submit"
-              className="grid h-8 w-8 place-items-center rounded-lg border border-white/15 bg-white/5 text-stardust transition hover:border-danger/40 hover:bg-danger/10 hover:text-danger"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-stardust transition hover:border-danger/40 hover:bg-danger/10 hover:text-danger"
               aria-label="Stop request"
             >
               <Square size={14} fill="currentColor" />
@@ -449,7 +515,7 @@ export function ChatSidebar({
             <button
               type="submit"
               disabled={!address || !input.trim()}
-              className="grid h-8 w-8 place-items-center rounded-lg bg-btc-orange text-white transition hover:bg-btc-orange/90 disabled:opacity-50"
+              className="grid h-9 w-9 place-items-center rounded-full bg-primary text-void transition hover:bg-primary/90 disabled:opacity-50 shadow-[0_0_12px_rgba(184,176,200,0.3)] hover:shadow-[0_0_16px_rgba(184,176,200,0.5)] disabled:shadow-none"
               aria-label="Send message"
             >
               <Send size={14} />
@@ -457,6 +523,9 @@ export function ChatSidebar({
           )}
         </form>
 
+          </>
+        )}
+        
         {overlay && onClose && (
           <button type="button" onClick={onClose} className="sr-only">
             Close chat

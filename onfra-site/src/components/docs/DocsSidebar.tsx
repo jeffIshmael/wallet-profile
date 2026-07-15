@@ -16,10 +16,7 @@ export function DocsSidebar() {
             <p className="docs-sidebar-heading">{section.title}</p>
             <ul className="docs-sidebar-list">
               {section.items.map((item) => {
-                const active =
-                  item.href === "/docs"
-                    ? pathname === "/docs"
-                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const active = pathname === item.href;
 
                 return (
                   <li key={item.href}>

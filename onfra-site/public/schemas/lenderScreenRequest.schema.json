@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenRequest.schema.json",
+  "title": "LenderScreenRequest",
+  "description": "Request body for OnFRA lender underwriting screen.",
+  "type": "object",
+  "required": ["walletAddress", "callerAddress"],
+  "properties": {
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Borrower wallet to screen before lending."
+    },
+    "callerAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Lender wallet paying for the screen via x402."
+    },
+    "months": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "default": 12,
+      "description": "Months of transaction history to analyze."
+    },
+    "force": {
+      "type": "boolean",
+      "default": false,
+      "description": "Bypass cache and run fresh analysis."
+    }
+  },
+  "additionalProperties": false
+}

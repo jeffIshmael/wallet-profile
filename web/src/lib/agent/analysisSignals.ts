@@ -156,9 +156,7 @@ export function buildFullAnalysisPayload(
     assessment: extractSignalData("assessment", walletData),
     threeMonthStatement: extractSignalData("statement", walletData),
     statement: extractSignalData("statement", walletData),
-    x402Billing: isOwnWallet
-      ? { chargedUsdt: "0", token: "USDT", chain: "celo", free: true }
-      : { chargedUsdt: priceUsdt, token: "USDT", chain: "celo", free: false },
+    x402Billing: { chargedUsdt: priceUsdt, token: "USDT", chain: "celo", free: false },
     createdAt: fetchedAt ?? new Date().toISOString()
   };
 }

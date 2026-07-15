@@ -3,13 +3,15 @@ import Link from "next/link";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { LINKS } from "@/lib/links";
 
+import { DocsAssistantDropdown } from "./DocsAssistantDropdown";
+
 export function DocsHeader() {
   return (
     <header className="docs-header sticky top-0 z-50 border-b border-white/8 bg-black/90 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-6">
           <Link href="/docs" className="flex items-center gap-2 text-sm font-medium text-ink">
-            <Sparkles size={16} className="text-nude" strokeWidth={1.5} />
+            <img src="/logo_dark.png" alt="OnFRA" className="h-5 w-5 rounded-full" />
             <span>OnFRA Docs</span>
           </Link>
           <nav className="hidden items-center gap-5 text-xs text-ink-muted md:flex">
@@ -75,13 +77,8 @@ export function DocsH3({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
-export function DocsCode({ children }: { children: string }) {
-  return (
-    <pre className="docs-code">
-      <code>{children}</code>
-    </pre>
-  );
-}
+export { DocsCode } from "./DocsCode";
+export { DocsAssistantDropdown } from "./DocsAssistantDropdown";
 
 export function DocsTable({ children }: { children: ReactNode }) {
   return (

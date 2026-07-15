@@ -3,7 +3,8 @@ import {
   DocsBreadcrumb,
   DocsCode,
   DocsH2,
-  DocsH3
+  DocsH3,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { API_URL } from "@/lib/links";
@@ -19,7 +20,10 @@ export default function InstallDocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Overview" title="Install skill" />
-      <h1 className="docs-title">Install OnFRA for agents</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">Install OnFRA for agents</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         Add the OnFRA skill so AI agents know how to analyze wallets, handle x402 payments, and verify
         REP passports.

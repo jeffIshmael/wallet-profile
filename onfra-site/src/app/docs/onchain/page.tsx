@@ -4,7 +4,8 @@ import {
   DocsCode,
   DocsH2,
   DocsH3,
-  DocsTable
+  DocsTable,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { LINKS } from "@/lib/links";
@@ -20,7 +21,10 @@ export default function OnchainDocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Integrate" title="Onchain & Attribution" />
-      <h1 className="docs-title">Onchain &amp; Attribution</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">Onchain &amp; Attribution</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         OnFRA operates as a verified ERC-8004 reputation agent on Celo mainnet. Learn how to verify
         records onchain and attribute transactions back to your platform.

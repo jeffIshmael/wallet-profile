@@ -88,28 +88,40 @@ export function AgentChatPreviewClaude({
           </div>
 
           {authenticated ? (
-            <div className="mt-8 flex items-center gap-4">
+            <div className="mt-8 flex flex-col items-start gap-1">
               <button
                 type="button"
                 onClick={onAskAgent}
                 disabled={connecting}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 hover:shadow-[0_0_32px_-4px_rgba(184,176,200,0.65)] disabled:cursor-wait disabled:opacity-70"
+                className="group inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-primary/10 border border-primary/30 px-6 py-3 font-mono text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.3)] transition-all hover:scale-105 hover:bg-primary/20 hover:border-primary/50 hover:shadow-[0_0_32px_-4px_rgba(184,176,200,0.6)] disabled:cursor-wait disabled:opacity-70"
               >
-                {connecting ? "Connecting..." : "Ask Agent"}
-                <ArrowRight size={14} />
+                {connecting ? "Connecting..." : (
+                  <>
+                    <img src="/apple-icon.png" alt="OnFRA" className="h-5 w-5 rounded-full" />
+                    Ask Agent
+                  </>
+                )}
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </button>
+              <span className="text-[10px] text-stardust/60 ml-6 uppercase tracking-wider">Powered by AI</span>
             </div>
           ) : miniPay ? (
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-col items-start gap-1">
               <button
                 type="button"
                 onClick={onAskAgent}
                 disabled={connecting}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btc-orange px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.5)] transition hover:scale-105 hover:bg-btc-orange/90 disabled:cursor-wait disabled:opacity-70"
+                className="group inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-primary/10 border border-primary/30 px-6 py-3 font-mono text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_24px_-4px_rgba(184,176,200,0.3)] transition-all hover:scale-105 hover:bg-primary/20 hover:border-primary/50 hover:shadow-[0_0_32px_-4px_rgba(184,176,200,0.6)] disabled:cursor-wait disabled:opacity-70"
               >
-                {connecting ? "Connecting…" : "Ask Agent"}
-                <ArrowRight size={14} />
+                {connecting ? "Connecting…" : (
+                  <>
+                    <img src="/apple-icon.png" alt="OnFRA" className="h-5 w-5 rounded-full" />
+                    Ask Agent
+                  </>
+                )}
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </button>
+              <span className="text-[10px] text-stardust/60 ml-6 uppercase tracking-wider">Powered by AI</span>
             </div>
           ) : (
             <div className="mt-8 flex flex-wrap items-center gap-4">

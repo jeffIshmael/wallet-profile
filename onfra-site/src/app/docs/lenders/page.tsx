@@ -3,10 +3,11 @@ import {
   DocsBreadcrumb,
   DocsCode,
   DocsH2,
-  DocsH3
+  DocsH3,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
-import { API_URL } from "@/lib/links";
+import { API_URL, APP_URL } from "@/lib/links";
 import type { TocItem } from "@/lib/docsNav";
 
 const TOC: TocItem[] = [
@@ -21,11 +22,14 @@ export default function LendersDocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Integrate" title="Lender screening" />
-      <h1 className="docs-title">Lender screening</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">Lender screening</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         Screen borrower wallets before extending credit. One API call returns an underwriting
-        data package you can use to evaluate trustworthiness, reputation, average monthly income,
-        and loan capacity.
+        data package you can use to evaluate trustworthiness, financial health, estimated monthly income,
+        and estimated loan capacity.
       </p>
 
       <div className="docs-prose">
@@ -38,14 +42,14 @@ export default function LendersDocsPage() {
         <ul>
           <li>Recurring stablecoin inflow patterns and weekly consistency</li>
           <li>Wallet reputation score (0–100) from maturity and behavior</li>
-          <li>Loan capacity range with confidence level</li>
+          <li>Estimated loan capacity range with confidence level</li>
           <li>Trustworthiness flag derived from onchain financial signals</li>
         </ul>
 
         <DocsH2 id="flow">Integration flow</DocsH2>
         <ol>
           <li>Borrower provides wallet address (and optionally a REP passport ID)</li>
-          <li>Your backend calls <code>POST /api/lender/screen</code> with x402 payment</li>
+          <li>Your backend calls <code>POST /api/lender/screen</code> with x402 payment <strong>(0.01 USDT)</strong></li>
           <li>Use <code>trust.isTrustworthy</code>, reputation, income, and lending capacity to apply your rules</li>
           <li>Optionally verify REP passport via <code>GET /api/agent/verify/{"{id}"}</code></li>
         </ol>
@@ -86,6 +90,22 @@ export default function LendersDocsPage() {
         </p>
 
         <DocsH2 id="passport">REP passport</DocsH2>
+        <DocsH3 id="sample-passport">Sample passport</DocsH3>
+        <p>
+          You can view an example of a generated REP passport. The PDF contains verified
+          financial signals including the wallet's health score, estimated income, and transaction summary.
+        </p>
+        <p className="mt-4 mb-6">
+          <a
+            href={`${APP_URL}/report/REP-X141GYYEUM`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition"
+          >
+            View Sample REP Passport →
+          </a>
+        </p>
+
         <DocsH3 id="verify-passport">Verify onchain</DocsH3>
         <p>
           Borrowers can purchase a verified financial passport (<code>REP-{"{id}"}</code>) for 0.10 USDT.

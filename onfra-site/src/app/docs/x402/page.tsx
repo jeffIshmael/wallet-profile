@@ -4,7 +4,8 @@ import {
   DocsCode,
   DocsH2,
   DocsH3,
-  DocsTable
+  DocsTable,
+  DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import type { TocItem } from "@/lib/docsNav";
@@ -20,7 +21,10 @@ export default function X402DocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Integrate" title="x402 payments" />
-      <h1 className="docs-title">x402 payments</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">x402 payments</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         Paid OnFRA endpoints settle in USDT on Celo mainnet via the x402 payment protocol. No API keys
         or subscriptions — pay per query from your wallet.
@@ -68,8 +72,12 @@ export default function X402DocsPage() {
               <td>0.10 USDT</td>
             </tr>
             <tr>
+              <td>Generate statement</td>
+              <td>0.01 USDT</td>
+            </tr>
+            <tr>
               <td>Cached signal reads</td>
-              <td>Free</td>
+              <td>0.01 USDT</td>
             </tr>
             <tr>
               <td>Verify REP passport</td>
@@ -82,11 +90,11 @@ export default function X402DocsPage() {
           <Link href="/pricing">pricing page</Link> for the full breakdown.
         </p>
 
-        <DocsH2 id="own-wallet">Own wallet queries</DocsH2>
+        <DocsH2 id="app-vs-api">App vs API Queries</DocsH2>
         <p>
-          When <code>callerAddress</code> matches the target wallet (or you query your own connected
-          wallet in the app), analyze and chat are <strong>free</strong>. External queries — screening
-          someone else&apos;s address — require x402 payment.
+          When using the OnFRA web application dashboard, querying your own connected wallet is <strong>free</strong>. 
+          However, <strong>all</strong> queries made through the Agent API (including analyze, chat, and statements) 
+          require x402 payment of 0.01 USDT, regardless of whether you are querying your own wallet or an external one.
         </p>
         <div className="docs-callout">
           <strong>Lender screen</strong> always requires payment from <code>callerAddress</code> (the

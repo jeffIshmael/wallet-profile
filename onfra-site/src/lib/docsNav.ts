@@ -29,7 +29,8 @@ export const DOCS_NAV: DocsNavSection[] = [
   {
     title: "Agents",
     items: [
-      { title: "MCP & ERC-8004", href: "/docs/agents" },
+      { title: "MCP", href: "/docs/agents" },
+      { title: "A2A", href: "/docs/agents/a2a" },
       { title: "JSON schemas", href: "/docs/schemas" }
     ]
   }

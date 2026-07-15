@@ -1041,3 +1041,55 @@ body {
   font-weight: 500;
   color: var(--color-nude-soft);
 }
+
+/* Light Mode Overrides */
+html.light {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f4f5;
+  --color-ink: #000000;
+  --color-ink-muted: #52525b;
+  --color-ink-faint: #a1a1aa;
+}
+
+html.light .page-shell {
+  background: var(--color-bg);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.1);
+}
+
+html.light .nav-pill {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html.light .docs-sidebar {
+  border-right-color: rgba(0, 0, 0, 0.06);
+}
+
+html.light .docs-toc {
+  border-left-color: rgba(0, 0, 0, 0.06);
+}
+
+html.light .terminal-chrome {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.light .code-surface {
+  background: rgba(244, 244, 245, 0.9);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+html.light pre.docs-code {
+  background: rgba(244, 244, 245, 0.9);
+  border-color: rgba(0, 0, 0, 0.07);
+  color: #3f3f46;
+}
+
+html.light .docs-sidebar-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}

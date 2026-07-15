@@ -7,6 +7,7 @@ const TOOLS = [
   { name: "analyze_wallet", route: "POST /api/agent/analyze", desc: "Full financial analysis" },
   { name: "chat_query", route: "POST /api/agent/chat", desc: "Natural-language wallet queries" },
   { name: "generate_report", route: "POST /api/agent/report", desc: "Verified financial passport" },
+  { name: "generate_statement", route: "POST /api/agent/statement", desc: "Generate transaction statement PDF" },
   { name: "verify_report", route: "GET /api/agent/verify/{id}", desc: "Verify REP-{id} onchain" }
 ] as const;
 

@@ -61,7 +61,7 @@ export async function POST(req: Request) {
   }
 
   const paymentBlock = await assertPayment(req, "external", {
-    skipPayment: target.isOwnWallet,
+    skipPayment: false,
     skipReason: "own-wallet chat"
   });
   if (paymentBlock) return paymentBlock;
@@ -111,9 +111,7 @@ export async function POST(req: Request) {
       response: stripMarkdown(response.text),
       toolsUsed: response.toolsUsed,
       source: response.source,
-      x402Billing: target.isOwnWallet
-        ? { chargedUsdt: "0", token: "USDT", chain: "celo", free: true }
-        : { chargedUsdt: priceUsdt, token: "USDT", chain: "celo", free: false }
+      x402Billing: { chargedUsdt: priceUsdt, token: "USDT", chain: "celo", free: false }
     });
   } catch (error) {
     await trackApiEvent({

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { DEFAULT_THEME_ID, THEME_BOOT_MAP } from "@/lib/nudeThemes";
 import "./globals.css";
@@ -48,7 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <ThemeProvider>{children}</ThemeProvider>
+        </NextThemesProvider>
       </body>
     </html>
   );

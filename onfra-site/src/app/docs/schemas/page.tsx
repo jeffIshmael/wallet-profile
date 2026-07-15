@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { DocsBreadcrumb, DocsH2 } from "@/components/docs/DocsContent";
+import { DocsBreadcrumb, DocsH2   DocsAssistantDropdown,
+} from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { API_URL } from "@/lib/links";
 import type { TocItem } from "@/lib/docsNav";
@@ -24,10 +25,13 @@ export default function SchemasDocsPage() {
   return (
     <DocsShell toc={TOC}>
       <DocsBreadcrumb section="Agents" title="JSON schemas" />
-      <h1 className="docs-title">JSON schemas</h1>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h1 className="docs-title !mb-0">JSON schemas</h1>
+        <DocsAssistantDropdown />
+      </div>
       <p className="docs-lead">
         Request and response shapes are defined in machine-readable JSON Schema at{" "}
-        <code>{API_URL}/schemas/</code>. Use these for validation, codegen, and agent tool definitions.
+        <code>/schemas/</code>. Use these for validation, codegen, and agent tool definitions.
       </p>
 
       <div className="docs-prose">
@@ -36,7 +40,7 @@ export default function SchemasDocsPage() {
           {SCHEMAS.filter((s) => s.kind === "Request").map((schema) => (
             <li key={schema.file}>
               <a
-                href={`${API_URL}/schemas/${schema.file}`}
+                href={`/schemas/${schema.file}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -51,7 +55,7 @@ export default function SchemasDocsPage() {
           {SCHEMAS.filter((s) => s.kind === "Response").map((schema) => (
             <li key={schema.file}>
               <a
-                href={`${API_URL}/schemas/${schema.file}`}
+                href={`/schemas/${schema.file}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenResult.schema.json",
+  "title": "LenderScreenResult",
+  "description": "Lender underwriting result returned by OnFRA (trustworthiness, reputation, income, and loan capacity).",
+  "type": "object",
+  "required": [
+    "status",
+    "walletAddress",
+    "screenedAt",
+    "trust",
+    "scores",
+    "income",
+    "lending",
+    "verification",
+    "cached",
+    "x402Billing"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed"]
+    },
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "screenedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trust": {
+      "type": "object",
+      "required": ["isTrustworthy"],
+      "properties": {
+        "isTrustworthy": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["approve", "review", "decline"]
+    },
+    "recommendationRationale": {
+      "type": "string"
+    },
+    "scores": {
+      "type": "object",
+      "required": ["financialHealth", "reputation", "reputationCategory"],
+      "properties": {
+        "financialHealth": { "type": "number", "minimum": 0, "maximum": 100 },
+        "reputation": { "type": "number", "minimum": 0, "maximum": 100 },
+        "reputationCategory": { "type": "string" }
+      }
+    },
+    "income": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "monthlyEstimateUsd": { "type": "number" },
+        "weeklyConsistencyPct": { "type": "number" },
+        "recurringIncome": { "type": "boolean" },
+        "threeMonthInflowUsd": { "type": "number" },
+        "threeMonthOutflowUsd": { "type": "number" },
+        "threeMonthNetFlowUsd": { "type": "number" }
+      }
+    },
+    "lending": {
+      "type": "object",
+      "properties": {
+        "recommendedMinUsd": { "type": "number" },
+        "recommendedMaxUsd": { "type": "number" },
+        "confidence": { "type": "string" },
+        "riskCategory": { "type": "string" },
+        "stablecoinBalanceUsd": { "type": "number" },
+        "walletAgeMonths": { "type": "number" }
+      }
+    },
+    "signals": {
+      "type": "object",
+      "properties": {
+        "positive": { "type": "array", "items": { "type": "string" } },
+        "concerns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "whatLendersAlreadySee": {
+      "type": "object",
+      "description": "Data lenders can already read from chain — collateral, balances, tx count."
+    },
+    "whatOnfraAdds": {
+      "type": "object",
+      "description": "Signals OnFRA derives that traditional underwriting lacks for wallet-native borrowers."
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "hasOnchainPassport": { "type": "boolean" },
+        "reportId": { "type": ["string", "null"] },
+        "verifyUrl": { "type": ["string", "null"] },
+        "onchainReporterContract": { "type": "string" }
+      }
+    },
+    "cached": { "type": "boolean" },
+    "x402Billing": {
+      "type": "object",
+      "properties": {
+        "chargedUsdt": { "type": "string" },
+        "token": { "type": "string" },
+        "chain": { "type": "string" },
+        "payer": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

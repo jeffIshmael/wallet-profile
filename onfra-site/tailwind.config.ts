@@ -11,14 +11,14 @@ export default {
       },
       colors: {
         canvas: {
-          DEFAULT: "#0c0c0c",
-          soft: "#000000",
-          card: "#141414"
+          DEFAULT: "var(--color-surface)",
+          soft: "var(--color-bg)",
+          card: "var(--color-surface-2)"
         },
         ink: {
-          DEFAULT: "#ffffff",
-          muted: "#a3a3a3",
-          faint: "#737373"
+          DEFAULT: "var(--color-ink)",
+          muted: "var(--color-ink-muted)",
+          faint: "var(--color-ink-faint)"
         },
         nude: {
           DEFAULT: "var(--color-nude)",

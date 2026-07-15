@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/chatRequest.schema.json",
+  "title": "ChatRequest",
+  "description": "Multi-turn chat query to Onfra AI about wallet financial reputation.",
+  "type": "object",
+  "required": ["message"],
+  "properties": {
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "User question about financial health, loan capacity, reputation, or portfolio risk."
+    },
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Target wallet to analyze. Defaults to the caller's connected wallet when omitted."
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+          "content": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

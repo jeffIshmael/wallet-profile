@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/walletSignalResult.schema.json",
+  "title": "WalletSignalResult",
+  "description": "Single reputation signal slice from cached OnFRA analysis.",
+  "type": "object",
+  "required": ["signal", "walletAddress", "cached", "data"],
+  "properties": {
+    "signal": {
+      "type": "string",
+      "enum": [
+        "monthly-income",
+        "financial-health",
+        "reputation-score",
+        "loan-capacity",
+        "statement",
+        "assessment"
+      ]
+    },
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "cached": {
+      "type": "boolean",
+      "const": true
+    },
+    "fetchedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "data": {
+      "type": "object",
+      "description": "Signal-specific payload. Shape depends on signal id."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisRequest.schema.json",
+  "title": "WalletAnalysisRequest",
+  "description": "Request body for OnFRA wallet financial reputation analysis on Celo.",
+  "type": "object",
+  "required": ["walletAddress"],
+  "properties": {
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "EVM wallet address to analyze (Celo-first, multi-chain supported)."
+    },
+    "months": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "default": 3,
+      "description": "Months of transaction history for cash-flow statement (default 3)."
+    },
+    "includeAttestation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include AI-generated attestation paragraph in the response."
+    },
+    "fields": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Comma-separated field keys to return instead of the full payload."
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "monthlyIncome",
+              "financialHealth",
+              "reputationScore",
+              "loanCapacity",
+              "statement",
+              "assessment",
+              "walletData"
+            ]
+          }
+        }
+      ],
+      "description": "Optional subset of analysis fields. Omit for full response. Signal reads from cache are free via GET /api/wallet/{address}/signals/{signal}."
+    },
+    "force": {
+      "type": "boolean",
+      "default": false,
+      "description": "Bypass cache and run a fresh analysis (charges x402 for external wallets)."
+    },
+    "callerAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet paying via x402 when querying an external address."
+    }
+  },
+  "additionalProperties": false
+}
