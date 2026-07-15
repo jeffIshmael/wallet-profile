@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DocsBreadcrumb, DocsH2   DocsAssistantDropdown,
+import { DocsBreadcrumb, DocsH2, DocsAssistantDropdown,
 } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
 import { API_URL } from "@/lib/links";
