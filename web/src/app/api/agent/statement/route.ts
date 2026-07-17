@@ -23,8 +23,8 @@ export async function POST(req: Request) {
     return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  const callerAddress = body.callerAddress?.trim() || walletAddress;
-  if (!isEvmAddress(callerAddress)) {
+  const callerAddress = body.callerAddress?.trim();
+  if (!callerAddress || !isEvmAddress(callerAddress)) {
     return badRequest("callerAddress must be a valid 0x-prefixed EVM address.");
   }
 

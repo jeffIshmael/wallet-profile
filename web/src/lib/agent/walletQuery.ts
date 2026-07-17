@@ -139,9 +139,9 @@ export function resolveAnalysisTarget(
   const targetWallet = normalizeWalletAddress(walletAddress);
   const callerWallet = callerAddress
     ? normalizeWalletAddress(callerAddress)
-    : targetWallet;
+    : "";
 
-  const isOwnWallet = isSameWallet(callerWallet, targetWallet);
+  const isOwnWallet = callerWallet ? isSameWallet(callerWallet, targetWallet) : false;
   return {
     callerWallet,
     targetWallet,

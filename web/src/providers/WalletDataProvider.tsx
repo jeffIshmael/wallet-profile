@@ -148,7 +148,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/agent/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletAddress: target, force })
+          body: JSON.stringify({ walletAddress: target, callerAddress: address, force })
         });
 
         if (!response.ok) {

@@ -26,19 +26,23 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): 
 export async function POST(req: Request) {
   const body = parseJsonBody<{
     message?: string;
-    walletAddress?: string;
+    walletAddress?: string; // target wallet (from agent)
+    callerAddress?: string; // caller wallet (from frontend or agent)
     history?: Array<{ role: "user" | "assistant"; content: string }>;
     sessionId?: string;
   }>(await req.json().catch(() => null));
   if (!body?.message?.trim()) return badRequest("message is required.");
 
-  const callerWallet = body.walletAddress?.trim();
+  // For agents, caller is callerAddress. For legacy frontend compatibility, fallback to walletAddress.
+  const callerWallet = body.callerAddress?.trim() || body.walletAddress?.trim();
   if (!callerWallet || !isEvmAddress(callerWallet)) {
-    return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
+    return badRequest("callerAddress must be a valid 0x-prefixed EVM address.");
   }
 
+  // If the agent explicitly passed a target walletAddress, append it to the message so it's resolved.
+  const explicitTarget = body.walletAddress?.trim() && body.walletAddress !== callerWallet ? ` ${body.walletAddress}` : "";
   const userMessage = body.message.trim();
-  const queryTarget = resolveChatQueryTarget(userMessage, callerWallet);
+  const queryTarget = resolveChatQueryTarget(userMessage + explicitTarget, callerWallet);
   if (!queryTarget.ok) {
     return Response.json(
       { error: queryTarget.error, code: queryTarget.code },

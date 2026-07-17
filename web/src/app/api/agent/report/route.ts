@@ -22,7 +22,7 @@ import type { ReportProgressEvent } from "@/types/reportProgress";
 import type { Address } from "viem";
 
 export async function POST(req: Request) {
-  const body = parseJsonBody<{ walletAddress?: string; buyerAddress?: string }>(
+  const body = parseJsonBody<{ walletAddress?: string; buyerAddress?: string; callerAddress?: string }>(
     await req.json().catch(() => null)
   );
   if (!body) return badRequest("Invalid JSON body.");
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
     return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  const buyerAddress = body.buyerAddress?.trim();
+  const buyerAddress = body.buyerAddress?.trim() || body.callerAddress?.trim();
   if (!buyerAddress || !isEvmAddress(buyerAddress)) {
-    return badRequest("buyerAddress must be a valid 0x-prefixed EVM address.");
+    return badRequest("buyerAddress or callerAddress must be a valid 0x-prefixed EVM address.");
   }
 
   if (!isReporterConfigured()) {

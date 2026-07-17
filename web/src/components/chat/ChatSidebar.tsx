@@ -298,6 +298,7 @@ export function ChatSidebar({
         body: JSON.stringify({
           message: userMessage,
           walletAddress: address,
+          callerAddress: address,
           history,
           sessionId
         }),
