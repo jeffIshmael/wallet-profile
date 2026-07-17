@@ -5,8 +5,9 @@ import { PageShell } from "@/components/PageShell";
 import { API_URL } from "@/lib/links";
 
 type PlatformStats = {
-  totals?: { wallets?: number; reports?: number };
-  last7d?: { analyses?: number; reports?: number };
+  totals?: { wallets?: number; reports?: number; apiEvents?: number; externalApiEvents?: number };
+  today?: { apiEvents?: number };
+  last7Days?: { analyses?: number; reports?: number };
 };
 
 export default function StatsPage() {
@@ -23,8 +24,12 @@ export default function StatsPage() {
   const cards = [
     { label: "Wallets analyzed", value: stats?.totals?.wallets ?? "—" },
     { label: "Reports published", value: stats?.totals?.reports ?? "—" },
-    { label: "Analyses (7d)", value: stats?.last7d?.analyses ?? "—" },
-    { label: "Reports (7d)", value: stats?.last7d?.reports ?? "—" }
+    { label: "Analyses (7d)", value: stats?.last7Days?.analyses ?? "—" },
+    { label: "Reports (7d)", value: stats?.last7Days?.reports ?? "—" },
+    { label: "Total API calls", value: stats?.totals?.apiEvents ?? "—" },
+    { label: "API calls today", value: stats?.today?.apiEvents ?? "—" },
+    { label: "External API calls (X402)", value: stats?.totals?.externalApiEvents ?? "—" },
+    { label: "Skill Installs", value: "Untracked" }
   ];
 
   return (

@@ -45,6 +45,13 @@ const nextConfig = {
         ]
       },
       {
+        source: "/api/stats",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" }
+        ]
+      },
+      {
         source: "/schemas/:path*",
         headers: [{ key: "Access-Control-Allow-Origin", value: "*" }]
       }
