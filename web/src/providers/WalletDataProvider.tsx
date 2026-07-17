@@ -256,6 +256,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
     ]
   );
 
+  // @ts-expect-error React 18 vs React 19 type mismatch for ReactNode (bigint)
   return <WalletDataContext.Provider value={value}>{children}</WalletDataContext.Provider>;
 }
 
