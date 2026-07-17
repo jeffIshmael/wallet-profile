@@ -59,9 +59,11 @@ export async function POST(req: Request) {
 
   if (target.isExternal) {
     try {
-      const balanceCheck = await assertSufficientUsdtBalance(callerWallet, priceUsdt);
-      if (!balanceCheck.ok) {
-        return insufficientBalanceError(balanceCheck.balance, priceUsdt);
+      if (callerWallet) {
+        const balanceCheck = await assertSufficientUsdtBalance(callerWallet, priceUsdt);
+        if (!balanceCheck.ok) {
+          return insufficientBalanceError(balanceCheck.balance, priceUsdt);
+        }
       }
     } catch (error) {
       console.warn("[chat] USDT balance pre-check failed:", error);
@@ -77,7 +79,8 @@ export async function POST(req: Request) {
   const started = Date.now();
 
   try {
-    const session = await getOrCreateChatSession(callerWallet, body.sessionId);
+    const sessionOwner = callerWallet || target.targetWallet;
+    const session = await getOrCreateChatSession(sessionOwner, body.sessionId);
     const history = body.history ?? [];
 
     const response = await withTimeout(
@@ -101,7 +104,7 @@ export async function POST(req: Request) {
     await trackApiEvent({
       endpoint: "chat",
       status: "success",
-      walletAddress: callerWallet,
+      walletAddress: callerWallet || target.targetWallet,
       durationMs: Date.now() - started,
       metadata: {
         targetWallet: target.targetWallet,
@@ -112,7 +115,7 @@ export async function POST(req: Request) {
 
     return Response.json({
       sessionId: session.id,
-      walletAddress: callerWallet.toLowerCase(),
+      walletAddress: (callerWallet || target.targetWallet).toLowerCase(),
       targetWallet: target.targetWallet,
       isOwnWallet: target.isOwnWallet,
       message: userMessage,
@@ -125,7 +128,7 @@ export async function POST(req: Request) {
     await trackApiEvent({
       endpoint: "chat",
       status: "error",
-      walletAddress: callerWallet,
+      walletAddress: callerWallet || target.targetWallet,
       durationMs: Date.now() - started,
       metadata: {
         message: error instanceof Error ? error.message : "Chat failed."
@@ -134,7 +137,7 @@ export async function POST(req: Request) {
     console.error("[chat] OnFRA agent failed:", error);
     return Response.json(
       {
-        walletAddress: callerWallet.toLowerCase(),
+        walletAddress: (callerWallet || target.targetWallet).toLowerCase(),
         message: userMessage,
         code: "AGENT_ERROR",
         error:
