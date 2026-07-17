@@ -84,7 +84,7 @@ export async function POST(req: Request) {
   }
 
   const paymentBlock = await assertPayment(req, "external", {
-    skipPayment: false,
+    skipPayment: target.isOwnWallet,
     skipReason: "own-wallet analyze"
   });
   if (paymentBlock) return paymentBlock;

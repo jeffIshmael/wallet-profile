@@ -63,7 +63,7 @@ export function MascotAnimator({
         className="relative z-10"
       >
         <Image
-          src="/app/icon-512.png"
+          src="/apple-icon.png"
           alt="OnFRA Agent"
           width={size}
           height={size}

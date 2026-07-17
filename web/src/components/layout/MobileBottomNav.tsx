@@ -9,7 +9,6 @@ import { Fragment } from "react";
 const NAV_ITEMS = [
   { id: "home", label: "Home", href: "/", icon: Home },
   { id: "verify", label: "Verify", href: "/verify", icon: ShieldCheck },
-  { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, featured: true },
   { id: "chat", label: "Agent chat", href: "/chat", icon: Bot, badge: "New" },
   { id: "statements", label: "Statements", href: "/dashboard/statements", icon: ReceiptText }
 ] as const;
@@ -20,8 +19,6 @@ function isActive(id: (typeof NAV_ITEMS)[number]["id"], pathname: string): boole
       return pathname === "/";
     case "verify":
       return pathname === "/verify";
-    case "dashboard":
-      return pathname === "/dashboard";
     case "chat":
       return pathname === "/chat";
     case "statements":
@@ -72,39 +69,6 @@ function StandardNavLink({
   );
 }
 
-function FeaturedDashboardLink({ active }: { active: boolean }) {
-  const Icon = LayoutDashboard;
-
-  return (
-    <Link
-      href="/dashboard"
-      className="relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-1 pt-0"
-      aria-current={active ? "page" : undefined}
-    >
-      <span
-        className={clsx(
-          "relative z-10 -mt-5 grid h-14 w-14 place-items-center rounded-full border-2 shadow-[0_0_24px_-4px_rgba(184,176,200,0.55)] transition",
-          active
-            ? "border-btc-orange bg-btc-orange text-white"
-            : "border-btc-orange/50 bg-void-surface text-btc-orange hover:border-btc-orange hover:bg-btc-orange/15"
-        )}
-      >
-        <Icon size={26} strokeWidth={2.25} />
-        {active && (
-          <span className="absolute inset-0 rounded-full ring-2 ring-btc-orange/30 ring-offset-2 ring-offset-black/90" />
-        )}
-      </span>
-      <span
-        className={clsx(
-          "relative z-10 max-w-full truncate text-[9px] font-semibold leading-tight",
-          active ? "text-btc-orange" : "text-stardust"
-        )}
-      >
-        Dashboard
-      </span>
-    </Link>
-  );
-}
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -122,11 +86,7 @@ export function MobileBottomNav() {
           return (
             <Fragment key={item.id}>
               {index > 0 && <NavDivider />}
-              {"featured" in item && item.featured ? (
-                <FeaturedDashboardLink active={active} />
-              ) : (
-                <StandardNavLink item={item} active={active} />
-              )}
+              <StandardNavLink item={item} active={active} />
             </Fragment>
           );
         })}

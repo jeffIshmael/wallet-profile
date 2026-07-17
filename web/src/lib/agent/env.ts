@@ -16,7 +16,7 @@ export function getThirdwebClientId(): string | undefined {
 
 /** Treasury / server wallet that receives x402 USDT payments. */
 export function getX402PayToAddress(): `0x${string}` | undefined {
-  const explicit = process.env.X402_PAY_TO?.trim();
+  const explicit = process.env.X402_PAY_TO?.trim() || process.env.NEXT_PUBLIC_X402_PAY_TO?.trim();
   if (explicit?.startsWith("0x")) return explicit as `0x${string}`;
 
   const reporterKey = process.env.REPORTER_PRIVATE_KEY?.trim();

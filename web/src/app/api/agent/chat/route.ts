@@ -61,7 +61,7 @@ export async function POST(req: Request) {
   }
 
   const paymentBlock = await assertPayment(req, "external", {
-    skipPayment: false,
+    skipPayment: target.isOwnWallet,
     skipReason: "own-wallet chat"
   });
   if (paymentBlock) return paymentBlock;
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
   const started = Date.now();
 
   try {
-    const session = await getOrCreateChatSession(callerWallet);
+    const session = await getOrCreateChatSession(callerWallet, body.sessionId);
     const history = body.history ?? [];
 
     const response = await withTimeout(
@@ -144,13 +144,14 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const walletAddress = searchParams.get("walletAddress")?.trim();
+  const sessionId = searchParams.get("sessionId")?.trim() || undefined;
 
   if (!walletAddress || !isEvmAddress(walletAddress)) {
     return badRequest("walletAddress query param must be a valid 0x-prefixed EVM address.");
   }
 
   try {
-    const history = await getChatHistory(walletAddress);
+    const history = await getChatHistory(walletAddress, sessionId);
     return Response.json(history);
   } catch (error) {
     console.error("[chat] Failed to load history:", error);

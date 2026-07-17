@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Send, Square } from "lucide-react";
+import { Loader2, Send, Square, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MascotAnimator } from "@/components/chat/MascotAnimator";
@@ -142,6 +142,34 @@ export function ChatSidebar({
       stageTimerRef.current = null;
     }
     setLoadingStatus(null);
+  }
+
+  async function loadSession(id: string) {
+    if (!address) return;
+    setActiveTab("chat");
+    setLoadingHistory(true);
+    try {
+      const response = await fetch(
+        `/api/agent/chat?walletAddress=${encodeURIComponent(address)}&sessionId=${encodeURIComponent(id)}`
+      );
+      if (!response.ok) return;
+
+      const payload = await response.json();
+      setSessionId(payload.sessionId ?? null);
+      const loaded = (payload.messages ?? []).map((message: any) => ({
+        role: message.role === "user" ? ("user" as const) : ("ai" as const),
+        text: message.content,
+        createdAt: message.createdAt
+      }));
+      setMessages(loaded);
+      setUserMessageCount(loaded.filter((message: any) => message.role === "user").length);
+    } catch {
+      setMessages([]);
+      setSessionId(null);
+      setUserMessageCount(0);
+    } finally {
+      setLoadingHistory(false);
+    }
   }
 
   function cancelRequest() {
@@ -340,7 +368,7 @@ export function ChatSidebar({
           </div>
         )}
 
-        <div className="mb-4 flex gap-1 rounded-full bg-white/5 p-1 border border-white/5 w-fit">
+        <div className="mb-4 mx-auto flex gap-1 rounded-full bg-white/5 p-1 border border-white/5 w-fit relative">
           <button
             onClick={() => setActiveTab("chat")}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
@@ -361,11 +389,24 @@ export function ChatSidebar({
           >
             History
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMessages([]);
+              setSessionId("new");
+              setUserMessageCount(0);
+              setActiveTab("chat");
+            }}
+            className="absolute -right-10 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-stardust transition hover:bg-white/10 hover:text-white"
+            aria-label="New Chat"
+          >
+            <Plus size={16} />
+          </button>
         </div>
 
         {activeTab === "history" ? (
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <ChatHistoryList />
+            <ChatHistoryList address={address!} onSelectSession={loadSession} />
           </div>
         ) : (
           <>

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { LandingNav } from "@/components/landing/design-4/LandingNav";
+import { Header } from "@/components/layout/Header";
 import { FooterSection } from "@/components/landing/design-4/sections/FooterSection";
 import { VerifySection } from "@/components/landing/design-4/sections/VerifySection";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
@@ -17,18 +18,23 @@ export default function VerifyPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-void font-inter text-white">
-      <LandingNav
-        onSignIn={login}
-        onDisconnect={() => {
-          clearAnalysisSession();
-          logout();
-        }}
-        onTryChat={handleTryChat}
-        authenticated={ready && authenticated}
-        address={ready ? address : null}
-        connecting={connectingMiniPay}
-        active="verify"
-      />
+      <div className="hidden md:block">
+        <LandingNav
+          onSignIn={login}
+          onDisconnect={() => {
+            clearAnalysisSession();
+            logout();
+          }}
+          onTryChat={handleTryChat}
+          authenticated={ready && authenticated}
+          address={ready ? address : null}
+          connecting={connectingMiniPay}
+          active="verify"
+        />
+      </div>
+      <div className="md:hidden">
+        <Header compact dashboardActions={{ onChatOpen: handleTryChat }} />
+      </div>
       <main className="flex flex-1 flex-col pt-24">
         <VerifySection />
       </main>

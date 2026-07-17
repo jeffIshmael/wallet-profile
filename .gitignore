@@ -54,3 +54,9 @@ web/prisma/*.db-journal
 onfra-skill/
 
 /video
+
+# API test scripts
+solve_askbots.py
+
+# Skills managed in separate repos
+.agents/skills/onfra-skill/

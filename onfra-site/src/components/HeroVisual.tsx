@@ -42,7 +42,7 @@ export function HeroPreview() {
       <div className="relative w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/animation_image.png"
+          src="/animation_image.webp"
           alt="Wallet address enters OnFRA scanner and emerges as financial reputation signals"
           className="block h-auto w-full"
         />

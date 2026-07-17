@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Wallet } from "lucide-react";
+import { Copy, Wallet, LogOut } from "lucide-react";
 import { DashboardHeaderActions } from "@/components/layout/DashboardHeaderActions";
 import { OnfraBrand } from "@/components/layout/OnfraBrand";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { ThemeToggleButton } from "@/providers/ThemeProvider";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useWalletDisplay } from "@/hooks/useWalletDisplay";
+import { clearAnalysisSession } from "@/lib/dashboardSession";
 
 type HeaderProps = {
   compact?: boolean;
@@ -15,7 +16,7 @@ type HeaderProps = {
 };
 
 export function Header({ compact = false, dashboardActions }: HeaderProps) {
-  const { miniPay, connectingMiniPay } = useWalletAuth();
+  const { miniPay, connectingMiniPay, authenticated, logout } = useWalletAuth();
   const { primaryLabel, secondaryHint, address } = useWalletDisplay();
   const connecting = connectingMiniPay;
 
@@ -27,15 +28,26 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
         <OnfraBrand size={compact ? "sm" : "md"} className="shrink-0" />
 
         {dashboardActions ? (
-          <DashboardHeaderActions
-            onChatOpen={dashboardActions.onChatOpen}
-            trailing={
-              <>
-                {miniPay && <StatusBadge tone="green">MiniPay</StatusBadge>}
-                <ThemeToggleButton />
-              </>
-            }
-          />
+          <>
+            <DashboardHeaderActions onChatOpen={dashboardActions.onChatOpen} />
+            <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-3 md:border-l md:border-white/10 md:pl-3">
+              {miniPay && <StatusBadge tone="green">MiniPay</StatusBadge>}
+              <ThemeToggleButton />
+              {authenticated && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAnalysisSession();
+                    logout();
+                  }}
+                  className="rounded-lg p-2 text-stardust transition hover:bg-white/10 hover:text-white"
+                  aria-label="Log out"
+                >
+                  <LogOut size={16} />
+                </button>
+              )}
+            </div>
+          </>
         ) : (
           <>
             <div className="ml-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-void-surface px-2.5 py-1.5 sm:gap-2 sm:px-3 sm:py-2">
@@ -67,6 +79,19 @@ export function Header({ compact = false, dashboardActions }: HeaderProps) {
             <div className="flex shrink-0 items-center gap-2">
               {miniPay && <StatusBadge tone="green">MiniPay</StatusBadge>}
               <ThemeToggleButton />
+              {authenticated && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAnalysisSession();
+                    logout();
+                  }}
+                  className="rounded-lg p-2 text-stardust transition hover:bg-white/10 hover:text-white"
+                  aria-label="Log out"
+                >
+                  <LogOut size={16} />
+                </button>
+              )}
             </div>
           </>
         )}

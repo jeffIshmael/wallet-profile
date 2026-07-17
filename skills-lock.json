@@ -4,7 +4,7 @@
     "celo-builders": {
       "source": "celobuilders.xyz",
       "sourceType": "well-known",
-      "computedHash": "e6c4a5b7d4718fac6ead7f4d1cf2c1a25b9002dd35b63dde3f26f690345abe24"
+      "computedHash": "9b383bb781aa0fcf607928f46a1491e95368c8c0886c387b7a936f3ae35ee4b4"
     },
     "celopedia-skill": {
       "source": "celo-org/celopedia-skills",
