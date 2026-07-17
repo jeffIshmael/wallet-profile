@@ -25,18 +25,19 @@ export async function POST(req: Request) {
     return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  if (!body.callerAddress?.trim()) {
+  const isDashboard = req.headers.get("x-onfra-dashboard") === "true";
+  const callerAddress = isDashboard ? body.callerAddress?.trim() : undefined;
+
+  if (isDashboard && (!callerAddress || !isEvmAddress(callerAddress))) {
     return badRequest("callerAddress is required — the lender wallet paying for the screen.");
   }
 
-  if (!isEvmAddress(body.callerAddress.trim())) {
-    return badRequest("callerAddress must be a valid 0x-prefixed EVM address.");
-  }
-
-  const target = resolveAnalysisTarget(walletAddress, body.callerAddress.trim());
+  const target = resolveAnalysisTarget(walletAddress, callerAddress);
   const priceUsdt = getTierPriceUsdt("external");
 
-  if (!target.isExternal) {
+  // Agents don't have a callerAddress, but we still allow them to screen wallets
+  // However, the dashboard requires callerAddress to be different from the screened wallet
+  if (isDashboard && !target.isExternal) {
     return badRequest(
       "Lender screen requires screening a borrower wallet different from callerAddress."
     );

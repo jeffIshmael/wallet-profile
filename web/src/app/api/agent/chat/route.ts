@@ -33,9 +33,13 @@ export async function POST(req: Request) {
   }>(await req.json().catch(() => null));
   if (!body?.message?.trim()) return badRequest("message is required.");
 
-  // For agents, caller is callerAddress. For legacy frontend compatibility, fallback to walletAddress.
-  const callerWallet = body.callerAddress?.trim() || body.walletAddress?.trim();
-  if (!callerWallet || !isEvmAddress(callerWallet)) {
+  // Only trust callerAddress from the official dashboard to prevent agent spoofing
+  const isDashboard = req.headers.get("x-onfra-dashboard") === "true";
+  
+  // For dashboard, caller is callerAddress. For legacy frontend compatibility, fallback to walletAddress.
+  const callerWallet = isDashboard ? (body.callerAddress?.trim() || body.walletAddress?.trim()) : undefined;
+
+  if (isDashboard && (!callerWallet || !isEvmAddress(callerWallet))) {
     return badRequest("callerAddress must be a valid 0x-prefixed EVM address.");
   }
 

@@ -45,7 +45,7 @@ export type QueryTarget = {
  */
 export function resolveChatQueryTarget(
   message: string,
-  callerWallet: string
+  callerWallet: string | undefined
 ): { ok: true; target: QueryTarget } | { ok: false; code: string; error: string } {
   const invalidFragments = findInvalidAddressFragments(message);
   if (invalidFragments.length > 0) {
@@ -57,14 +57,17 @@ export function resolveChatQueryTarget(
   }
 
   const mentioned = extractWalletAddresses(message);
-  const caller = normalizeWalletAddress(callerWallet);
-
-  if (!isEvmAddress(caller)) {
-    return {
-      ok: false,
-      code: "INVALID_CALLER",
-      error: "Connect a valid wallet before querying."
-    };
+  
+  let caller = "";
+  if (callerWallet) {
+    caller = normalizeWalletAddress(callerWallet);
+    if (!isEvmAddress(caller)) {
+      return {
+        ok: false,
+        code: "INVALID_CALLER",
+        error: "Connect a valid wallet before querying."
+      };
+    }
   }
 
   let targetWallet = caller;
@@ -78,7 +81,15 @@ export function resolveChatQueryTarget(
     };
   }
 
-  const isOwnWallet = isSameWallet(caller, targetWallet);
+  if (!targetWallet) {
+    return {
+      ok: false,
+      code: "MISSING_WALLET",
+      error: "Please provide a wallet address to query."
+    };
+  }
+
+  const isOwnWallet = caller ? isSameWallet(caller, targetWallet) : false;
   return {
     ok: true,
     target: {
