@@ -33,7 +33,7 @@ export default function VerifyPage() {
         />
       </div>
       <div className="md:hidden">
-        <Header compact dashboardActions={{ onChatOpen: handleTryChat }} />
+        <Header compact />
       </div>
       <main className="flex flex-1 flex-col pt-24">
         <VerifySection />
