@@ -23,6 +23,11 @@ export type PlatformStats = {
     analyses: number;
     reports: number;
     chatMessages: number;
+    apiEvents: number;
+    externalApiEvents: number;
+  };
+  today: {
+    apiEvents: number;
   };
   averages: {
     financialHealthScore: number;
@@ -178,6 +183,13 @@ export function StatsContent() {
             <StatTile label="Total analyses" value={platformStats.totals.analyses} />
             <StatTile label="Reports published" value={platformStats.totals.reports} />
             <StatTile label="Chat messages" value={platformStats.totals.chatMessages} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatTile label="Total API calls" value={platformStats.totals.apiEvents} />
+            <StatTile label="API calls today" value={platformStats.today.apiEvents} />
+            <StatTile label="External API calls (X402)" value={platformStats.totals.externalApiEvents} />
+            <StatTile label="Skill Installs" value="Untracked" />
           </div>
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">

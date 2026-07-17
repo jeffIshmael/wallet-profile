@@ -60,6 +60,7 @@ function buildDailyApiUsage(
 }
 
 export async function getPlatformStats() {
+  const since24h = daysAgo(1);
   const since7d = daysAgo(7);
   const since30d = daysAgo(30);
   const dayLabels = lastNDayLabels(7);
@@ -77,7 +78,10 @@ export async function getPlatformStats() {
     apiEvents7d,
     analysesLast7d,
     apiEventsLast7d,
-    endpointBreakdown
+    endpointBreakdown,
+    totalApiEvents,
+    apiEvents24h,
+    externalApiEvents
   ] = await Promise.all([
     prisma.wallet.count(),
     prisma.analysisRun.count(),
@@ -102,6 +106,16 @@ export async function getPlatformStats() {
       where: { createdAt: { gte: since30d } },
       _count: { _all: true },
       orderBy: { _count: { endpoint: "desc" } }
+    }),
+    prisma.apiEvent.count(),
+    prisma.apiEvent.count({ where: { createdAt: { gte: since24h } } }),
+    prisma.apiEvent.count({
+      where: {
+        metadata: {
+          path: ["isExternal"],
+          equals: true
+        }
+      }
     })
   ]);
 
@@ -113,7 +127,12 @@ export async function getPlatformStats() {
       wallets: totalWallets,
       analyses: totalAnalyses,
       reports: totalReports,
-      chatMessages: totalChatMessages
+      chatMessages: totalChatMessages,
+      apiEvents: totalApiEvents,
+      externalApiEvents: externalApiEvents
+    },
+    today: {
+      apiEvents: apiEvents24h
     },
     averages: {
       financialHealthScore: avgHealth._avg.financialHealthScore ?? 0,
