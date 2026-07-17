@@ -147,7 +147,10 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
       try {
         const response = await fetch("/api/agent/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "x-onfra-dashboard": "true"
+          },
           body: JSON.stringify({ walletAddress: target, callerAddress: address, force })
         });
 

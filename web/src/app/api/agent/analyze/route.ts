@@ -65,11 +65,15 @@ export async function POST(req: Request) {
     return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  if (body.callerAddress?.trim() && !isEvmAddress(body.callerAddress.trim())) {
+  // Only trust callerAddress from the official dashboard to prevent agent spoofing
+  const isDashboard = req.headers.get("x-onfra-dashboard") === "true";
+  const callerAddress = isDashboard ? body.callerAddress?.trim() : undefined;
+
+  if (callerAddress && !isEvmAddress(callerAddress)) {
     return badRequest("callerAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  const target = resolveAnalysisTarget(walletAddress, body.callerAddress?.trim());
+  const target = resolveAnalysisTarget(walletAddress, callerAddress);
   const priceUsdt = getTierPriceUsdt("external");
 
   if (target.isExternal) {
