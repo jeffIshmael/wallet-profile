@@ -28,7 +28,7 @@ export default function SkillsPage() {
         </p>
         <pre className="code-block mt-4 overflow-x-auto text-ink-muted">
           {`# Skills CLI
-npx skills add github:jeffIshmael/onfra-skill
+npx skills add jeffIshmael/onfra-skill
 
 # MCP manifest (tool discovery)
 ${API_URL}/.well-known/mcp.json`}

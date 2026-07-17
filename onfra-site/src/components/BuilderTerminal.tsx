@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { LINKS } from "@/lib/links";
 
-const NPX_INSTALL = "npx skills add github:jeffIshmael/onfra-skill";
+const NPX_INSTALL = "npx skills add jeffIshmael/onfra-skill";
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);

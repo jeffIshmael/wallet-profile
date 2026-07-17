@@ -30,7 +30,7 @@ export default function InstallDocsPage() {
         Run from your project root:
 
         ```
-npx skills add github:jeffIshmael/onfra-skill
+npx skills add jeffIshmael/onfra-skill
 ```
         
           Works with Cursor, Claude Code, Antigravity, and other agents that support the Skills CLI.

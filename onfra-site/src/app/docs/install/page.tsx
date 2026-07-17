@@ -32,7 +32,7 @@ export default function InstallDocsPage() {
       <div className="docs-prose">
         <DocsH2 id="skills-cli">Skills CLI</DocsH2>
         <p>Run from your project root:</p>
-        <DocsCode>npx skills add github:jeffIshmael/onfra-skill</DocsCode>
+        <DocsCode>npx skills add jeffIshmael/onfra-skill</DocsCode>
         <p>
           Works with Cursor, Claude Code, Antigravity, and other agents that support the Skills CLI.
           The skill installs into your project&apos;s <code>.agents/skills/</code> directory.
