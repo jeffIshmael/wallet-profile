@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 /**
  * Prisma CLI (migrate, studio, db push) uses DIRECT_URL — session/direct connection.
@@ -12,6 +12,6 @@ export default defineConfig({
     path: "prisma/migrations"
   },
   datasource: {
-    url: env("DIRECT_URL")
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL
   }
 });
