@@ -22,17 +22,12 @@
       "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. Own wallet is free; external queries cost 0.01 USDT via x402.",
       "inputSchema": {
         "type": "object",
-        "required": ["walletAddress", "callerAddress"],
+        "required": ["walletAddress"],
         "properties": {
           "walletAddress": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
             "description": "EVM wallet address to analyze (Celo-first)."
-          },
-          "callerAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Agent/caller wallet address paying via x402."
           },
           "months": {
             "type": "integer",
@@ -98,16 +93,11 @@
       "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Own wallet is free; external queries cost 0.01 USDT via x402 when enforcement is enabled.",
       "inputSchema": {
         "type": "object",
-        "required": ["message", "callerAddress"],
+        "required": ["message"],
         "properties": {
           "message": {
             "type": "string",
             "description": "Question about a wallet's financial reputation."
-          },
-          "callerAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Agent/caller wallet address paying via x402."
           },
           "walletAddress": {
             "type": "string",
@@ -129,20 +119,15 @@
     },
     {
       "name": "screen_wallet",
-      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness (trust.isTrustworthy), wallet reputation, average monthly income estimate, and loan capacity range (with confidence). Requires callerAddress (lender wallet) and x402 payment of 0.01 USDT.",
+      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness (trust.isTrustworthy), wallet reputation, average monthly income estimate, and loan capacity range (with confidence). Own wallet is free; external queries cost 0.01 USDT via x402.",
       "inputSchema": {
         "type": "object",
-        "required": ["walletAddress", "callerAddress"],
+        "required": ["walletAddress"],
         "properties": {
           "walletAddress": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
             "description": "Borrower wallet to screen."
-          },
-          "callerAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Lender wallet paying via x402."
           },
           "force": {
             "type": "boolean",
@@ -156,16 +141,11 @@
       "description": "Purchase a Verified Financial Reputation Report with transaction statements, scores, AI summary, and verification code. Costs 0.10 USDT via x402.",
       "inputSchema": {
         "type": "object",
-        "required": ["walletAddress", "callerAddress"],
+        "required": ["walletAddress"],
         "properties": {
           "walletAddress": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$"
-          },
-          "callerAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Agent/caller wallet address paying via x402."
           },
           "periodMonths": {
             "type": "integer",
@@ -240,7 +220,6 @@
       "tool": "analyze_wallet",
       "input": {
         "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "callerAddress": "0x0000000000000000000000000000000000000001",
         "months": 3
       }
     },
@@ -249,16 +228,14 @@
       "tool": "chat_query",
       "input": {
         "message": "What is the income stability classification and monthly inflow estimate?",
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "callerAddress": "0x0000000000000000000000000000000000000001"
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315"
       }
     },
     {
       "prompt": "Should we approve this borrower wallet for a microloan?",
       "tool": "screen_wallet",
       "input": {
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "callerAddress": "0x0000000000000000000000000000000000000001"
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315"
       }
     },
     {
@@ -266,7 +243,6 @@
       "tool": "generate_report",
       "input": {
         "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "callerAddress": "0x0000000000000000000000000000000000000001",
         "periodMonths": 3
       }
     }
