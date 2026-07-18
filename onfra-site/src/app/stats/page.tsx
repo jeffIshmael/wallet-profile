@@ -28,8 +28,7 @@ export default function StatsPage() {
     { label: "Reports (7d)", value: stats?.last7Days?.reports ?? "—" },
     { label: "Total API calls", value: stats?.totals?.apiEvents ?? "—" },
     { label: "API calls today", value: stats?.today?.apiEvents ?? "—" },
-    { label: "External API calls (X402)", value: stats?.totals?.externalApiEvents ?? "—" },
-    { label: "Skill Installs", value: "Untracked" }
+    { label: "External API calls (X402)", value: stats?.totals?.externalApiEvents ?? "—" }
   ];
 
   return (
@@ -46,7 +45,7 @@ export default function StatsPage() {
         </p>
       )}
 
-      <div className="mt-10 grid gap-3 sm:grid-cols-2">
+      <div className="mt-10 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         {cards.map((card) => (
           <div key={card.label} className="card-lift rounded-2xl p-5">
             <p className="label-accent font-semibold">{card.label}</p>
