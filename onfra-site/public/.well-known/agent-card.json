@@ -27,7 +27,7 @@
       "currencySymbol": "USDT",
       "paymentHeader": "X-PAYMENT",
       "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
-      "enforcement": "Own-wallet queries are free. External wallet queries cost 0.01 USDT. Verified reports cost 0.10 USDT via x402 on Celo."
+      "enforcement": "Reading cached analysis is free. Fresh external wallet queries and statement generations cost 0.01 USDT. Verified reports cost 0.10 USDT via x402 on Celo."
     }
   },
   "payments": {

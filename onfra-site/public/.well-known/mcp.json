@@ -19,7 +19,7 @@
   "tools": [
     {
       "name": "analyze_wallet",
-      "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. Own wallet is free; external queries cost 0.01 USDT via x402.",
+      "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. Reading the cache via GET is free; forcing a fresh analysis costs 0.01 USDT via x402. Does NOT return transaction statements.",
       "inputSchema": {
         "type": "object",
         "required": ["walletAddress"],
@@ -90,7 +90,7 @@
     },
     {
       "name": "chat_query",
-      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Own wallet is free; external queries cost 0.01 USDT via x402 when enforcement is enabled.",
+      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. External queries cost 0.01 USDT via x402 when enforcement is enabled.",
       "inputSchema": {
         "type": "object",
         "required": ["message"],
