@@ -1,6 +1,6 @@
 import { badRequest, isEvmAddress } from "@/lib/agent/validate";
 import { getLatestWalletData } from "@/lib/db/analysis";
-import { assertPayment } from "@/lib/agent/x402";
+import { buildFullAnalysisPayload } from "@/lib/agent/analysisSignals";
 
 export async function GET(
   req: Request,
@@ -31,12 +31,24 @@ export async function GET(
       return Response.json({ walletAddress: walletAddress.toLowerCase(), walletData: null });
     }
 
-    return Response.json({
-      walletAddress: walletAddress.toLowerCase(),
-      walletData: latest.walletData,
-      cached: latest.fromCache,
-      fetchedAt: latest.createdAt.toISOString()
-    });
+    const payload = buildFullAnalysisPayload(
+      walletAddress,
+      latest.walletData,
+      latest.fromCache,
+      isOwnWallet,
+      latest.createdAt.toISOString()
+    );
+
+    if (!isDashboard) {
+      // @ts-expect-error Optional deletions to protect raw statements from external agents
+      delete payload.walletData;
+      // @ts-expect-error Optional deletions
+      delete payload.statement;
+      // @ts-expect-error Optional deletions
+      delete payload.threeMonthStatement;
+    }
+
+    return Response.json(payload);
   } catch (error) {
     console.error("[wallet/analysis] Failed to load analysis:", error);
     return Response.json(

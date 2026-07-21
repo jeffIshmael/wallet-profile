@@ -23,6 +23,7 @@ function analysisResponse(
   walletData: WalletData,
   cached: boolean,
   isOwnWallet: boolean,
+  isDashboard: boolean,
   fields: AnalyzeFieldKey[] | null,
   fetchedAt?: string
 ) {
@@ -33,6 +34,15 @@ function analysisResponse(
     isOwnWallet,
     fetchedAt
   );
+
+  if (!isDashboard) {
+    // @ts-expect-error Optional deletions to protect raw statements from external agents
+    delete payload.walletData;
+    // @ts-expect-error Optional deletions
+    delete payload.statement;
+    // @ts-expect-error Optional deletions
+    delete payload.threeMonthStatement;
+  }
 
   if (fields) {
     return Response.json(pickAnalysisFields(payload, fields));
@@ -117,6 +127,7 @@ export async function POST(req: Request) {
           cached,
           true,
           target.isOwnWallet,
+          isDashboard,
           fields,
           run?.createdAt.toISOString()
         );
@@ -143,6 +154,7 @@ export async function POST(req: Request) {
       walletData,
       false,
       target.isOwnWallet,
+      isDashboard,
       fields,
       run.createdAt.toISOString()
     );
