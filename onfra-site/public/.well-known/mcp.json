@@ -1,0 +1,261 @@
+{
+  "name": "OnFRA — Onfra Financial Intelligence Agent",
+  "version": "2026-06-08",
+  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Onfra. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Onfra dashboard at https://wallet-profile-orpin.vercel.app.",
+  "auth": {
+    "scheme": "x402",
+    "chain": "celo",
+    "chainId": 42220,
+    "currency": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+    "currencySymbol": "USDT",
+    "paymentHeader": "X-PAYMENT",
+    "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
+    "pricing": {
+      "own_wallet_query": "free",
+      "external_wallet_query": "0.01 USDT",
+      "verified_financial_reputation_report": "0.10 USDT"
+    }
+  },
+  "tools": [
+    {
+      "name": "analyze_wallet",
+      "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. Own wallet is free; external queries cost 0.01 USDT via x402.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "EVM wallet address to analyze (Celo-first)."
+          },
+          "months": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "default": 3,
+            "description": "Months of transaction history for cash-flow statement."
+          },
+          "includeAttestation": {
+            "type": "boolean",
+            "default": true
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "monthlyIncome",
+                "financialHealth",
+                "reputationScore",
+                "loanCapacity",
+                "statement",
+                "assessment",
+                "walletData"
+              ]
+            },
+            "description": "Optional subset of fields instead of full walletData."
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "get_wallet_signal",
+      "description": "Read one reputation signal from cached analysis (free). Signal ids: monthly-income, financial-health, reputation-score, loan-capacity, statement, assessment. Returns 404 with hint to analyze_wallet if cache is missing.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress", "signal"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "monthly-income",
+              "financial-health",
+              "reputation-score",
+              "loan-capacity",
+              "statement",
+              "assessment"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "chat_query",
+      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Own wallet is free; external queries cost 0.01 USDT via x402 when enforcement is enabled.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Question about a wallet's financial reputation."
+          },
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Target wallet. Required for external wallet queries."
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+                "content": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "screen_wallet",
+      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness (trust.isTrustworthy), wallet reputation, average monthly income estimate, and loan capacity range (with confidence). Own wallet is free; external queries cost 0.01 USDT via x402.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Borrower wallet to screen."
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "generate_report",
+      "description": "Purchase a Verified Financial Reputation Report with transaction statements, scores, AI summary, and verification code. Costs 0.10 USDT via x402.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "periodMonths": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "default": 3,
+            "description": "Statement period: 3, 6, or 12 months."
+          }
+        }
+      }
+    },
+    {
+      "name": "verify_report",
+      "description": "Confirm a Verified Financial Reputation Report verification code (WP-...) or report ID (REP-...) was issued by OnFRA on Onfra.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["reportId"],
+        "properties": {
+          "reportId": {
+            "type": "string",
+            "description": "Report ID (REP-...) or verification code (WP-...)."
+          }
+        }
+      }
+    }
+  ],
+  "prompts": [
+    { "name": "financial_health", "description": "What is the Financial Health Score for this wallet?" },
+    { "name": "reputation_check", "description": "What is this wallet's reputation and trust rating?" },
+    { "name": "income_stability", "description": "Is this wallet a stable earner? What is the income classification?" },
+    { "name": "portfolio_risk", "description": "What is the portfolio risk exposure for this wallet?" },
+    { "name": "loan_capacity", "description": "How much can this wallet safely borrow?" },
+    { "name": "verified_report", "description": "Generate a Verified Financial Reputation Report for lending." }
+  ],
+  "resources": [
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenRequest.schema.json",
+      "name": "Lender Screen Request Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenResult.schema.json",
+      "name": "Lender Screen Result Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisRequest.schema.json",
+      "name": "Wallet Analysis Request Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisResult.schema.json",
+      "name": "Wallet Analysis Result Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletSignalResult.schema.json",
+      "name": "Wallet Signal Result Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/chatRequest.schema.json",
+      "name": "Chat Request Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/reportRequest.schema.json",
+      "name": "Report Request Schema"
+    },
+    {
+      "uri": "https://wallet-profile-orpin.vercel.app/schemas/reportResult.schema.json",
+      "name": "Report Result Schema"
+    }
+  ],
+  "examples": [
+    {
+      "prompt": "Analyze this Celo wallet for microfinance lending eligibility",
+      "tool": "analyze_wallet",
+      "input": {
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "months": 3
+      }
+    },
+    {
+      "prompt": "Can this freelancer wallet prove stable income?",
+      "tool": "chat_query",
+      "input": {
+        "message": "What is the income stability classification and monthly inflow estimate?",
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315"
+      }
+    },
+    {
+      "prompt": "Should we approve this borrower wallet for a microloan?",
+      "tool": "screen_wallet",
+      "input": {
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315"
+      }
+    },
+    {
+      "prompt": "Purchase a Verified Financial Reputation Report for a loan application",
+      "tool": "generate_report",
+      "input": {
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "periodMonths": 3
+      }
+    }
+  ],
+  "integration": {
+    "note": "OnFRA lender infrastructure: https://wallet-profile-orpin.vercel.app/developers · Lender screen: 0.01 USDT · Full analyze: 0.01 USDT · Verified report: 0.10 USDT · REST: screen_wallet → POST /api/lender/screen · analyze_wallet → POST /api/agent/analyze · get_wallet_signal → GET /api/wallet/{address}/signals/{signal} · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
+    "routes": {
+      "screen_wallet": { "method": "POST", "path": "/api/lender/screen" },
+      "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },
+      "get_wallet_signal": { "method": "GET", "path": "/api/wallet/{address}/signals/{signal}" },
+      "chat_query": { "method": "POST", "path": "/api/agent/chat" },
+      "generate_report": { "method": "POST", "path": "/api/agent/report" },
+      "verify_report": { "method": "GET", "path": "/api/agent/verify/{reportId}" }
+    }
+  }
+}

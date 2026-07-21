@@ -4,5 +4,5 @@ export async function GET() {
   const summary = await getIntegrationsSummary();
   const ok = summary.gemini.ok && summary.x402Status.ok;
 
-  return Response.json(summary, { status: ok ? 200 : 503 });
+  return Response.json(summary, { status: 200 });
 }

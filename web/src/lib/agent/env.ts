@@ -65,5 +65,8 @@ export function isX402Configured(): boolean {
 }
 
 export function isX402Enforced(): boolean {
-  return process.env.X402_ENFORCE === "true" && isX402Configured();
+  if (process.env.X402_ENFORCE !== undefined) {
+    return process.env.X402_ENFORCE === "true" && isX402Configured();
+  }
+  return process.env.NODE_ENV === "production" && isX402Configured();
 }

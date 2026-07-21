@@ -1,0 +1,104 @@
+{
+  "name": "OnFRA — Onfra Financial Intelligence Agent",
+  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. It evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to produce Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI financial summaries, and borrowing capacity recommendations. Solves proof-of-income for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Available on Onfra (https://wallet-profile-orpin.vercel.app). Celo-first; additional EVM chains planned.",
+  "url": "https://wallet-profile-orpin.vercel.app",
+  "version": "1.0.0",
+  "protocolVersion": "0.3.0",
+  "provider": {
+    "name": "Onfra",
+    "url": "https://wallet-profile-orpin.vercel.app"
+  },
+  "iconUrl": "https://wallet-profile-orpin.vercel.app/agent_logo.png",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": true,
+    "humanInTheLoop": false
+  },
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "authentication": {
+    "schemes": ["x402"],
+    "x402": {
+      "scheme": "x402",
+      "chain": "celo",
+      "chainId": 42220,
+      "currency": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+      "currencySymbol": "USDT",
+      "paymentHeader": "X-PAYMENT",
+      "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
+      "enforcement": "Own-wallet queries are free. External wallet queries cost 0.01 USDT. Verified reports cost 0.10 USDT via x402 on Celo."
+    }
+  },
+  "payments": {
+    "x402": {
+      "model": "pay-per-request",
+      "currency": "USDT",
+      "chain": "celo",
+      "chainId": 42220,
+      "tokenAddress": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+      "pricing": {
+        "own_wallet_query": "free",
+        "external_wallet_query": "0.01 USDT",
+        "verified_financial_reputation_report": "0.10 USDT",
+        "minimum": "0.01 USDT"
+      },
+      "freeEndpoints": ["/api/agent/verify", "/api/agent/chat?ownWallet=true"]
+    }
+  },
+  "tee": {
+    "provider": "vercel",
+    "attestation": "self-declared",
+    "note": "Agent runs on Vercel serverless at wallet-profile-orpin.vercel.app."
+  },
+  "skills": [
+    {
+      "id": "wallet_financial_analysis",
+      "name": "Wallet Financial Analysis",
+      "description": "Analyzes transaction history, cash flow, wallet age, and asset composition to produce Financial Health Scores and 3-month cash flow statements.",
+      "tags": ["celo", "defi", "credit", "underwriting", "proof-of-income"],
+      "inputTypes": ["wallet_address"],
+      "outputTypes": ["financial_health_score", "cash_flow_statement"]
+    },
+    {
+      "id": "reputation_scoring",
+      "name": "Wallet Reputation Scoring",
+      "description": "Evaluates wallet maturity, transaction consistency, protocol trust, and long-term financial reliability.",
+      "tags": ["reputation", "trust", "erc-8004"],
+      "inputTypes": ["wallet_address"],
+      "outputTypes": ["reputation_score", "trust_category"]
+    },
+    {
+      "id": "income_stability",
+      "name": "Income Stability Assessment",
+      "description": "Detects recurring income streams and classifies income stability over time.",
+      "tags": ["income", "freelancer", "remote-work"],
+      "inputTypes": ["wallet_address"],
+      "outputTypes": ["income_stability_label", "monthly_income_estimate"]
+    },
+    {
+      "id": "portfolio_risk",
+      "name": "Portfolio Risk Exposure",
+      "description": "Analyzes stablecoin, volatile, DeFi, and NFT allocation to classify portfolio risk.",
+      "tags": ["risk", "portfolio", "defi"],
+      "inputTypes": ["wallet_address"],
+      "outputTypes": ["risk_category", "allocation_breakdown"]
+    },
+    {
+      "id": "loan_capacity",
+      "name": "Loan Capacity Estimate",
+      "description": "Estimates responsible borrowing range from income stability, reputation, and risk signals.",
+      "tags": ["lending", "microfinance", "credit"],
+      "inputTypes": ["wallet_address"],
+      "outputTypes": ["loan_range", "confidence_level"]
+    },
+    {
+      "id": "verified_reputation_report",
+      "name": "Verified Financial Reputation Report",
+      "description": "Premium lender-ready attestation with verification code, report hash, and transaction statements.",
+      "tags": ["attestation", "verification", "reports"],
+      "inputTypes": ["wallet_address", "report_period"],
+      "outputTypes": ["report_id", "verification_code", "report_hash"]
+    }
+  ]
+}

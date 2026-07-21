@@ -59,4 +59,19 @@ onfra-skill/
 solve_askbots.py
 
 # Skills managed in separate repos
+# Skills managed in separate repos
 .agents/skills/onfra-skill/
+
+# Temp scripts and notes
+.askbots_credentials.json
+agent_feedback_learnings.md
+aigora-feedback-entry.md
+askbots_tasks.json
+fetch_askbots.py
+hackathon_submission.md
+improvements.md
+responses.md
+submit-pr.sh
+test_create_project.py
+feature-spec-mcp-dropdown-theme-toggle.md
+script.md
