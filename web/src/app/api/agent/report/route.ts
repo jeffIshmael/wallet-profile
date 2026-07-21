@@ -32,9 +32,14 @@ export async function POST(req: Request) {
     return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  const buyerAddress = body.buyerAddress?.trim() || body.callerAddress?.trim();
-  if (!buyerAddress || !isEvmAddress(buyerAddress)) {
-    return badRequest("buyerAddress or callerAddress must be a valid 0x-prefixed EVM address.");
+  // Only trust buyerAddress/callerAddress from the official dashboard to prevent agent spoofing
+  const isDashboard = req.headers.get("x-onfra-dashboard") === "true";
+  const buyerAddress =
+    (isDashboard ? (body.buyerAddress?.trim() || body.callerAddress?.trim()) : undefined) ||
+    walletAddress;
+
+  if (isDashboard && (!buyerAddress || !isEvmAddress(buyerAddress))) {
+    return badRequest("buyerAddress or callerAddress is required for dashboard report requests.");
   }
 
   if (!isReporterConfigured()) {

@@ -23,9 +23,12 @@ export async function POST(req: Request) {
     return badRequest("walletAddress must be a valid 0x-prefixed EVM address.");
   }
 
-  const callerAddress = body.callerAddress?.trim();
-  if (!callerAddress || !isEvmAddress(callerAddress)) {
-    return badRequest("callerAddress must be a valid 0x-prefixed EVM address.");
+  // Only trust callerAddress from the official dashboard to prevent agent spoofing
+  const isDashboard = req.headers.get("x-onfra-dashboard") === "true";
+  const callerAddress = isDashboard ? body.callerAddress?.trim() : undefined;
+
+  if (isDashboard && (!callerAddress || !isEvmAddress(callerAddress))) {
+    return badRequest("callerAddress is required for dashboard statement requests.");
   }
 
   // Normalize period
@@ -50,10 +53,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const isOwnWallet = walletAddress.toLowerCase() === callerAddress.toLowerCase();
+  const isOwnWallet = callerAddress ? walletAddress.toLowerCase() === callerAddress.toLowerCase() : false;
   const priceUsdt = getTierPriceUsdt("external");
 
-  if (!isOwnWallet) {
+  if (callerAddress && !isOwnWallet) {
     try {
       const balanceCheck = await assertSufficientUsdtBalance(callerAddress, priceUsdt);
       if (!balanceCheck.ok) {
