@@ -256,7 +256,10 @@ export function ChatSidebar({
       if (wantsReport) {
         const response = await chatFetch("/api/agent/report", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "x-onfra-dashboard": "true"
+          },
           body: JSON.stringify({
             walletAddress: earlyCheck.target.targetWallet,
             buyerAddress: address
@@ -294,7 +297,10 @@ export function ChatSidebar({
 
       const response = await chatFetch("/api/agent/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-onfra-dashboard": "true"
+        },
         body: JSON.stringify({
           message: userMessage,
           walletAddress: address,
