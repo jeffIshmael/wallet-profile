@@ -13,7 +13,7 @@ export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "da
   const light = tone === "light";
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4">
+    <header className="fixed inset-x-0 top-6 z-50 flex justify-center px-4">
       <div
         className={cn(
           "mt-[var(--nav-top)] flex w-full max-w-4xl items-center justify-between gap-4 rounded-full px-4 py-2.5 sm:px-5",
@@ -56,19 +56,6 @@ export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "da
 
         <div className="flex items-center gap-2">
           <a
-            href="https://calendly.com/jeffishmael141/30min" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "flex h-9 items-center gap-1.5 rounded-full px-4 text-xs font-medium transition",
-              light
-                ? "border border-on-nude/20 text-on-nude hover:bg-on-nude/10"
-                : "border border-nude-soft/30 text-ink hover:bg-nude-soft/10"
-            )}
-          >
-            Book a demo
-          </a>
-          <a
             href={LINKS.app}
             target="_blank"
             rel="noopener noreferrer"
@@ -79,7 +66,7 @@ export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "da
                 : "bg-nude text-on-nude hover:bg-nude-soft"
             )}
           >
-            Open Web App
+            OnFRA App
             <ArrowUpRight size={14} strokeWidth={2} />
           </a>
         </div>

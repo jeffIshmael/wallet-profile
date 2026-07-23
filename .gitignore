@@ -60,7 +60,7 @@ solve_askbots.py
 
 # Skills managed in separate repos
 # Skills managed in separate repos
-.agents/skills/onfra-skill/
+.agents/
 
 # Temp scripts and notes
 .askbots_credentials.json

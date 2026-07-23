@@ -12,7 +12,7 @@ export default function HomePage() {
       <main className="hero-ambient pb-0">
         <section className="section-black section-hero w-full">
           <SiteNav />
-          <div className="hero-content mx-auto flex max-w-4xl flex-col items-center px-5 text-center">
+          <div className="hero-content mx-auto flex max-w-4xl flex-col items-center px-5 text-center my-auto pb-20">
             <div className="animate-fade-up">
               <p className="label-accent text-[11px] font-medium sm:text-xs">ERC-8004 · Celo Mainnet</p>
               <h1 className="headline mt-5 text-[2.75rem] font-semibold leading-[1.12] text-ink sm:text-6xl md:text-7xl">
@@ -49,18 +49,18 @@ export default function HomePage() {
                   View docs <FileIcon className="h-4 w-4" />
                 </Link>
                 <a
-                  href={LINKS.app}
+                  href="https://calendly.com/jeffishmael141/30min"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-ghost px-9 py-3.5 text-base flex items-center gap-2"
                 >
-                  Try it out <ArrowUpRight className="h-4 w-4" />
+                  Book a demo <ArrowUpRight className="h-4 w-4" />
                 </a>
               </div>
             </div>
           </div>
 
-          <HeroPreview />
+          {/* <HeroPreview /> */}
         </section>
 
         <section className="section-pearl py-20">

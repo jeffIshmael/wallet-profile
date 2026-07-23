@@ -1,9 +1,9 @@
 {
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "name": "OnFRA",
-  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. The agent evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to transform raw onchain data into lender-friendly financial intelligence. Outputs include Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI-generated financial summaries, and borrowing capacity recommendations. OnFRA solves the proof-of-income problem for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Users interact through Onfra at https://app.onfra.xyz to connect a wallet, view their profile, generate statements, receive AI insights, purchase Verified Financial Reputation Reports, or query any wallet address. Currently analyzing Celo blockchain , additional EVM chains planned.",
+  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. The agent evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to transform raw onchain data into lender-friendly financial intelligence. Outputs include Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis,transaction statements, AI-generated financial summaries, and borrowing capacity recommendations. OnFRA solves the proof-of-income problem for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Users interact through Onfra at https://app.onfra.xyz to connect a wallet, view their profile, generate statements, receive AI insights, purchase Verified Financial Reputation Reports, or query any wallet address. Currently analyzing Celo blockchain , additional EVM chains planned.",
   "image": "https://app.onfra.xyz/agent_logo.png",
-  "homepage": "https://app.onfra.xyz",
+  "homepage": "https://onfra.xyz",
   "category": "financial-reputation,proof-of-income,credit-scoring,microfinance",
   "tags": [
     "financial_reputation",
@@ -23,7 +23,7 @@
     "erc-8004"
   ],
   "license": "MIT",
-  "documentation": "https://github.com/jeffIshmael/wallet-profile",
+  "documentation": "https://onfra.xyz/docs",
   "capabilities": [
     "wallet_financial_analysis",
     "financial_health_scoring",
