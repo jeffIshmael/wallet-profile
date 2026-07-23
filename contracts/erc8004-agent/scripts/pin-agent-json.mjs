@@ -55,7 +55,7 @@ async function main() {
   }
 
   const agentJson = JSON.parse(readFileSync(AGENT_JSON_PATH, "utf8"));
-  const appUrl = "https://wallet-profile-orpin.vercel.app";
+  const appUrl = "https://app.onfra.xyz";
 
   // Ensure canonical production URLs before pinning.
   agentJson.homepage = appUrl;

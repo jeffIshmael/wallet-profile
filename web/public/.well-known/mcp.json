@@ -1,7 +1,7 @@
 {
   "name": "OnFRA — Onfra Financial Intelligence Agent",
   "version": "2026-06-08",
-  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Onfra. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Onfra dashboard at https://wallet-profile-orpin.vercel.app.",
+  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Onfra. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Onfra dashboard at https://app.onfra.xyz.",
   "auth": {
     "scheme": "x402",
     "chain": "celo",
@@ -182,35 +182,35 @@
   ],
   "resources": [
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenRequest.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/lenderScreenRequest.schema.json",
       "name": "Lender Screen Request Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenResult.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/lenderScreenResult.schema.json",
       "name": "Lender Screen Result Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisRequest.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/walletAnalysisRequest.schema.json",
       "name": "Wallet Analysis Request Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletAnalysisResult.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/walletAnalysisResult.schema.json",
       "name": "Wallet Analysis Result Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/walletSignalResult.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/walletSignalResult.schema.json",
       "name": "Wallet Signal Result Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/chatRequest.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/chatRequest.schema.json",
       "name": "Chat Request Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/reportRequest.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/reportRequest.schema.json",
       "name": "Report Request Schema"
     },
     {
-      "uri": "https://wallet-profile-orpin.vercel.app/schemas/reportResult.schema.json",
+      "uri": "https://app.onfra.xyz/schemas/reportResult.schema.json",
       "name": "Report Result Schema"
     }
   ],
@@ -248,7 +248,7 @@
     }
   ],
   "integration": {
-    "note": "OnFRA lender infrastructure: https://wallet-profile-orpin.vercel.app/developers · Lender screen: 0.01 USDT · Full analyze: 0.01 USDT · Verified report: 0.10 USDT · REST: screen_wallet → POST /api/lender/screen · analyze_wallet → POST /api/agent/analyze · get_wallet_signal → GET /api/wallet/{address}/signals/{signal} · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
+    "note": "OnFRA lender infrastructure: https://app.onfra.xyz/developers · Lender screen: 0.01 USDT · Full analyze: 0.01 USDT · Verified report: 0.10 USDT · REST: screen_wallet → POST /api/lender/screen · analyze_wallet → POST /api/agent/analyze · get_wallet_signal → GET /api/wallet/{address}/signals/{signal} · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
     "routes": {
       "screen_wallet": { "method": "POST", "path": "/api/lender/screen" },
       "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },

@@ -32,7 +32,7 @@ After on-chain `register()` assigns an `agentId`, add to `registrations` and re-
 ]
 ```
 
-**Registered:** OnFRA is agent `#9219` on Celo mainnet. Canonical app URL: `https://wallet-profile-orpin.vercel.app`. Re-pin `agent.json` to IPFS and call `setAgentURI(9219, ipfs://...)` when metadata changes (`npm run pin-agent-json` then `npm run set-uri`).
+**Registered:** OnFRA is agent `#9219` on Celo mainnet. Canonical app URL: `https://app.onfra.xyz`. Re-pin `agent.json` to IPFS and call `setAgentURI(9219, ipfs://...)` when metadata changes (`npm run pin-agent-json` then `npm run set-uri`).
 
 **Reputation Registry (mainnet):** `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
 
@@ -45,7 +45,7 @@ cd ../../web && npm run feedback:erc8004
 ## Pre-registration checklist
 
 1. Deploy the web app so all `/.well-known/*` URLs resolve publicly.
-2. Set `NEXT_PUBLIC_APP_URL=https://wallet-profile-orpin.vercel.app` (or your deployment URL).
+2. Set `NEXT_PUBLIC_APP_URL=https://app.onfra.xyz` (or your deployment URL).
 3. Validate JSON (no trailing commas):
    - `GET /.well-known/agent.json`
    - `GET /.well-known/agent-card.json`

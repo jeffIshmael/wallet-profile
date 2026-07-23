@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenRequest.schema.json",
+  "$id": "https://app.onfra.xyz/schemas/lenderScreenRequest.schema.json",
   "title": "LenderScreenRequest",
   "description": "Request body for OnFRA lender underwriting screen.",
   "type": "object",

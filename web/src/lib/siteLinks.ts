@@ -8,7 +8,7 @@ import {
 /** Public links used across the app footer, README, and docs. */
 export const PLATFORM_LINKS = {
   app: APP_BASE_URL,
-  demo: "https://wallet-profile-orpin.vercel.app",
+  demo: "https://app.onfra.xyz",
   video: "https://youtu.be/7WC3lD5dDj4",
   github: "https://github.com/jeffIshmael/wallet-profile",
   docs: "https://github.com/jeffIshmael/wallet-profile/tree/main/docs",

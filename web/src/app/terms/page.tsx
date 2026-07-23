@@ -15,7 +15,7 @@ export default function TermsPage() {
 
       <p>
         These Terms of Service (&quot;Terms&quot;) govern your use of Onfra, including the web app and MiniPay
-        Mini App operated at wallet-profile-orpin.vercel.app (&quot;Onfra&quot;, &quot;we&quot;, &quot;us&quot;). By using
+        Mini App operated at app.onfra.xyz (&quot;Onfra&quot;, &quot;we&quot;, &quot;us&quot;). By using
         Onfra you agree to these Terms.
       </p>
 

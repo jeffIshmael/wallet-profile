@@ -75,7 +75,7 @@ Sample verifiable transactions:
 
 Sample report (full PDF on IPFS): PASTE_IPFS_LINK_HERE
 
-Verification: anyone can confirm a published attestation at https://wallet-profile-orpin.vercel.app/verify by pasting a REP-{id} code, or by calling verifyReport() on the OnchainReporter contract on Celoscan. The verify flow checks onchain registry data (wallet, scores, report hash, publish timestamp) — it does not serve the full report document. The PDF itself is pinned to IPFS; the onchain record is the tamper-evident proof that Onfra issued that report at that hash.
+Verification: anyone can confirm a published attestation at https://app.onfra.xyz/verify by pasting a REP-{id} code, or by calling verifyReport() on the OnchainReporter contract on Celoscan. The verify flow checks onchain registry data (wallet, scores, report hash, publish timestamp) — it does not serve the full report document. The PDF itself is pinned to IPFS; the onchain record is the tamper-evident proof that Onfra issued that report at that hash.
 ```
 
 ---
@@ -83,11 +83,11 @@ Verification: anyone can confirm a published attestation at https://wallet-profi
 ## Please include a demo, if possible
 
 ```
-Live app: https://wallet-profile-orpin.vercel.app
+Live app: https://app.onfra.xyz
 Demo video: https://youtu.be/7WC3lD5dDj4
 GitHub (open source, MIT): https://github.com/jeffIshmael/wallet-profile
 OnFRA on 8004scan: https://8004scan.io/agents/celo/9219
-Agent card (A2A): https://wallet-profile-orpin.vercel.app/.well-known/agent-card.json
+Agent card (A2A): https://app.onfra.xyz/.well-known/agent-card.json
 API docs: https://github.com/jeffIshmael/wallet-profile/tree/main/docs/api.md
 ```
 

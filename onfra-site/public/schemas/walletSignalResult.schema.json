@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wallet-profile-orpin.vercel.app/schemas/walletSignalResult.schema.json",
+  "$id": "https://app.onfra.xyz/schemas/walletSignalResult.schema.json",
   "title": "WalletSignalResult",
   "description": "Single reputation signal slice from cached OnFRA analysis.",
   "type": "object",

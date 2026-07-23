@@ -2,7 +2,7 @@
 
 Onfra partnership materials for Celo ecosystem lenders, microfinance platforms, and fintech rails.
 
-**Live product:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)  
+**Live product:** [app.onfra.xyz](https://app.onfra.xyz)  
 **Demo video:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)  
 **OnFRA (ERC-8004):** [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219)
 
@@ -12,12 +12,11 @@ Onfra partnership materials for Celo ecosystem lenders, microfinance platforms, 
 
 | Priority | Project | Type | Contact |
 |----------|---------|------|---------|
-| 1 | [Feather](https://feather.zone) | Morpho vault curator on Celo | **info@feather.zone** · [X @Featherlend](https://x.com/Featherlend) · [Telegram](https://t.me/featherlend) |
-| 2 | [EthicHub](https://www.ethichub.com) | P2P microfinance on Celo | **investors@ethichub.com** · **info@ethichub.com** · [Telegram EN](https://t.me/ethichubeng) |
-| 3 | [Pretium](https://pretium.africa) | Payments / MiniPay Shop & Pay | [X @PretiumApp](https://x.com/PretiumApp) · [LinkedIn](https://linkedin.com/company/pretium-finance) · [Telegram](https://t.me/+-8nyVGLheGhkZjA0) |
-| 4 | [Morpho](https://morpho.org) | Lending markets on Celo | [Contact form](https://morpho.org) · [Discord](https://discord.com/invite/BWXbJMHMdz) · [X @MorphoLabs](https://x.com/MorphoLabs) |
-| 5 | [Aave V3](https://aave.com) | Largest lending market on Celo | [Talk to Sales](https://aave.com) · [Discord](https://discord.gg/aave) · [X @aave](https://x.com/aave) |
-| 6 | [Walapay](https://www.walapay.io) | Cross-border remittance (MiniPay) | [Docs](https://docs.walapay.io) · [X @walapay_io](https://x.com/walapay_io) · [LinkedIn](https://linkedin.com/company/walapay) |
+| 1 | [EthicHub](https://www.ethichub.com) | P2P microfinance on Celo | **investors@ethichub.com** · **info@ethichub.com** · [Telegram EN](https://t.me/ethichubeng) |
+| 2 | [Feather](https://feather.zone) | Morpho vault curator on Celo | **info@feather.zone** · [X @Featherlend](https://x.com/Featherlend) · [Telegram](https://t.me/featherlend) |
+| 3 | [Morpho](https://morpho.org) | Lending markets on Celo | [Contact form](https://morpho.org) · [Discord](https://discord.com/invite/BWXbJMHMdz) · [X @MorphoLabs](https://x.com/MorphoLabs) |
+| 4 | [Aave V3](https://aave.com) | Largest lending market on Celo | [Talk to Sales](https://aave.com) · [Discord](https://discord.gg/aave) · [X @aave](https://x.com/aave) |
+| 5 | [Walapay](https://www.walapay.io) | Cross-border remittance (MiniPay) | [Docs](https://docs.walapay.io) · [X @walapay_io](https://x.com/walapay_io) · [LinkedIn](https://linkedin.com/company/walapay) |
 | — | [Self Protocol](https://self.xyz) | ZK identity (bundle partner) | [X @selfprotocol](https://x.com/selfprotocol) · [Docs](https://docs.self.xyz) |
 | — | [Bridge (Stripe)](https://www.bridge.xyz) | Fiat ↔ stablecoin B2B API | [API docs](https://apidocs.bridge.xyz) |
 
@@ -40,11 +39,11 @@ Onfra turns Celo wallet activity into lender-ready financial intelligence:
 - **Verified Financial Passport** — a tamper-evident PDF with onchain attestation (`REP-{id}`)
 
 **How verification works**  
-Report hashes are published to the `OnchainReporter` contract on Celo mainnet and pinned to IPFS. Any lender can verify a report at [wallet-profile-orpin.vercel.app/verify](https://wallet-profile-orpin.vercel.app/verify), via API, or by calling the contract directly.
+Report hashes are published to the `OnchainReporter` contract on Celo mainnet and pinned to IPFS. Any lender can verify a report at [app.onfra.xyz/verify](https://app.onfra.xyz/verify), via API, or by calling the contract directly.
 
 | Resource | Link |
 |----------|------|
-| Live app | [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) |
+| Live app | [app.onfra.xyz](https://app.onfra.xyz) |
 | OnchainReporter | `0xE7621aF5dE3806ba26115bdC89190c65ed835C21` |
 | OnFRA agent (ERC-8004 #9219) | [8004scan](https://8004scan.io/agents/celo/9219) |
 | Demo video | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
@@ -111,7 +110,7 @@ Copy, personalize the `[bracketed]` lines, and send. Subject lines are included 
 
 Hi Feather team,
 
-I'm Jeff, founder of [Onfra](https://wallet-profile-orpin.vercel.app) — an onchain financial reputation platform on Celo. We turn wallet activity into lender-ready scores, income analysis, and verified financial passports with onchain attestation.
+I'm Jeff, founder of [Onfra](https://app.onfra.xyz) — an onchain financial reputation platform on Celo. We turn wallet activity into lender-ready scores, income analysis, and verified financial passports with onchain attestation.
 
 I saw Feather's work curating Morpho vaults on Celo for emerging-market users. That's exactly the audience we built for: people who earn and hold in USDT but have no bank statements when they want to borrow.
 
@@ -135,7 +134,7 @@ Onfra · [@onfra_xyz](https://x.com/onfra_xyz)
 
 Hi EthicHub team,
 
-I'm Jeff, building [Onfra](https://wallet-profile-orpin.vercel.app) — we translate Celo wallet activity into financial reputation that lenders can verify onchain.
+I'm Jeff, building [Onfra](https://app.onfra.xyz) — we translate Celo wallet activity into financial reputation that lenders can verify onchain.
 
 EthicHub's mission (connecting unbanked farmers and communities with onchain lending) maps directly to the gap we solve: borrowers have real financial activity onchain, but no standard way to prove income or repayment capacity to underwriters.
 
@@ -148,7 +147,7 @@ EthicHub's mission (connecting unbanked farmers and communities with onchain len
 
 **Pilot idea:** require a Onfra passport during EthicHub loan onboarding for borrowers with Celo wallet history. You verify the `REP-{id}` before disbursement — no new KYC vendor, just richer financial evidence on top of what you already collect.
 
-Live demo: [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) · Video: [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
+Live demo: [app.onfra.xyz](https://app.onfra.xyz) · Video: [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
 
 Would love 20 minutes to explore fit. Open to your thoughts on where this slots into your existing flow.
 
@@ -165,7 +164,7 @@ Onfra · [@onfra_xyz](https://x.com/onfra_xyz)
 
 Hi Pretium team,
 
-I'm Jeff, founder of [Onfra](https://wallet-profile-orpin.vercel.app). We help lenders assess wallet-based income — the kind your MiniPay users already have but can't put on a bank statement.
+I'm Jeff, founder of [Onfra](https://app.onfra.xyz). We help lenders assess wallet-based income — the kind your MiniPay users already have but can't put on a bank statement.
 
 Pretium moves stablecoins across Africa for everyday payments. Many of those users will eventually need credit — and lenders will ask for income proof that doesn't exist in traditional banking.
 
@@ -195,7 +194,7 @@ Onfra · [@onfra_xyz](https://x.com/onfra_xyz)
 
 Hi Morpho team,
 
-I'm Jeff, building [Onfra](https://wallet-profile-orpin.vercel.app) — onchain financial reputation for Celo wallets. We generate lender-ready scores, income analysis, and verified financial passports with onchain attestation.
+I'm Jeff, building [Onfra](https://app.onfra.xyz) — onchain financial reputation for Celo wallets. We generate lender-ready scores, income analysis, and verified financial passports with onchain attestation.
 
 Morpho's Celo expansion targets emerging-market borrowers who earn in stablecoins. Onfra gives those borrowers a way to prove financial history that collateral ratios alone don't capture — income consistency, wallet maturity, cash flow patterns.
 
@@ -218,7 +217,7 @@ Onfra · [@onfra_xyz](https://x.com/onfra_xyz)
 
 Hi Aave team,
 
-I'm Jeff, founder of [Onfra](https://wallet-profile-orpin.vercel.app). We turn Celo wallet activity into verifiable financial reputation — scores, income estimates, and onchain-attested financial passports.
+I'm Jeff, founder of [Onfra](https://app.onfra.xyz). We turn Celo wallet activity into verifiable financial reputation — scores, income estimates, and onchain-attested financial passports.
 
 Aave V3 on Celo serves users who hold and earn in USDT but often lack traditional credit files. Onfra adds a wallet-native underwriting signal: income stability, cash flow patterns, and loan capacity — all backed by inspectable transaction data and onchain verification (`REP-{id}`).
 
@@ -241,7 +240,7 @@ Onfra · [@onfra_xyz](https://x.com/onfra_xyz)
 
 Hi Walapay team,
 
-I'm Jeff, building [Onfra](https://wallet-profile-orpin.vercel.app) — we convert stablecoin wallet history into lender-ready financial reputation with onchain verification.
+I'm Jeff, building [Onfra](https://app.onfra.xyz) — we convert stablecoin wallet history into lender-ready financial reputation with onchain verification.
 
 Walapay users receive cross-border payments in USDT via MiniPay. When those users apply for loans or credit, lenders ask for bank statements that don't reflect their real income. Onfra fills that gap.
 
@@ -264,7 +263,7 @@ Onfra · [@onfra_xyz](https://x.com/onfra_xyz)
 
 Hi [Name / team],
 
-I'm Jeff, founder of [Onfra](https://wallet-profile-orpin.vercel.app). We help lenders assess borrowers who earn in stablecoins but have no traditional credit file.
+I'm Jeff, founder of [Onfra](https://app.onfra.xyz). We help lenders assess borrowers who earn in stablecoins but have no traditional credit file.
 
 [One sentence about why this partner specifically — their users, market, or product.]
 
@@ -272,7 +271,7 @@ Onfra analyzes Celo wallet activity and produces lender-ready scores, income est
 
 **Pilot:** require a Onfra passport during loan onboarding → verify `REP-{id}` before approval.
 
-Demo: [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) · Live app: [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
+Demo: [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) · Live app: [app.onfra.xyz](https://app.onfra.xyz)
 
 Would you be open to a 20-minute call?
 

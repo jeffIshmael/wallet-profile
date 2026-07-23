@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wallet-profile-orpin.vercel.app/schemas/lenderScreenResult.schema.json",
+  "$id": "https://app.onfra.xyz/schemas/lenderScreenResult.schema.json",
   "title": "LenderScreenResult",
   "description": "Lender underwriting result returned by OnFRA (trustworthiness, reputation, income, and loan capacity).",
   "type": "object",

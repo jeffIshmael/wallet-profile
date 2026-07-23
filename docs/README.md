@@ -6,7 +6,7 @@ Onfra is an onchain financial reputation platform for the Celo ecosystem. Users 
 
 | Resource | URL |
 |----------|-----|
-| **Live demo** | [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) |
+| **Live demo** | [app.onfra.xyz](https://app.onfra.xyz) |
 | **Demo video** | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
 | **GitHub** | [github.com/jeffIshmael/wallet-profile](https://github.com/jeffIshmael/wallet-profile) |
 | **X / Twitter** | [@onfra_xyz](https://x.com/onfra_xyz) |

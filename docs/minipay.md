@@ -34,7 +34,7 @@ MiniPay users pay for premium features (external wallet queries, verified report
 
 ## Testing in MiniPay
 
-1. Open [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) inside MiniPay
+1. Open [app.onfra.xyz](https://app.onfra.xyz) inside MiniPay
 2. Wallet connects automatically
 3. Tap **Dashboard** to analyze your wallet
 4. Explore scores, transactions, and statements
@@ -50,7 +50,7 @@ MiniPay users pay for premium features (external wallet queries, verified report
 
 ## Links
 
-- **Demo:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
+- **Demo:** [app.onfra.xyz](https://app.onfra.xyz)
 - **Video walkthrough:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
 - **OnFRA agent:** [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219)
 - **X:** [@onfra_xyz](https://x.com/onfra_xyz)
@@ -59,6 +59,6 @@ MiniPay users pay for premium features (external wallet queries, verified report
 
 See [minipay-submission.md](./minipay-submission.md) for listing fields, network manifest URL, PageSpeed steps, and Proof of Ship checklist.
 
-- **Icon:** https://wallet-profile-orpin.vercel.app/icon-512.png
-- **Network manifest:** https://wallet-profile-orpin.vercel.app/.well-known/minipay-network-manifest.json
+- **Icon:** https://app.onfra.xyz/icon-512.png
+- **Network manifest:** https://app.onfra.xyz/.well-known/minipay-network-manifest.json
 - **Support / Terms / Privacy:** `/support`, `/terms`, `/privacy`

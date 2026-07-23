@@ -150,5 +150,5 @@ Reputation: 51/100
 Loan capacity: 0 USD (Ineligible)
 
 Download: https://ipfs.io/ipfs/bafybeianox6mprzdzrkpbanparc7wunjcu5zeeoyqvqc7r5j4hixzp3bfm
-Verify at: https://wallet-profile-orpin.vercel.app/verify (paste code REP-X141GYYEUM)
+Verify at: https://app.onfra.xyz/verify (paste code REP-X141GYYEUM)
 Onchain tx: https://celoscan.io/tx/0xa1cc290f6ff3b6755fec875cbc608e2a968097260f18da0081bb34752727fe4a

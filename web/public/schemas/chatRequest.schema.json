@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wallet-profile-orpin.vercel.app/schemas/chatRequest.schema.json",
+  "$id": "https://app.onfra.xyz/schemas/chatRequest.schema.json",
   "title": "ChatRequest",
   "description": "Multi-turn chat query to Onfra AI about wallet financial reputation.",
   "type": "object",

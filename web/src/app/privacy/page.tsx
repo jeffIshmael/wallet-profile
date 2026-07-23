@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
       <p>
         This Privacy Policy explains how Onfra (&quot;we&quot;) collects and uses information when you use
-        wallet-profile-orpin.vercel.app and the Onfra MiniPay Mini App.
+        app.onfra.xyz and the Onfra MiniPay Mini App.
       </p>
 
       <h2 className="pt-2 font-space text-lg font-semibold text-white">Information we process</h2>

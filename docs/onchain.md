@@ -17,9 +17,9 @@ Onfra registers verified financial reports on Celo mainnet and exposes OnFRA as 
 | Agent ID | **9219** |
 | Chain | Celo mainnet (42220) |
 | 8004scan profile | [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219) |
-| Agent URI | `ipfs://bafkreicnwmw3b75ncm54df54k7j7loxwzfqz5u7jsb3axsibgprl3le364` (also served at `https://wallet-profile-orpin.vercel.app/.well-known/agent.json`) |
-| Agent card | `https://wallet-profile-orpin.vercel.app/.well-known/agent-card.json` |
-| MCP manifest | `https://wallet-profile-orpin.vercel.app/.well-known/mcp.json` |
+| Agent URI | `ipfs://bafkreicnwmw3b75ncm54df54k7j7loxwzfqz5u7jsb3axsibgprl3le364` (also served at `https://app.onfra.xyz/.well-known/agent.json`) |
+| Agent card | `https://app.onfra.xyz/.well-known/agent-card.json` |
+| MCP manifest | `https://app.onfra.xyz/.well-known/mcp.json` |
 
 ## OnchainReporter
 
@@ -34,7 +34,7 @@ The `OnchainReporter` contract is an upgradeable financial attestation registry.
 
 Reports use verification codes in the format `REP-{reportId}`. Verification works two ways:
 
-1. **Web UI** — paste the code at [wallet-profile-orpin.vercel.app/verify](https://wallet-profile-orpin.vercel.app/verify)
+1. **Web UI** — paste the code at [app.onfra.xyz/verify](https://app.onfra.xyz/verify)
 2. **Onchain** — call `verifyReport(reportId)` or `verifyReportByHash(reportHash)` on the proxy contract
 3. **API** — `GET /api/agent/verify/{reportId}`
 

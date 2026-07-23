@@ -1,6 +1,6 @@
 {
   "app": "Onfra",
-  "appUrl": "https://wallet-profile-orpin.vercel.app",
+  "appUrl": "https://app.onfra.xyz",
   "alternateUrls": [],
   "updated": "2026-06-22",
   "chain": "celo-mainnet",
@@ -8,7 +8,7 @@
   "description": "Network manifest for MiniPay submission — all origins, subdomains, and external resources used by the Onfra Mini App.",
   "firstParty": {
     "origins": [
-      "https://wallet-profile-orpin.vercel.app"
+      "https://app.onfra.xyz"
     ],
     "routes": [
       "/",

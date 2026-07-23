@@ -56,6 +56,19 @@ export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "da
 
         <div className="flex items-center gap-2">
           <a
+            href="https://calendly.com/jeffishmael141/30min" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "flex h-9 items-center gap-1.5 rounded-full px-4 text-xs font-medium transition",
+              light
+                ? "border border-on-nude/20 text-on-nude hover:bg-on-nude/10"
+                : "border border-nude-soft/30 text-ink hover:bg-nude-soft/10"
+            )}
+          >
+            Book a demo
+          </a>
+          <a
             href={LINKS.app}
             target="_blank"
             rel="noopener noreferrer"

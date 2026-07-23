@@ -40,7 +40,7 @@ export function answerVerifiedReportExplainer(isOwnWallet: boolean): string {
     "• AI assessment and borrowing recommendations",
     "• A unique verification code (REP-XXXXXXXXXX)",
     "",
-    "Reports are pinned to IPFS and registered onchain on Celo. Anyone can confirm authenticity at wallet-profile-orpin.vercel.app/verify using the code.",
+    "Reports are pinned to IPFS and registered onchain on Celo. Anyone can confirm authenticity at app.onfra.xyz/verify using the code.",
     "",
     "Cost: 0.10 USDT for any wallet — yours or someone else's.",
     "Quick wallet lookups in chat cost 0.01 USDT. Questions about your own wallet are free."

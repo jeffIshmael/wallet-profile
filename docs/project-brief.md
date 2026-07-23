@@ -16,7 +16,7 @@ The platform is powered by **OnFRA** (Onchain Financial Reputation Agent), a Lan
 
 Onfra ships as a production-ready monorepo: a Next.js web app (with MiniPay native support), the OnFRA agent backend, and Solidity contracts (`OnchainReporter` attestation registry on Celo mainnet). It exposes REST APIs, ERC-8004 agent discovery manifests, and x402 micropayments for premium features.
 
-**Live demo:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)  
+**Live demo:** [app.onfra.xyz](https://app.onfra.xyz)  
 **Demo video:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
 
 ---
@@ -115,7 +115,7 @@ We plan to get there through a mix of product-led growth and targeted distributi
 
 ### 1. Distribution & go-to-market
 
-With the core product shipped, distribution is the priority. We are pursuing MiniPay Mini App listing, Celo ecosystem programs for visibility and grants, and direct outreach to lenders and microfinance platforms that need alternative income verification. On the integration side, we are promoting the REST API and ERC-8004 agent discovery so third-party apps and agents can call OnFRA programmatically. Community growth through X, case studies, and freelancer/creator channels will drive organic wallet analyses. Production URL: `https://wallet-profile-orpin.vercel.app` (canonical for app, manifests, and agent metadata).
+With the core product shipped, distribution is the priority. We are pursuing MiniPay Mini App listing, Celo ecosystem programs for visibility and grants, and direct outreach to lenders and microfinance platforms that need alternative income verification. On the integration side, we are promoting the REST API and ERC-8004 agent discovery so third-party apps and agents can call OnFRA programmatically. Community growth through X, case studies, and freelancer/creator channels will drive organic wallet analyses. Production URL: `https://app.onfra.xyz` (canonical for app, manifests, and agent metadata).
 
 ### 2. OnFRA agent improvements
 
@@ -150,7 +150,7 @@ Onfra currently analyzes **Celo mainnet** (chain ID 42220). Many stablecoin earn
 
 | Resource | URL |
 |----------|-----|
-| Live demo | [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app) |
+| Live demo | [app.onfra.xyz](https://app.onfra.xyz) |
 | Demo video | [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4) |
 | Documentation | [docs/](./README.md) |
 | GitHub | [github.com/jeffIshmael/wallet-profile](https://github.com/jeffIshmael/wallet-profile) |

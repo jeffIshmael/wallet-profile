@@ -51,7 +51,7 @@ A lender-ready PDF report that includes scores, income insights, borrowing recom
 
 ### Public verification
 
-Anyone can verify a report at [wallet-profile-orpin.vercel.app/verify](https://wallet-profile-orpin.vercel.app/verify) using the verification code. The page confirms wallet address, scores, report hash, IPFS link, and onchain registry data.
+Anyone can verify a report at [app.onfra.xyz/verify](https://app.onfra.xyz/verify) using the verification code. The page confirms wallet address, scores, report hash, IPFS link, and onchain registry data.
 
 ### OnFRA agent chat
 
@@ -81,7 +81,7 @@ Payments settle in USDT on Celo via x402.
 
 ## Links
 
-- **Demo:** [wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
+- **Demo:** [app.onfra.xyz](https://app.onfra.xyz)
 - **Video walkthrough:** [youtu.be/7WC3lD5dDj4](https://youtu.be/7WC3lD5dDj4)
 - **X:** [@onfra_xyz](https://x.com/onfra_xyz)
 - **OnFRA agent:** [8004scan.io/agents/celo/9219](https://8004scan.io/agents/celo/9219)

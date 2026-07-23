@@ -88,7 +88,7 @@ function drawReportHeader(
   }
   doc.setFont("helvetica", "bold");
   doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);
-  doc.text("Verify at wallet-profile-orpin.vercel.app/verify", pageWidth - margin - 4, y + 11, { align: "right" });
+  doc.text("Verify at app.onfra.xyz/verify", pageWidth - margin - 4, y + 11, { align: "right" });
 
   y += verificationBoxHeight + 6;
   doc.setFont("helvetica", "normal");
@@ -487,8 +487,8 @@ function drawReportFooter(doc: jsPDF, input: OfficialReportInput, margin: number
     );
     doc.setFont("helvetica", "normal");
     const footerMeta = input.ipfsCid
-      ? `Verification Code: ${input.verificationCode} · IPFS: ${formatIpfsUri(input.ipfsCid)} · wallet-profile-orpin.vercel.app/verify`
-      : `Verification Code: ${input.verificationCode} · wallet-profile-orpin.vercel.app/verify`;
+      ? `Verification Code: ${input.verificationCode} · IPFS: ${formatIpfsUri(input.ipfsCid)} · app.onfra.xyz/verify`
+      : `Verification Code: ${input.verificationCode} · app.onfra.xyz/verify`;
     doc.text(footerMeta, margin, footerY + 3.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(REPORT_THEME.accent[0], REPORT_THEME.accent[1], REPORT_THEME.accent[2]);

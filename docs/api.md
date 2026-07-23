@@ -2,9 +2,9 @@
 
 OnFRA exposes financial-reputation infrastructure through REST API routes and ERC-8004 / MCP discovery manifests. Onfra is the reference borrower UI.
 
-**Base URL:** [https://wallet-profile-orpin.vercel.app](https://wallet-profile-orpin.vercel.app)
+**Base URL:** [https://app.onfra.xyz](https://app.onfra.xyz)
 
-**Lender integration guide:** [/developers](https://wallet-profile-orpin.vercel.app/developers)
+**Lender integration guide:** [/developers](https://app.onfra.xyz/developers)
 
 ## Endpoints
 
@@ -36,7 +36,7 @@ Request and response schemas are the single source of truth in `web/public/schem
 | Report request | `/schemas/reportRequest.schema.json` |
 | Report result | `/schemas/reportResult.schema.json` |
 
-Full URLs: `https://wallet-profile-orpin.vercel.app/schemas/{filename}`
+Full URLs: `https://app.onfra.xyz/schemas/{filename}`
 
 ## x402 payment headers
 
@@ -73,7 +73,7 @@ import { celo } from "viem/chains";
 
 const USDC = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
 const FACILITATOR = "https://api.x402.celo.org";
-const ONFRA_API = "https://wallet-profile-orpin.vercel.app";
+const ONFRA_API = "https://app.onfra.xyz";
 
 const account = privateKeyToAccount(process.env.AGENT_PRIVATE_KEY as `0x${string}`);
 const client = createWalletClient({ chain: celo, transport: http(), account });
@@ -132,7 +132,7 @@ const result = await fetch(`${ONFRA_API}/api/agent/analyze`, {
 ## Example: screen borrower (lenders)
 
 ```bash
-curl -X POST https://wallet-profile-orpin.vercel.app/api/lender/screen \
+curl -X POST https://app.onfra.xyz/api/lender/screen \
   -H "Content-Type: application/json" \
   -H "X-PAYMENT: <x402-signature>" \
   -d '{
@@ -146,7 +146,7 @@ Returns `trust.isTrustworthy`, wallet reputation (score + category), average mon
 ## Example: analyze wallet
 
 ```bash
-curl -X POST https://wallet-profile-orpin.vercel.app/api/agent/analyze \
+curl -X POST https://app.onfra.xyz/api/agent/analyze \
   -H "Content-Type: application/json" \
   -d '{"walletAddress": "0xYourWalletAddress"}'
 ```
@@ -156,7 +156,7 @@ For external wallet queries, include the x402 payment header after obtaining a p
 Optional `fields` returns a subset without full `walletData`:
 
 ```bash
-curl -X POST 'https://wallet-profile-orpin.vercel.app/api/agent/analyze?fields=loanCapacity,reputationScore' \
+curl -X POST 'https://app.onfra.xyz/api/agent/analyze?fields=loanCapacity,reputationScore' \
   -H "Content-Type: application/json" \
   -H "X-PAYMENT: <x402-signature>" \
   -d '{"walletAddress": "0xBorrowerWallet..."}'
@@ -170,10 +170,10 @@ After a wallet has been analyzed, individual signals are free cache reads:
 
 ```bash
 # List signals + cache status
-curl https://wallet-profile-orpin.vercel.app/api/wallet/0xYourWalletAddress/signals
+curl https://app.onfra.xyz/api/wallet/0xYourWalletAddress/signals
 
 # Loan capacity only
-curl https://wallet-profile-orpin.vercel.app/api/wallet/0xYourWalletAddress/signals/loan-capacity
+curl https://app.onfra.xyz/api/wallet/0xYourWalletAddress/signals/loan-capacity
 ```
 
 Signal ids: `monthly-income`, `financial-health`, `reputation-score`, `loan-capacity`, `statement`, `assessment`.
@@ -183,7 +183,7 @@ Returns `404` with a hint to `POST /api/agent/analyze` when cache is missing or 
 ## Example: verify report
 
 ```bash
-curl https://wallet-profile-orpin.vercel.app/api/agent/verify/REP-X141GYYEUM
+curl https://app.onfra.xyz/api/agent/verify/REP-X141GYYEUM
 ```
 
 Returns wallet address, scores, report hash, IPFS CID, and onchain attestation status.
