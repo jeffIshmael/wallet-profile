@@ -1,5 +1,5 @@
 import { getWalletDataForChat } from "@/lib/agent/chatCache";
-import { getGeminiApiKey } from "@/lib/agent/env";
+import { getOpenAIApiKey } from "@/lib/agent/env";
 import type { ChatAgentContext, ChatAgentResult, ChatStatusCallback } from "@/lib/agent/chatTypes";
 import { mapBundleToWalletData } from "@/lib/agent/mapWalletData";
 import type { WalletData } from "@/types/walletData";
@@ -89,7 +89,7 @@ export async function runAgentChat(
   }
 
   return runChatAgent(history, {
-    apiKey: getGeminiApiKey(),
+    apiKey: getOpenAIApiKey(),
     context: { ...context, cachedDashboard },
     onStatus
   });

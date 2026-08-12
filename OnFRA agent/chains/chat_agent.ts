@@ -1,4 +1,4 @@
-import { ChatGoogle } from "@langchain/google";
+import { ChatOpenAI } from "@langchain/openai";
 import { computeFinancialHealth } from "../tools/compute_financial_health.js";
 import { computeReputationScore } from "../tools/compute_reputation_score.js";
 import { riskExposure } from "../tools/risk_exposure.js";
@@ -9,7 +9,7 @@ import {
   answerFromCachedDashboard,
   answerSupportedChainsExplainer,
   answerVerifiedReportExplainer,
-  buildDashboardContextForGemini,
+  buildDashboardContextForOpenAI,
   classifyQuery,
   INTENT_TOOL,
   isSupportedChainsQuestion,
@@ -28,7 +28,7 @@ export type ChatAgentContext = {
 export type ChatAgentResult = {
   text: string;
   toolsUsed: string[];
-  source: "cache" | "tool" | "gemini";
+  source: "cache" | "tool" | "openai";
 };
 
 export type ChatStatusCallback = (status: string) => void;
@@ -104,7 +104,7 @@ async function runSingleTool(
   };
 }
 
-async function answerGeneralWithGemini(
+async function answerGeneralWithOpenAI(
   dashboard: CachedDashboard,
   userMessage: string,
   apiKey: string | undefined,
@@ -112,13 +112,13 @@ async function answerGeneralWithGemini(
 ): Promise<string | null> {
   if (!apiKey) return null;
 
-  const model = new ChatGoogle({
-    model: "gemini-2.5-flash",
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     apiKey,
     temperature: 0.3
   });
 
-  const context = buildDashboardContextForGemini(dashboard);
+  const context = buildDashboardContextForOpenAI(dashboard);
 
   try {
     const result = await Promise.race([
@@ -134,7 +134,7 @@ ${context}
 User question: ${userMessage}`
       ),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Gemini timeout")), timeoutMs)
+        setTimeout(() => reject(new Error("OpenAI timeout")), timeoutMs)
       )
     ]);
     const text = String((result as { content?: unknown }).content ?? "").trim();
@@ -144,7 +144,7 @@ User question: ${userMessage}`
   }
 }
 
-async function maybePolishWithGemini(
+async function maybePolishWithOpenAI(
   draft: string,
   userMessage: string,
   apiKey: string | undefined,
@@ -152,8 +152,8 @@ async function maybePolishWithGemini(
 ): Promise<string | null> {
   if (!apiKey) return null;
 
-  const model = new ChatGoogle({
-    model: "gemini-2.5-flash",
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     apiKey,
     temperature: 0.2
   });
@@ -164,7 +164,7 @@ async function maybePolishWithGemini(
         `Rewrite this wallet analysis answer to be concise and friendly. Plain text only — no markdown, no asterisks, no bold. Use one item per line with "• " for bullet lists or "1. " for numbered steps. Keep all numbers exactly as given.\n\nUser question: ${userMessage}\n\nDraft answer:\n${draft}`
       ),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Gemini timeout")), timeoutMs)
+        setTimeout(() => reject(new Error("OpenAI timeout")), timeoutMs)
       )
     ]);
     const text = String((result as { content?: unknown }).content ?? "").trim();
@@ -183,7 +183,7 @@ export async function runChatAgent(
   }
 ): Promise<ChatAgentResult> {
   const { apiKey, context, onStatus } = options;
-  const actualApiKey = apiKey || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+  const actualApiKey = apiKey || process.env.OPENAI_API_KEY;
   const lastUserQuery = history.filter((h) => h.role === "user").pop()?.content?.trim() ?? "";
   const intent = classifyQuery(lastUserQuery);
   const target = context.targetWallet.toLowerCase();
@@ -218,13 +218,13 @@ export async function runChatAgent(
 
     if (intent === "general") {
       onStatus?.("Answering from your profile…");
-      const generalAnswer = await answerGeneralWithGemini(
+      const generalAnswer = await answerGeneralWithOpenAI(
         context.cachedDashboard,
         lastUserQuery,
         actualApiKey
       );
       if (generalAnswer) {
-        return { text: generalAnswer, toolsUsed: [], source: "gemini" };
+        return { text: generalAnswer, toolsUsed: [], source: "openai" };
       }
     }
   }
@@ -256,21 +256,21 @@ export async function runChatAgent(
   // Targeted tool only (one RPC pass, no ReAct loop)
   if (intent !== "general") {
     const { text, toolsUsed } = await runSingleTool(intent, target, onStatus);
-    const polished = await maybePolishWithGemini(text, lastUserQuery, actualApiKey);
+    const polished = await maybePolishWithOpenAI(text, lastUserQuery, actualApiKey);
     return {
       text: polished ?? text,
       toolsUsed,
-      source: polished ? "gemini" : "tool"
+      source: polished ? "openai" : "tool"
     };
   }
 
   // General external/uncached — pick financial health as default overview tool
   onStatus?.("Fetching wallet summary…");
   const { text, toolsUsed } = await runSingleTool("financial_health", target, onStatus);
-  const polished = await maybePolishWithGemini(text, lastUserQuery, actualApiKey);
+  const polished = await maybePolishWithOpenAI(text, lastUserQuery, actualApiKey);
   return {
     text: polished ?? text,
     toolsUsed,
-    source: polished ? "gemini" : "tool"
+    source: polished ? "openai" : "tool"
   };
 }

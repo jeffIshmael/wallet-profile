@@ -7,7 +7,7 @@ export type ChatAgentContext = {
 export type ChatAgentResult = {
   text: string;
   toolsUsed: string[];
-  source?: "cache" | "tool" | "gemini";
+  source?: "cache" | "tool" | "openai";
 };
 
 export type ChatStatusCallback = (status: string) => void;

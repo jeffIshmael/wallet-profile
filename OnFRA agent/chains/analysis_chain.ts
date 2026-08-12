@@ -6,12 +6,12 @@ import { incomeStability } from "../tools/income_stability.js";
 import { loanCapacity } from "../tools/loan_capacity.js";
 import { SUMMARY_PROMPT } from "../prompts/summary_prompt.js";
 import { walletCache } from "../memory/wallet_cache.js";
-import { ChatGoogle } from "@langchain/google";
+import { ChatOpenAI } from "@langchain/openai";
 import { computePeriodFlow, fullOnchainDataCache } from "../lib/getWalletDetails.js";
 
-const GEMINI_SUMMARY_TIMEOUT_MS = Number(process.env.GEMINI_SUMMARY_TIMEOUT_MS ?? 8_000);
-const SKIP_GEMINI_SUMMARY =
-  process.env.SKIP_GEMINI_SUMMARY === "1" || process.env.SKIP_GEMINI_SUMMARY === "true";
+const OPENAI_SUMMARY_TIMEOUT_MS = Number(process.env.OPENAI_SUMMARY_TIMEOUT_MS ?? 8_000);
+const SKIP_OPENAI_SUMMARY =
+  process.env.SKIP_OPENAI_SUMMARY === "1" || process.env.SKIP_OPENAI_SUMMARY === "true";
 
 export interface DashboardOutput {
   walletAddress: string;
@@ -144,11 +144,11 @@ export async function runAnalysisChain(
   });
   const loanData = JSON.parse(loanJson);
 
-  // 4. Generate AI Summary using Gemini if key is provided, else fallback to mock AI summary
+  // 4. Generate AI Summary using OpenAI if key is provided, else fallback to mock AI summary
   let aiDashboardSummary = "";
   let aiAttestation = "";
 
-  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   const txCount = rawData.threeMonthStatement?.transactionCount ?? 0;
   const isInactiveWallet =
     txCount === 0 &&
@@ -156,11 +156,11 @@ export async function runAnalysisChain(
     (rawData.volatileBalance ?? 0) === 0 &&
     !rawData.firstTransaction;
 
-  if (apiKey && !isInactiveWallet && !SKIP_GEMINI_SUMMARY) {
+  if (apiKey && !isInactiveWallet && !SKIP_OPENAI_SUMMARY) {
     try {
-      console.log(`[AnalysisChain] Generating AI summary using ChatGoogle...`);
-      const model = new ChatGoogle({
-        model: "gemini-2.5-flash",
+      console.log(`[AnalysisChain] Generating AI summary using ChatOpenAI...`);
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
         apiKey: apiKey,
         temperature: 0.2,
       });
@@ -180,8 +180,8 @@ export async function runAnalysisChain(
         model.invoke(formattedPrompt),
         new Promise<never>((_, reject) =>
           setTimeout(
-            () => reject(new Error(`Gemini summary timed out after ${GEMINI_SUMMARY_TIMEOUT_MS}ms`)),
-            GEMINI_SUMMARY_TIMEOUT_MS
+            () => reject(new Error(`OpenAI summary timed out after ${OPENAI_SUMMARY_TIMEOUT_MS}ms`)),
+            OPENAI_SUMMARY_TIMEOUT_MS
           )
         )
       ]);
@@ -208,12 +208,12 @@ export async function runAnalysisChain(
         aiAttestation = `Onfra AI attests that wallet ${address} has a financial health score of ${healthData.financialHealthScore}% and reputation standing of ${reputationData.reputationScore}/100. Portfolio risk is classified as ${riskData.riskCategory} with stable monthly inflows estimated at $${incomeData.monthlyIncomeEstimateUsd} USD.`;
       }
     } catch (err) {
-      console.warn("[AnalysisChain] Google Generative AI error, falling back to rule-based AI generator:", err);
+      console.warn("[AnalysisChain] OpenAI API error, falling back to rule-based AI generator:", err);
     }
   } else if (isInactiveWallet) {
-    console.log(`[AnalysisChain] Skipping Gemini for inactive wallet ${address}`);
-  } else if (SKIP_GEMINI_SUMMARY) {
-    console.log(`[AnalysisChain] Skipping Gemini (SKIP_GEMINI_SUMMARY enabled)`);
+    console.log(`[AnalysisChain] Skipping OpenAI for inactive wallet ${address}`);
+  } else if (SKIP_OPENAI_SUMMARY) {
+    console.log(`[AnalysisChain] Skipping OpenAI (SKIP_OPENAI_SUMMARY enabled)`);
   }
 
   // Fallback Rule-based generator (always runs if no API key or if API call fails)

@@ -4,7 +4,6 @@ import { Bot, Home, LayoutDashboard, ReceiptText, ShieldCheck } from "lucide-rea
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { Fragment } from "react";
 
 const NAV_ITEMS = [
   { id: "home", label: "Home", href: "/", icon: Home },
@@ -83,12 +82,10 @@ export function MobileBottomNav() {
         {NAV_ITEMS.map((item, index) => {
           const active = isActive(item.id, pathname);
 
-          return (
-            <Fragment key={item.id}>
-              {index > 0 && <NavDivider />}
-              <StandardNavLink item={item} active={active} />
-            </Fragment>
-          );
+          return [
+            index > 0 && <NavDivider key={`divider-${item.id}`} />,
+            <StandardNavLink key={item.id} item={item} active={active} />
+          ];
         })}
       </div>
     </nav>

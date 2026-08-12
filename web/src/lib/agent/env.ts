@@ -2,8 +2,8 @@ import { privateKeyToAccount } from "viem/accounts";
 
 export type X402SettlementMode = "simulated" | "confirmed";
 
-export function getGeminiApiKey(): string | undefined {
-  return process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
+export function getOpenAIApiKey(): string | undefined {
+  return process.env.OPENAI_API_KEY?.trim();
 }
 
 export function getThirdwebSecretKey(): string | undefined {

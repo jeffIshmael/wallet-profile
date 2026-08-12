@@ -463,7 +463,7 @@ function answerGeneralConcept(message: string, dashboard: CachedDashboard): stri
   return null;
 }
 
-export function buildDashboardContextForGemini(dashboard: CachedDashboard): string {
+export function buildDashboardContextForOpenAI(dashboard: CachedDashboard): string {
   const { metrics, onfraAssessment, portfolio } = dashboard;
   const b = metrics.financialHealth.breakdown;
   return [

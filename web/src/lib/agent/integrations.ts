@@ -1,5 +1,5 @@
 import {
-  getGeminiApiKey,
+  getOpenAIApiKey,
   getX402PayToAddress,
   getX402SettlementMode,
   isX402Configured,
@@ -12,7 +12,7 @@ export type IntegrationStatus = {
   error?: string;
 };
 
-function parseGoogleApiError(raw: string): string {
+function parseOpenAIApiError(raw: string): string {
   try {
     const parsed = JSON.parse(raw) as { error?: { message?: string } };
     return parsed.error?.message ?? raw;
@@ -21,26 +21,28 @@ function parseGoogleApiError(raw: string): string {
   }
 }
 
-export async function checkGeminiIntegration(): Promise<IntegrationStatus> {
-  const apiKey = getGeminiApiKey();
+export async function checkOpenAIIntegration(): Promise<IntegrationStatus> {
+  const apiKey = getOpenAIApiKey();
   if (!apiKey) {
-    return { configured: false, ok: false, error: "GEMINI_API_KEY is not set." };
+    return { configured: false, ok: false, error: "OPENAI_API_KEY is not set." };
   }
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash?key=${apiKey}`
+      `https://api.openai.com/v1/models`, {
+        headers: { Authorization: `Bearer ${apiKey}` }
+      }
     );
     if (!res.ok) {
       const message = await res.text();
-      return { configured: true, ok: false, error: parseGoogleApiError(message) };
+      return { configured: true, ok: false, error: parseOpenAIApiError(message) };
     }
     return { configured: true, ok: true };
   } catch (error) {
     return {
       configured: true,
       ok: false,
-      error: error instanceof Error ? error.message : "Gemini check failed."
+      error: error instanceof Error ? error.message : "OpenAI check failed."
     };
   }
 }
@@ -104,13 +106,13 @@ export async function checkX402Integration(): Promise<
 }
 
 export async function getIntegrationsSummary() {
-  const [gemini, x402Status] = await Promise.all([
-    checkGeminiIntegration(),
+  const [openai, x402Status] = await Promise.all([
+    checkOpenAIIntegration(),
     checkX402Integration()
   ]);
 
   return {
-    gemini,
+    openai,
     x402Status,
     x402: {
       enforce: isX402Enforced(),
