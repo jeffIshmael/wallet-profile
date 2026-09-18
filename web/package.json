@@ -1,6 +1,6 @@
 {
   "name": "@onfra/web",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "build:agent": "npm ci --prefix \"../OnFRA agent\" && npm run build --prefix \"../OnFRA agent\" && node scripts/bundle-onfra.mjs",

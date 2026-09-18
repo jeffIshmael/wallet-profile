@@ -111,7 +111,7 @@ function parsePaymentPayload(header: string): PaymentPayloadRecord | null {
   if (typeof obj.signature === "string" && obj.authorization && typeof obj.authorization === "object") {
     return {
       x402Version: 1,
-      scheme: AUTH_SCHEME,
+      scheme: "exact",
       network: CHAIN,
       payload: obj
     };
@@ -127,7 +127,7 @@ function parsePaymentPayload(header: string): PaymentPayloadRecord | null {
   ) {
     return {
       x402Version: 1,
-      scheme: AUTH_SCHEME,
+      scheme: "exact",
       network: CHAIN,
       payload: {
         signature: obj.signature,
@@ -149,7 +149,8 @@ function parsePaymentPayload(header: string): PaymentPayloadRecord | null {
 function buildPaymentRequirements(tier: X402PriceTier, payTo: string, resource: string) {
   const priceUsdt = TIER_AMOUNTS[tier];
   return {
-    scheme: AUTH_SCHEME,
+    // Facilitator exact-scheme wire format — not WWW-Authenticate AUTH_SCHEME ("x402")
+    scheme: "exact" as const,
     network: CHAIN,
     maxAmountRequired: usdtToAtomic(priceUsdt),
     resource,
@@ -201,7 +202,7 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
 
   const accepts = [
     {
-      scheme: AUTH_SCHEME,
+      scheme: "exact",
       network: CHAIN,
       chainId: CHAIN_ID,
       maxAmountRequired,
@@ -225,7 +226,8 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
       error: "Payment Required",
       code: "PAYMENT_REQUIRED",
       x402Version: 1,
-      scheme: AUTH_SCHEME,
+      scheme: "exact",
+      authScheme: AUTH_SCHEME,
       network: CHAIN,
       chain: CHAIN,
       chainId: CHAIN_ID,
