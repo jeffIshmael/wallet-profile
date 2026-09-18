@@ -1,6 +1,6 @@
 {
   "name": "@onfra/web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "build:agent": "npm ci --prefix \"../OnFRA agent\" && npm run build --prefix \"../OnFRA agent\" && node scripts/bundle-onfra.mjs",
@@ -70,6 +70,5 @@
   "overrides": {
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.1"
-  },
-  "_redeployNote": "force onfra redeploy 1726651 header fix"
+  }
 }

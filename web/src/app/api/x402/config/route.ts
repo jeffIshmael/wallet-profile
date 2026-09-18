@@ -17,6 +17,9 @@ export async function GET() {
     production: isX402ProductionSettlement(),
     enforced: isX402Enforced(),
     publicPayTo: getPublicX402PayToAddress() ?? payTo ?? null,
-    attributionTag: getAttributionTag()
+    attributionTag: getAttributionTag(),
+    // Wire format sent to api.x402.celo.org/settle (not legacy {payment, network})
+    settleWireFormat: "paymentPayload-v1",
+    settleFacilitator: "https://api.x402.celo.org/settle"
   });
 }
