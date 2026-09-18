@@ -402,9 +402,19 @@ export async function assertPayment(
   }
 
   const settlementError = decodePaymentRequiredError(resultHeaders);
+  const facilitatorReason =
+    responseBody && typeof responseBody === "object"
+      ? String(
+          (responseBody as Record<string, unknown>).errorReason ??
+            (responseBody as Record<string, unknown>).invalidReason ??
+            (responseBody as Record<string, unknown>).error ??
+            ""
+        ) || null
+      : null;
   console.warn(
     `${logPrefix} Payment required (HTTP ${resultStatus}) after ${Date.now() - settleStarted}ms` +
-      (settlementError ? ` — ${settlementError}` : " — client must sign and retry.")
+      (settlementError ? ` — ${settlementError}` : "") +
+      (facilitatorReason ? ` — ${facilitatorReason}` : " — client must sign and retry.")
   );
 
   if (!responseBody || typeof responseBody !== "object") {
@@ -421,22 +431,39 @@ export async function assertPayment(
     currencySymbol: "USDT",
     priceUsdt: TIER_AMOUNTS[tier],
     attributionTag: getAttributionTag(),
-    ...responseBody,
+    facilitatorStatus: resultStatus,
+    facilitator: responseBody,
     payTo,
     asset: USDT_CELO_MAINNET,
     chainId: CHAIN_ID,
     paymentHeader: PAYMENT_HEADER
   };
 
+  // Never forward facilitator Content-Length / Content-Type — they truncate or duplicate our body.
+  const safeHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    "WWW-Authenticate": AUTH_SCHEME
+  };
+  for (const [key, value] of Object.entries(resultHeaders)) {
+    const lower = key.toLowerCase();
+    if (
+      lower === "content-length" ||
+      lower === "content-type" ||
+      lower === "transfer-encoding" ||
+      lower === "connection"
+    ) {
+      continue;
+    }
+    if (lower.startsWith("x-") || lower === "www-authenticate" || lower === "payment-required") {
+      safeHeaders[key] = value;
+    }
+  }
+
   return {
     ok: false,
     response: new Response(JSON.stringify(body), {
       status: resultStatus >= 400 ? resultStatus : 402,
-      headers: {
-        "Content-Type": "application/json",
-        "WWW-Authenticate": AUTH_SCHEME,
-        ...resultHeaders
-      }
+      headers: safeHeaders
     })
   };
 }
