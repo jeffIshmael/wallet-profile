@@ -1,5 +1,5 @@
 import { SIGNAL_IDS, ANALYZE_FIELD_KEYS } from "@/lib/agent/analysisSignals";
-import { getX402PayToAddress, isX402Enforced } from "@/lib/agent/env";
+import { getAttributionTag, getX402PayToAddress, isX402Enforced } from "@/lib/agent/env";
 import {
   APP_BASE_URL,
   AUTH_SCHEME,
@@ -17,6 +17,7 @@ import {
 export async function GET() {
   const payTo = getX402PayToAddress() ?? null;
   const base = APP_BASE_URL;
+  const attributionTag = getAttributionTag();
 
   return Response.json({
     name: "OnFRA",
@@ -24,6 +25,7 @@ export async function GET() {
     baseUrl: base,
     chain: CHAIN,
     chainId: CHAIN_ID,
+    attributionTag,
     auth: {
       scheme: AUTH_SCHEME,
       model: "x402-pay-per-request",

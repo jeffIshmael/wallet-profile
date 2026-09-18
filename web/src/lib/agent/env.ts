@@ -70,3 +70,5 @@ export function isX402Enforced(): boolean {
   }
   return process.env.NODE_ENV === "production" && isX402Configured();
 }
+
+export { getAttributionTag } from "@/lib/blockchain/constants";

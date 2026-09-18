@@ -84,14 +84,19 @@ export async function POST(req: Request) {
   }
 
   const paymentStarted = Date.now();
-  const paymentBlock = await assertPayment(req, "report");
-  if (paymentBlock) {
+  const payment = await assertPayment(req, "report");
+  if (!payment.ok) {
     console.log(
       `${logPrefix} Payment required (402) returned after ${Date.now() - paymentStarted}ms — awaiting signed retry.`
     );
-    return paymentBlock;
+    return payment.response;
   }
-  console.log(`${logPrefix} Payment settled in ${Date.now() - paymentStarted}ms.`);
+  const settlement = payment.settlement;
+  console.log(
+    `${logPrefix} Payment settled in ${Date.now() - paymentStarted}ms` +
+      (settlement.txHash ? ` (tx=${settlement.txHash.slice(0, 12)}…)` : "") +
+      "."
+  );
 
   const started = Date.now();
   const encoder = new TextEncoder();
@@ -186,7 +191,12 @@ export async function POST(req: Request) {
           status: "success",
           walletAddress,
           durationMs: Date.now() - started,
-          metadata: { reportId: onchain.reportId, ipfsCid: pinned.cid }
+          metadata: {
+            reportId: onchain.reportId,
+            ipfsCid: pinned.cid,
+            attestationTx: onchain.transactionHash,
+            settlement
+          }
         });
 
         console.log(
@@ -206,6 +216,7 @@ export async function POST(req: Request) {
             reportHash: pinned.cid,
             transactionHash: onchain.transactionHash,
             explorerUrl: `${CELOSCAN_BASE_URL}/tx/${onchain.transactionHash}`,
+            paymentSettlement: settlement,
             reputationScore: metrics.reputation.score,
             financialHealthScore: metrics.financialHealth.score,
             loanCapacity: metrics.loanCapacity.range,

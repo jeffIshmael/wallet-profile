@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "feedback:erc8004": "node scripts/submit-erc8004-feedback.mjs",
+    "seed:txs": "node scripts/seed-onfra-txs.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",

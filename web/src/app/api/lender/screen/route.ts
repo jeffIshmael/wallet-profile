@@ -52,11 +52,12 @@ export async function POST(req: Request) {
     console.warn("[lender/screen] USDT balance pre-check failed:", error);
   }
 
-  const paymentBlock = await assertPayment(req, "external", {
+  const payment = await assertPayment(req, "external", {
     skipPayment: false,
     skipReason: "lender screen"
   });
-  if (paymentBlock) return paymentBlock;
+  if (!payment.ok) return payment.response;
+  const settlement = payment.settlement;
 
   const logPrefix = `[lender/screen ${walletAddress.slice(0, 10)}…]`;
   const started = Date.now();
@@ -96,7 +97,8 @@ export async function POST(req: Request) {
       metadata: {
         cached,
         trust: isTrustworthy,
-        callerAddress: target.callerWallet
+        callerAddress: target.callerWallet,
+        settlement
       }
     });
 
@@ -126,7 +128,8 @@ export async function POST(req: Request) {
         chargedUsdt: priceUsdt,
         token: "USDT",
         chain: "celo",
-        payer: target.callerWallet
+        payer: target.callerWallet,
+        settlement
       }
     });
   } catch (error) {

@@ -229,6 +229,10 @@ export default function DevelopersPage() {
 
         <section className="mt-8">
           <h3 className="font-space text-lg font-semibold">Screen a borrower wallet</h3>
+          <p className="mt-2 text-xs leading-6 text-stardust">
+            External screens cost <span className="text-white">0.01 USDT</span> via x402 (tagged Celo
+            attribution). Own-wallet dashboard analysis stays free; looking up another address is always paid.
+          </p>
           <pre className="mt-3 overflow-x-auto rounded-2xl border border-white/10 bg-black/60 p-4 font-mono text-xs leading-6 text-stardust">
             {SCREEN_EXAMPLE}
           </pre>

@@ -1,4 +1,5 @@
 import {
+  getAttributionTag,
   getOpenAIApiKey,
   getX402PayToAddress,
   getX402SettlementMode,
@@ -114,6 +115,7 @@ export async function getIntegrationsSummary() {
 
   const payTo = x402Status.payTo ?? getX402PayToAddress() ?? null;
   const agentReady = Boolean(payTo) && isX402Configured();
+  const attributionTag = getAttributionTag();
 
   return {
     ok: agentReady,
@@ -121,6 +123,7 @@ export async function getIntegrationsSummary() {
     status: agentReady ? "ok" : "degraded",
     payTo,
     usdtSettlementAddress: payTo,
+    attributionTag,
     settlementToken: USDT_CELO_MAINNET,
     settlementTokenSymbol: "USDT",
     chain: CHAIN,

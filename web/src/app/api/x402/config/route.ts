@@ -1,4 +1,5 @@
 import {
+  getAttributionTag,
   getPublicX402PayToAddress,
   getX402PayToAddress,
   getX402SettlementMode,
@@ -15,6 +16,7 @@ export async function GET() {
     settlementMode,
     production: isX402ProductionSettlement(),
     enforced: isX402Enforced(),
-    publicPayTo: getPublicX402PayToAddress() ?? payTo ?? null
+    publicPayTo: getPublicX402PayToAddress() ?? payTo ?? null,
+    attributionTag: getAttributionTag()
   });
 }

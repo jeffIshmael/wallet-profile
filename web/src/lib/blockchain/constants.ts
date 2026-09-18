@@ -43,6 +43,11 @@ export const PAYMENT_HEADER = "X-PAYMENT" as const;
 export const PAYMENT_HEADER_ALIASES = ["PAYMENT-SIGNATURE", "x-payment"] as const;
 export const AUTH_SCHEME = "x402" as const;
 
+/** Celo Builders / Agents at Work attribution suffix (safe for client + server). */
+export function getAttributionTag(): string {
+  return process.env.NEXT_PUBLIC_ATTRIBUTION_TAG?.trim() || "onfra";
+}
+
 /** Micropayment pricing (USDT on Celo) */
 export const PRICING = {
   /** External wallet chat / analyze lookup */

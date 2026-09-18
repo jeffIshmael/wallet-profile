@@ -10,6 +10,7 @@ import {
 import { toDataSuffix } from "@celo/attribution-tags";
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
+import { getAttributionTag } from "@/lib/blockchain/constants";
 import { onchainReporterAbi } from "@/lib/blockchain/abi/onchainReporter";
 import { ONCHAIN_REPORTER_PROXY } from "@/lib/blockchain/constants";
 import { isValidReportId, normalizeReportId } from "@/lib/reports/reportId";
@@ -113,8 +114,7 @@ export async function publishFinancialReportOnchain(
     ]
   });
 
-  const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
-  const taggedData = concat([callData, toDataSuffix(attributionTag)]);
+  const taggedData = concat([callData, toDataSuffix(getAttributionTag())]);
 
   const hash = await walletClient.sendTransaction({
     account: walletClient.account,

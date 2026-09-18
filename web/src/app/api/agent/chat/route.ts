@@ -70,11 +70,12 @@ export async function POST(req: Request) {
     }
   }
 
-  const paymentBlock = await assertPayment(req, "external", {
+  const payment = await assertPayment(req, "external", {
     skipPayment: target.isOwnWallet,
     skipReason: "own-wallet chat"
   });
-  if (paymentBlock) return paymentBlock;
+  if (!payment.ok) return payment.response;
+  const settlement = payment.settlement;
 
   const started = Date.now();
 
@@ -109,7 +110,8 @@ export async function POST(req: Request) {
       metadata: {
         targetWallet: target.targetWallet,
         isExternal: target.isExternal,
-        toolsUsed: response.toolsUsed
+        toolsUsed: response.toolsUsed,
+        settlement
       }
     });
 
@@ -122,7 +124,13 @@ export async function POST(req: Request) {
       response: stripMarkdown(response.text),
       toolsUsed: response.toolsUsed,
       source: response.source,
-      x402Billing: { chargedUsdt: priceUsdt, token: "USDT", chain: "celo", free: false }
+      x402Billing: {
+        chargedUsdt: priceUsdt,
+        token: "USDT",
+        chain: "celo",
+        free: target.isOwnWallet,
+        settlement
+      }
     });
   } catch (error) {
     await trackApiEvent({

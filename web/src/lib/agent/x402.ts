@@ -4,6 +4,7 @@ import {
 } from "@/lib/x402/minipaySettlement";
 import {
   AUTH_SCHEME,
+  CELOSCAN_BASE_URL,
   CHAIN,
   CHAIN_ID,
   PAYMENT_HEADER,
@@ -12,12 +13,26 @@ import {
   USDT_CELO_MAINNET
 } from "@/lib/blockchain/constants";
 import {
+  getAttributionTag,
   getX402PayToAddress,
   getX402SettlementMode,
   isX402Enforced
 } from "@/lib/agent/env";
 
 export type X402PriceTier = "external" | "report";
+
+export type PaymentSettlement = {
+  method: "skipped" | "unenforced" | "direct-usdt" | "x402-facilitator" | "simulated";
+  priceUsdt: string;
+  txHash?: string;
+  payTo?: string;
+  attributionTag: string;
+  explorerUrl?: string;
+};
+
+export type AssertPaymentResult =
+  | { ok: true; settlement: PaymentSettlement }
+  | { ok: false; response: Response };
 
 const TIER_AMOUNTS: Record<X402PriceTier, string> = {
   external: PRICING.externalWalletQueryUsdt,
@@ -34,7 +49,9 @@ function decodePaymentRequiredError(
   responseHeaders?: Record<string, string>
 ): string | null {
   const encoded =
-    responseHeaders?.["PAYMENT-REQUIRED"] ?? responseHeaders?.["payment-required"] ?? responseHeaders?.["Payment-Required"];
+    responseHeaders?.["PAYMENT-REQUIRED"] ??
+    responseHeaders?.["payment-required"] ??
+    responseHeaders?.["Payment-Required"];
   if (!encoded) return null;
   try {
     const rawBytes = Buffer.from(encoded, "base64");
@@ -46,6 +63,40 @@ function decodePaymentRequiredError(
   } catch {
     return null;
   }
+}
+
+function extractFacilitatorTxHash(body: unknown): string | undefined {
+  if (!body || typeof body !== "object") return undefined;
+  const record = body as Record<string, unknown>;
+  for (const key of ["transaction", "transactionHash", "txHash", "hash"]) {
+    const value = record[key];
+    if (typeof value === "string" && value.startsWith("0x")) return value;
+  }
+  const nested = record.settlement ?? record.result;
+  if (nested && typeof nested === "object") {
+    return extractFacilitatorTxHash(nested);
+  }
+  return undefined;
+}
+
+function settlementOk(
+  method: PaymentSettlement["method"],
+  priceUsdt: string,
+  extras?: Partial<PaymentSettlement>
+): AssertPaymentResult {
+  const txHash = extras?.txHash;
+  return {
+    ok: true,
+    settlement: {
+      ...extras,
+      method,
+      priceUsdt,
+      attributionTag: getAttributionTag(),
+      payTo: extras?.payTo ?? getX402PayToAddress(),
+      txHash,
+      explorerUrl: txHash ? `${CELOSCAN_BASE_URL}/tx/${txHash}` : extras?.explorerUrl
+    }
+  };
 }
 
 export function getPaymentHeader(req: Request): string | null {
@@ -77,7 +128,9 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
       extra: {
         paymentHeader: PAYMENT_HEADER,
         alternateHeaders: [...PAYMENT_HEADER_ALIASES],
-        settlement: "celo-x402-facilitator"
+        settlement: "celo-x402-facilitator",
+        directTransferHeader: "X-MINIPAY-TX",
+        attributionTag: getAttributionTag()
       }
     }
   ];
@@ -100,6 +153,7 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
       payTo,
       paymentHeader: PAYMENT_HEADER,
       alternateHeaders: [...PAYMENT_HEADER_ALIASES],
+      attributionTag: getAttributionTag(),
       accepts,
       retry: {
         method: "resubmit",
@@ -107,7 +161,8 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
         steps: [
           "Read accepts[0] (asset, maxAmountRequired, payTo, network).",
           "Sign an EIP-3009 USDT authorization (or settle via a Celo x402 client) for maxAmountRequired to payTo.",
-          `Retry the same HTTP request with ${PAYMENT_HEADER} set to the payment payload.`
+          `Retry the same HTTP request with ${PAYMENT_HEADER} set to the payment payload.`,
+          "MiniPay / direct USDT: send a tagged transfer then retry with X-MINIPAY-TX + X-PAYMENT-CALLER."
         ]
       },
       configUrl: "/api/x402/config",
@@ -133,29 +188,32 @@ export function isPaymentEnforced(): boolean {
 export { getX402SettlementMode } from "@/lib/agent/env";
 
 /**
- * Settle x402 via Thirdweb facilitator.
+ * Settle payment via direct USDT transfer proof or Celo x402 facilitator.
  * Skipped entirely when `skipPayment` is true (own-wallet queries).
  */
 export async function assertPayment(
   req: Request,
   tier: X402PriceTier,
   options?: { skipPayment?: boolean; skipReason?: string }
-): Promise<Response | null> {
+): Promise<AssertPaymentResult> {
   const logPrefix = `[x402 ${tier}]`;
+  const priceUsdt = TIER_AMOUNTS[tier];
 
   if (options?.skipPayment) {
     console.log(`${logPrefix} Payment skipped (${options.skipReason ?? "free request"}).`);
-    return null;
+    return settlementOk("skipped", "0");
   }
   if (!isPaymentEnforced()) {
-    console.log(`${logPrefix} Payment not enforced (X402_ENFORCE is off or facilitator not configured).`);
-    return null;
+    console.log(
+      `${logPrefix} Payment not enforced (X402_ENFORCE is off or facilitator not configured).`
+    );
+    return settlementOk("unenforced", priceUsdt);
   }
 
   const payTo = getX402PayToAddress();
   if (!payTo) {
     console.warn(`${logPrefix} X402_ENFORCE is enabled but payout address is not configured.`);
-    return paymentRequiredResponse(tier);
+    return { ok: false, response: paymentRequiredResponse(tier) };
   }
 
   const directTransferTx = getMiniPayTxHeader(req);
@@ -165,28 +223,30 @@ export async function assertPayment(
       console.log(
         `${logPrefix} Direct USDT transfer verified on Celo (${directTransferTx.slice(0, 12)}…).`
       );
-      return null;
+      return settlementOk("direct-usdt", priceUsdt, {
+        txHash: directTransferTx,
+        payTo
+      });
     }
     console.warn(
       `${logPrefix} Direct transfer verification failed for ${directTransferTx.slice(0, 12)}… — check payer, amount, and payTo.`
     );
-    return paymentRequiredResponse(tier);
+    return { ok: false, response: paymentRequiredResponse(tier) };
   }
 
   const settlementMode = getX402SettlementMode();
-  const priceUsdt = TIER_AMOUNTS[tier];
   const paymentHeader = getPaymentHeader(req);
 
   if (!paymentHeader) {
     console.log(`${logPrefix} No payment header found. Returning 402 Payment Required.`);
-    return paymentRequiredResponse(tier);
+    return { ok: false, response: paymentRequiredResponse(tier) };
   }
 
   if (settlementMode === "simulated") {
     console.log(
       `${logPrefix} Payment settled (simulated mode — no real USDT is transferred, hasPaymentHeader=true, price=${priceUsdt} USDT).`
     );
-    return null;
+    return settlementOk("simulated", priceUsdt, { payTo });
   }
 
   console.log(
@@ -196,14 +256,14 @@ export async function assertPayment(
   const settleStarted = Date.now();
   let resultStatus = 402;
   let resultHeaders: Record<string, string> = {};
-  let responseBody: any = null;
+  let responseBody: unknown = null;
 
   try {
     const settleResponse = await fetch("https://api.x402.celo.org/settle", {
       method: "POST",
       headers: {
         "X-API-Key": process.env.X402_API_KEY || "",
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         payment: paymentHeader,
@@ -229,10 +289,13 @@ export async function assertPayment(
   }
 
   if (resultStatus === 200 || resultStatus === 201) {
+    const txHash = extractFacilitatorTxHash(responseBody);
     console.log(
-      `${logPrefix} Payment settled in ${Date.now() - settleStarted}ms (price=${priceUsdt} USDT).`
+      `${logPrefix} Payment settled in ${Date.now() - settleStarted}ms (price=${priceUsdt} USDT` +
+        (txHash ? `, tx=${txHash.slice(0, 12)}…` : "") +
+        ")."
     );
-    return null;
+    return settlementOk("x402-facilitator", priceUsdt, { txHash, payTo });
   }
 
   const settlementError = decodePaymentRequiredError(resultHeaders);
@@ -242,7 +305,7 @@ export async function assertPayment(
   );
 
   if (!responseBody || typeof responseBody !== "object") {
-    return paymentRequiredResponse(tier);
+    return { ok: false, response: paymentRequiredResponse(tier) };
   }
 
   const body = {
@@ -254,20 +317,23 @@ export async function assertPayment(
     currency: USDT_CELO_MAINNET,
     currencySymbol: "USDT",
     priceUsdt: TIER_AMOUNTS[tier],
+    attributionTag: getAttributionTag(),
     ...responseBody,
-    // Canonical settlement fields win over facilitator noise
     payTo,
     asset: USDT_CELO_MAINNET,
     chainId: CHAIN_ID,
     paymentHeader: PAYMENT_HEADER
   };
 
-  return new Response(JSON.stringify(body), {
-    status: resultStatus >= 400 ? resultStatus : 402,
-    headers: {
-      "Content-Type": "application/json",
-      "WWW-Authenticate": AUTH_SCHEME,
-      ...resultHeaders
-    }
-  });
+  return {
+    ok: false,
+    response: new Response(JSON.stringify(body), {
+      status: resultStatus >= 400 ? resultStatus : 402,
+      headers: {
+        "Content-Type": "application/json",
+        "WWW-Authenticate": AUTH_SCHEME,
+        ...resultHeaders
+      }
+    })
+  };
 }

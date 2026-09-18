@@ -8,6 +8,7 @@ import {
   type Hex
 } from "viem";
 import { toDataSuffix } from "@celo/attribution-tags";
+import { getAttributionTag } from "@/lib/blockchain/constants";
 import { celo } from "@/lib/chains/celo";
 import { MINIPAY_FEE_CURRENCY } from "@/lib/minipay/constants";
 import type { PreferredStablecoin } from "@/lib/minipay/stablecoins";
@@ -34,8 +35,7 @@ export async function sendMiniPayTransaction(
     transport: custom(provider)
   });
 
-  const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
-  const tagSuffix = toDataSuffix(attributionTag);
+  const tagSuffix = toDataSuffix(getAttributionTag());
   const data = request.data ? concat([request.data, tagSuffix]) : tagSuffix;
 
   return walletClient.sendTransaction({

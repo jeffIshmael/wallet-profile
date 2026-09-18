@@ -5,8 +5,8 @@ import { assertPayment } from "@/lib/agent/x402";
 
 /** Legacy single-route handler — prefer /api/agent/analyze and /api/agent/chat. */
 export async function POST(req: Request) {
-  const paymentBlock = await assertPayment(req, "external");
-  if (paymentBlock) return paymentBlock;
+  const payment = await assertPayment(req, "external");
+  if (!payment.ok) return payment.response;
 
   const body = (await req.json().catch(() => ({}))) as { message?: string; walletAddress?: string };
   const walletAddress = body.walletAddress || mockWallet.walletAddress;

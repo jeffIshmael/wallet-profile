@@ -97,11 +97,12 @@ export async function POST(req: Request) {
     }
   }
 
-  const paymentBlock = await assertPayment(req, "external", {
+  const payment = await assertPayment(req, "external", {
     skipPayment: target.isOwnWallet,
     skipReason: "own-wallet analyze"
   });
-  if (paymentBlock) return paymentBlock;
+  if (!payment.ok) return payment.response;
+  const settlement = payment.settlement;
 
   const logPrefix = `[analyze ${walletAddress.slice(0, 10)}…]`;
   const started = Date.now();
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
           status: "success",
           walletAddress,
           durationMs: Date.now() - started,
-          metadata: { cached: true, isExternal: target.isExternal, fields }
+          metadata: { cached: true, isExternal: target.isExternal, fields, settlement }
         });
         return analysisResponse(
           walletAddress,
@@ -146,7 +147,7 @@ export async function POST(req: Request) {
       status: "success",
       walletAddress,
       durationMs: Date.now() - started,
-      metadata: { cached: false, isExternal: target.isExternal }
+      metadata: { cached: false, isExternal: target.isExternal, settlement }
     });
 
     return analysisResponse(

@@ -67,11 +67,12 @@ export async function POST(req: Request) {
     }
   }
 
-  const paymentBlock = await assertPayment(req, "external", {
+  const payment = await assertPayment(req, "external", {
     skipPayment: false,
     skipReason: "own-wallet statement"
   });
-  if (paymentBlock) return paymentBlock;
+  if (!payment.ok) return payment.response;
+  const settlement = payment.settlement;
 
   const logPrefix = `[statement ${walletAddress.slice(0, 10)}…]`;
   const started = Date.now();
@@ -121,7 +122,7 @@ export async function POST(req: Request) {
       status: "success",
       walletAddress,
       durationMs: Date.now() - started,
-      metadata: { period, ipfsCid: pinned.cid }
+      metadata: { period, ipfsCid: pinned.cid, settlement }
     });
 
     return Response.json({
@@ -133,7 +134,13 @@ export async function POST(req: Request) {
       transactionCount: filteredTxs.length,
       ipfsCid: pinned.cid,
       ipfsUrl,
-      filename
+      filename,
+      x402Billing: {
+        chargedUsdt: priceUsdt,
+        token: "USDT",
+        chain: "celo",
+        settlement
+      }
     });
   } catch (error) {
     await trackApiEvent({

@@ -12,7 +12,7 @@ import {
 } from "viem";
 import { toDataSuffix } from "@celo/attribution-tags";
 import { celo } from "@/lib/chains/celo";
-import { USDT_CELO_MAINNET } from "@/lib/blockchain/constants";
+import { getAttributionTag, USDT_CELO_MAINNET } from "@/lib/blockchain/constants";
 import { isMiniPay, openMiniPayDeposit } from "@/lib/minipay";
 import { getPreferredStablecoin, getUsdtBalance } from "@/lib/minipay/stablecoins";
 import { feeTokenFromPreferred, sendMiniPayTransaction } from "@/lib/minipay/transactions";
@@ -71,8 +71,7 @@ export async function payUsdtViaDirectTransfer(
     args: [payTo, parseUnits(amountUsdt, 6)]
   });
 
-  const attributionTag = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG || "onfra";
-  const data = concat([transferData, toDataSuffix(attributionTag)]);
+  const data = concat([transferData, toDataSuffix(getAttributionTag())]);
 
   let hash: Hash;
 

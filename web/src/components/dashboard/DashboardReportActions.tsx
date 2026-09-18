@@ -28,7 +28,7 @@ export function DashboardReportActions({ className, variant = "header" }: Dashbo
         >
           {!isMobile && <FileBadge2 size={13} className="hidden shrink-0 lg:block" />}
           <span>Get Full Report</span>
-          <span className="report-price-badge shrink-0 rounded bg-black/20 px-1 py-0.5 text-[9px] font-bold">0.10 USDT</span>
+          <span className="report-price-badge shrink-0 rounded bg-black/20 px-1 py-0.5 text-[9px] font-bold">0.10 USDT · onchain</span>
           {!isMobile && <Download size={13} className="hidden shrink-0 opacity-90 lg:block" />}
         </button>
         <button
