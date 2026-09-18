@@ -79,6 +79,89 @@ function extractFacilitatorTxHash(body: unknown): string | undefined {
   return undefined;
 }
 
+type PaymentPayloadRecord = Record<string, unknown>;
+
+/** Parse X-PAYMENT as JSON, base64 JSON, or legacy flat EIP-3009 fields. */
+function parsePaymentPayload(header: string): PaymentPayloadRecord | null {
+  const tryJson = (raw: string): PaymentPayloadRecord | null => {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return parsed && typeof parsed === "object" ? (parsed as PaymentPayloadRecord) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  let obj = tryJson(header);
+  if (!obj) {
+    try {
+      obj = tryJson(Buffer.from(header, "base64").toString("utf8"));
+    } catch {
+      obj = null;
+    }
+  }
+  if (!obj) return null;
+
+  // Already a PaymentPayload (v1 scheme/network or v2 accepted)
+  if ("payload" in obj && ("scheme" in obj || "accepted" in obj || "x402Version" in obj)) {
+    return obj;
+  }
+
+  // { signature, authorization }
+  if (typeof obj.signature === "string" && obj.authorization && typeof obj.authorization === "object") {
+    return {
+      x402Version: 1,
+      scheme: AUTH_SCHEME,
+      network: CHAIN,
+      payload: obj
+    };
+  }
+
+  // Legacy flat EIP-3009: from/to/value/nonce/signature
+  if (
+    typeof obj.signature === "string" &&
+    typeof obj.from === "string" &&
+    typeof obj.to === "string" &&
+    obj.value != null &&
+    typeof obj.nonce === "string"
+  ) {
+    return {
+      x402Version: 1,
+      scheme: AUTH_SCHEME,
+      network: CHAIN,
+      payload: {
+        signature: obj.signature,
+        authorization: {
+          from: obj.from,
+          to: obj.to,
+          value: String(obj.value),
+          validAfter: String(obj.validAfter ?? "0"),
+          validBefore: String(obj.validBefore ?? ""),
+          nonce: obj.nonce
+        }
+      }
+    };
+  }
+
+  return null;
+}
+
+function buildPaymentRequirements(tier: X402PriceTier, payTo: string, resource: string) {
+  const priceUsdt = TIER_AMOUNTS[tier];
+  return {
+    scheme: AUTH_SCHEME,
+    network: CHAIN,
+    maxAmountRequired: usdtToAtomic(priceUsdt),
+    resource,
+    description: `OnFRA ${tier}`,
+    mimeType: "application/json",
+    payTo,
+    maxTimeoutSeconds: 300,
+    asset: USDT_CELO_MAINNET,
+    extra: { name: "Tether USD", version: "1" }
+  };
+}
+
 function settlementOk(
   method: PaymentSettlement["method"],
   priceUsdt: string,
@@ -126,6 +209,8 @@ export function paymentRequiredResponse(tier: X402PriceTier) {
       assetSymbol: "USDT",
       payTo,
       extra: {
+        name: "Tether USD",
+        version: "1",
         paymentHeader: PAYMENT_HEADER,
         alternateHeaders: [...PAYMENT_HEADER_ALIASES],
         settlement: "celo-x402-facilitator",
@@ -249,8 +334,25 @@ export async function assertPayment(
     return settlementOk("simulated", priceUsdt, { payTo });
   }
 
+  const paymentPayload = parsePaymentPayload(paymentHeader);
+  if (!paymentPayload) {
+    console.warn(`${logPrefix} X-PAYMENT header is not a valid PaymentPayload (JSON or base64).`);
+    return { ok: false, response: paymentRequiredResponse(tier) };
+  }
+
+  const resourceUrl = (() => {
+    try {
+      return new URL(req.url).pathname;
+    } catch {
+      return "/api";
+    }
+  })();
+  const paymentRequirements = buildPaymentRequirements(tier, payTo, resourceUrl);
+  const x402Version =
+    typeof paymentPayload.x402Version === "number" ? paymentPayload.x402Version : 1;
+
   console.log(
-    `${logPrefix} Settling payment: price=${priceUsdt} USDT, payTo=${payTo.slice(0, 10)}…, mode=${settlementMode}, hasPaymentHeader=true`
+    `${logPrefix} Settling payment: price=${priceUsdt} USDT, payTo=${payTo.slice(0, 10)}…, mode=${settlementMode}, x402Version=${x402Version}`
   );
 
   const settleStarted = Date.now();
@@ -266,8 +368,9 @@ export async function assertPayment(
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        payment: paymentHeader,
-        network: "celo"
+        x402Version,
+        paymentPayload,
+        paymentRequirements
       })
     });
 
