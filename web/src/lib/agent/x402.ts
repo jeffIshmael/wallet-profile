@@ -62,21 +62,66 @@ export function getTierPriceUsdt(tier: X402PriceTier): string {
 
 export function paymentRequiredResponse(tier: X402PriceTier) {
   const priceUsdt = TIER_AMOUNTS[tier];
+  const maxAmountRequired = usdtToAtomic(priceUsdt);
+  const payTo = getX402PayToAddress() ?? null;
+
+  const accepts = [
+    {
+      scheme: AUTH_SCHEME,
+      network: CHAIN,
+      chainId: CHAIN_ID,
+      maxAmountRequired,
+      asset: USDT_CELO_MAINNET,
+      assetSymbol: "USDT",
+      payTo,
+      extra: {
+        paymentHeader: PAYMENT_HEADER,
+        alternateHeaders: [...PAYMENT_HEADER_ALIASES],
+        settlement: "celo-x402-facilitator"
+      }
+    }
+  ];
+
   return Response.json(
     {
       error: "Payment Required",
       code: "PAYMENT_REQUIRED",
+      x402Version: 1,
       scheme: AUTH_SCHEME,
-      price: usdtToAtomic(priceUsdt),
-      priceUsdt,
-      currency: USDT_CELO_MAINNET,
+      network: CHAIN,
       chain: CHAIN,
       chainId: CHAIN_ID,
+      asset: USDT_CELO_MAINNET,
+      currency: USDT_CELO_MAINNET,
+      currencySymbol: "USDT",
+      price: maxAmountRequired,
+      maxAmountRequired,
+      priceUsdt,
+      payTo,
       paymentHeader: PAYMENT_HEADER,
+      alternateHeaders: [...PAYMENT_HEADER_ALIASES],
+      accepts,
+      retry: {
+        method: "resubmit",
+        header: PAYMENT_HEADER,
+        steps: [
+          "Read accepts[0] (asset, maxAmountRequired, payTo, network).",
+          "Sign an EIP-3009 USDT authorization (or settle via a Celo x402 client) for maxAmountRequired to payTo.",
+          `Retry the same HTTP request with ${PAYMENT_HEADER} set to the payment payload.`
+        ]
+      },
+      configUrl: "/api/x402/config",
       message: `This endpoint requires ${priceUsdt} USDT via x402. Retry with ${PAYMENT_HEADER} header.`,
       freeForOwnWallet: tier === "external"
     },
-    { status: 402 }
+    {
+      status: 402,
+      headers: {
+        "Content-Type": "application/json",
+        "WWW-Authenticate": AUTH_SCHEME,
+        "Payment-Required": "true"
+      }
+    }
   );
 }
 
@@ -196,24 +241,32 @@ export async function assertPayment(
       (settlementError ? ` — ${settlementError}` : " — client must sign and retry.")
   );
 
-  const body = responseBody && typeof responseBody === "object"
-    ? { code: "PAYMENT_REQUIRED", ...responseBody }
-    : {
-        error: "Payment Required",
-        code: "PAYMENT_REQUIRED",
-        scheme: AUTH_SCHEME,
-        priceUsdt: TIER_AMOUNTS[tier],
-        currency: USDT_CELO_MAINNET,
-        chain: CHAIN,
-        chainId: CHAIN_ID,
-        paymentHeader: PAYMENT_HEADER,
-        freeForOwnWallet: tier === "external"
-      };
+  if (!responseBody || typeof responseBody !== "object") {
+    return paymentRequiredResponse(tier);
+  }
+
+  const body = {
+    error: "Payment Required",
+    code: "PAYMENT_REQUIRED",
+    scheme: AUTH_SCHEME,
+    network: CHAIN,
+    chain: CHAIN,
+    currency: USDT_CELO_MAINNET,
+    currencySymbol: "USDT",
+    priceUsdt: TIER_AMOUNTS[tier],
+    ...responseBody,
+    // Canonical settlement fields win over facilitator noise
+    payTo,
+    asset: USDT_CELO_MAINNET,
+    chainId: CHAIN_ID,
+    paymentHeader: PAYMENT_HEADER
+  };
 
   return new Response(JSON.stringify(body), {
-    status: resultStatus,
+    status: resultStatus >= 400 ? resultStatus : 402,
     headers: {
       "Content-Type": "application/json",
+      "WWW-Authenticate": AUTH_SCHEME,
       ...resultHeaders
     }
   });

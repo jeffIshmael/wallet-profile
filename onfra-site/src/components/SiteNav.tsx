@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 
 const NAV = [
   { label: "Docs", href: LINKS.docs },
+  { label: "Skills", href: LINKS.skills },
   { label: "Pricing", href: LINKS.pricing },
   { label: "Stats", href: LINKS.stats }
 ] as const;

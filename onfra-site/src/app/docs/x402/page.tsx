@@ -13,6 +13,7 @@ import type { TocItem } from "@/lib/docsNav";
 const TOC: TocItem[] = [
   { id: "overview", title: "Overview" },
   { id: "header", title: "X-PAYMENT header" },
+  { id: "payment-required", title: "HTTP 402 body" },
   { id: "pricing", title: "Pricing" },
   { id: "own-wallet", title: "Own wallet queries" }
 ];
@@ -50,6 +51,48 @@ export default function X402DocsPage() {
           routes like <code>/api/lender/screen</code> or external <code>/api/agent/analyze</code>.
         </p>
 
+        <DocsH2 id="payment-required">HTTP 402 Payment Required</DocsH2>
+        <p>
+          Unpaid calls to paid endpoints return <code>402</code> with a machine-readable body. Agents
+          should read <code>accepts[0]</code>, settle, then retry with <code>X-PAYMENT</code>.
+        </p>
+        <DocsCode>{`{
+  "error": "Payment Required",
+  "code": "PAYMENT_REQUIRED",
+  "scheme": "x402",
+  "network": "celo",
+  "chainId": 42220,
+  "asset": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+  "currencySymbol": "USDT",
+  "priceUsdt": "0.01",
+  "maxAmountRequired": "10000",
+  "payTo": "<treasury from /api/x402/config>",
+  "paymentHeader": "X-PAYMENT",
+  "accepts": [{
+    "scheme": "x402",
+    "network": "celo",
+    "chainId": 42220,
+    "maxAmountRequired": "10000",
+    "asset": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+    "payTo": "<treasury>"
+  }],
+  "retry": {
+    "method": "resubmit",
+    "header": "X-PAYMENT",
+    "steps": [
+      "Read accepts[0]",
+      "Sign EIP-3009 USDT authorization",
+      "Retry the same request with X-PAYMENT"
+    ]
+  }
+}`}</DocsCode>
+        <p>
+          Discover live <code>payTo</code> from{" "}
+          <code>GET /api/x402/config</code> or <code>GET /api/health/integrations</code> (always HTTP
+          200; use top-level <code>payTo</code> / <code>usdtSettlementAddress</code>). Full action
+          inventory: <code>GET /api/capabilities</code>.
+        </p>
+
         <DocsH2 id="pricing">Pricing</DocsH2>
         <DocsTable>
           <thead>
@@ -77,7 +120,7 @@ export default function X402DocsPage() {
             </tr>
             <tr>
               <td>Cached signal reads</td>
-              <td>0.01 USDT</td>
+              <td>Free</td>
             </tr>
             <tr>
               <td>Verify REP passport</td>

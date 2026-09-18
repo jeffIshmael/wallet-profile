@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/statementRequest.schema.json",
+  "title": "StatementRequest",
+  "description": "Request body for OnFRA verified transaction statement (PDF → IPFS).",
+  "type": "object",
+  "required": ["walletAddress"],
+  "properties": {
+    "walletAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "EVM wallet address to generate a statement for."
+    },
+    "period": {
+      "type": "string",
+      "enum": ["3M", "6M", "12M"],
+      "default": "3M",
+      "description": "Statement lookback period."
+    },
+    "force": {
+      "type": "boolean",
+      "default": false,
+      "description": "Bypass cache and re-run analysis before exporting."
+    },
+    "callerAddress": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Dashboard-only payer address."
+    }
+  },
+  "additionalProperties": false
+}

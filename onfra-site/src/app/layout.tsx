@@ -21,8 +21,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "OnFRA — Onchain Financial Reputation Agent",
   description:
-    "Financial reputation infrastructure for Celo. Lenders and agents screen wallets, verify income, and assess loan capacity via API.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001")
+    "Financial reputation infrastructure for Celo. Lenders and agents screen wallets, verify income, and assess loan capacity via API. Discover MCP at /.well-known/mcp.json and the agent card at /.well-known/agent-card.json.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://onfra.xyz"),
+  other: {
+    "agent-card": "/.well-known/agent-card.json",
+    "mcp-manifest": "/.well-known/mcp.json"
+  }
 };
 
 const themeBootScript = `

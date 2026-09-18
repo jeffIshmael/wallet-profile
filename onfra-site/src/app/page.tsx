@@ -57,6 +57,35 @@ export default function HomePage() {
                   Book a demo <ArrowUpRight className="h-4 w-4" />
                 </a>
               </div>
+
+              <nav
+                aria-label="Agent discovery"
+                className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-x-4 gap-y-2 font-mono text-[11px] text-ink-faint sm:text-xs"
+              >
+                <a href={LINKS.mcp} className="transition hover:text-nude-soft">
+                  /.well-known/mcp.json
+                </a>
+                <span aria-hidden>·</span>
+                <a href={LINKS.agentCard} className="transition hover:text-nude-soft">
+                  agent-card.json
+                </a>
+                <span aria-hidden>·</span>
+                <Link href={LINKS.skills} className="transition hover:text-nude-soft">
+                  /skills
+                </Link>
+                <span aria-hidden>·</span>
+                <a href={LINKS.capabilities} className="transition hover:text-nude-soft">
+                  /api/capabilities
+                </a>
+                <span aria-hidden>·</span>
+                <a href="/SKILL.md" className="transition hover:text-nude-soft">
+                  /SKILL.md
+                </a>
+                <span aria-hidden>·</span>
+                <a href="/llms.txt" className="transition hover:text-nude-soft">
+                  llms.txt
+                </a>
+              </nav>
             </div>
           </div>
 

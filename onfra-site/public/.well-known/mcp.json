@@ -1,25 +1,99 @@
 {
   "name": "OnFRA — Onfra Financial Intelligence Agent",
   "version": "2026-06-08",
-  "description": "MCP discovery for OnFRA (OnChain Financial Reputation Agent) on Onfra. Analyzes Celo wallet activity — transaction history, cash flow, wallet age, and asset composition — to produce financial health scores, reputation ratings, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet address or use the Onfra dashboard at https://app.onfra.xyz.",
+  "description": "MCP discovery for OnFRA on Onfra. Analyzes Celo wallet activity into financial health, reputation, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet at https://app.onfra.xyz.",
   "auth": {
     "scheme": "x402",
+    "model": "pay-per-request",
+    "apiKeyRequired": false,
     "chain": "celo",
+    "network": "celo",
     "chainId": 42220,
     "currency": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
     "currencySymbol": "USDT",
     "paymentHeader": "X-PAYMENT",
     "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
+    "configUrl": "https://app.onfra.xyz/api/x402/config",
+    "healthUrl": "https://app.onfra.xyz/api/health/integrations",
+    "capabilitiesUrl": "https://app.onfra.xyz/api/capabilities",
     "pricing": {
-      "own_wallet_query": "free",
+      "own_wallet_dashboard_query": "free",
       "external_wallet_query": "0.01 USDT",
-      "verified_financial_reputation_report": "0.10 USDT"
+      "verified_financial_reputation_report": "0.10 USDT",
+      "cached_signal_read": "free",
+      "verify_report": "free"
+    },
+    "paymentRequired": {
+      "httpStatus": 402,
+      "code": "PAYMENT_REQUIRED",
+      "bodyFields": [
+        "payTo",
+        "asset",
+        "priceUsdt",
+        "maxAmountRequired",
+        "network",
+        "chainId",
+        "paymentHeader",
+        "accepts",
+        "retry"
+      ],
+      "example": {
+        "error": "Payment Required",
+        "code": "PAYMENT_REQUIRED",
+        "scheme": "x402",
+        "network": "celo",
+        "chainId": 42220,
+        "asset": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+        "currencySymbol": "USDT",
+        "priceUsdt": "0.01",
+        "maxAmountRequired": "10000",
+        "payTo": "<from /api/x402/config>",
+        "paymentHeader": "X-PAYMENT",
+        "accepts": [
+          {
+            "scheme": "x402",
+            "network": "celo",
+            "chainId": 42220,
+            "maxAmountRequired": "10000",
+            "asset": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+            "payTo": "<treasury>"
+          }
+        ],
+        "retry": {
+          "method": "resubmit",
+          "header": "X-PAYMENT",
+          "steps": [
+            "Read accepts[0] (asset, maxAmountRequired, payTo, network).",
+            "Sign EIP-3009 USDT authorization for maxAmountRequired to payTo.",
+            "Retry the same HTTP request with X-PAYMENT set to the payment payload."
+          ]
+        }
+      }
     }
   },
+  "signals": {
+    "ids": [
+      "monthly-income",
+      "financial-health",
+      "reputation-score",
+      "loan-capacity",
+      "statement",
+      "assessment"
+    ],
+    "listPath": "/api/wallet/{address}/signals",
+    "readPath": "/api/wallet/{address}/signals/{signal}",
+    "pricing": "free from cache after analyze"
+  },
+  "onChainActions": [
+    "USDT x402 settlement to payTo on Celo",
+    "OnchainReporter.publishFinancialReport for REP passports",
+    "OnchainReporter.verifyReport / GET /api/agent/verify/{id}",
+    "ERC-8004 agent #9219 identity"
+  ],
   "tools": [
     {
       "name": "analyze_wallet",
-      "description": "Analyze any Celo wallet address. Returns Financial Health Score, Wallet Reputation Score, Income Stability classification, Portfolio Risk Exposure, loan capacity, and AI financial summary. Reading the cache via GET is free; forcing a fresh analysis costs 0.01 USDT via x402. Does NOT return transaction statements.",
+      "description": "Analyze any Celo wallet. Returns health, reputation, income, loan capacity, and AI summary. Agent/API calls cost 0.01 USDT via x402; unpaid calls return HTTP 402 with accepts[].",
       "inputSchema": {
         "type": "object",
         "required": ["walletAddress"],
@@ -61,7 +135,11 @@
             "default": false
           }
         }
-      }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/walletAnalysisRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/walletAnalysisResult.schema.json",
+      "priceUsdt": "0.01",
+      "route": { "method": "POST", "path": "/api/agent/analyze" }
     },
     {
       "name": "get_wallet_signal",
@@ -86,11 +164,14 @@
             ]
           }
         }
-      }
+      },
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/walletSignalResult.schema.json",
+      "priceUsdt": "0",
+      "route": { "method": "GET", "path": "/api/wallet/{address}/signals/{signal}" }
     },
     {
       "name": "chat_query",
-      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. External queries cost 0.01 USDT via x402 when enforcement is enabled.",
+      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Costs 0.01 USDT via x402 when enforcement is enabled.",
       "inputSchema": {
         "type": "object",
         "required": ["message"],
@@ -115,11 +196,14 @@
             }
           }
         }
-      }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/chatRequest.schema.json",
+      "priceUsdt": "0.01",
+      "route": { "method": "POST", "path": "/api/agent/chat" }
     },
     {
       "name": "screen_wallet",
-      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness (trust.isTrustworthy), wallet reputation, average monthly income estimate, and loan capacity range (with confidence). Own wallet is free; external queries cost 0.01 USDT via x402.",
+      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness, reputation, income estimate, and loan capacity. Costs 0.01 USDT via x402.",
       "inputSchema": {
         "type": "object",
         "required": ["walletAddress"],
@@ -134,11 +218,42 @@
             "default": false
           }
         }
-      }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/lenderScreenRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/lenderScreenResult.schema.json",
+      "priceUsdt": "0.01",
+      "route": { "method": "POST", "path": "/api/lender/screen" }
+    },
+    {
+      "name": "generate_statement",
+      "description": "Generate a transaction statement PDF, pin to IPFS. period must be 3M, 6M, or 12M. Costs 0.01 USDT via x402.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["walletAddress"],
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "period": {
+            "type": "string",
+            "enum": ["3M", "6M", "12M"],
+            "default": "3M",
+            "description": "Statement lookback period."
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/statementRequest.schema.json",
+      "priceUsdt": "0.01",
+      "route": { "method": "POST", "path": "/api/agent/statement" }
     },
     {
       "name": "generate_report",
-      "description": "Purchase a Verified Financial Reputation Report with transaction statements, scores, AI summary, and verification code. Costs 0.10 USDT via x402.",
+      "description": "Purchase a Verified Financial Reputation Report with scores, AI summary, verification code, and onchain OnchainReporter attestation. Costs 0.10 USDT via x402.",
       "inputSchema": {
         "type": "object",
         "required": ["walletAddress"],
@@ -155,11 +270,16 @@
             "description": "Statement period: 3, 6, or 12 months."
           }
         }
-      }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/reportRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/reportResult.schema.json",
+      "priceUsdt": "0.10",
+      "route": { "method": "POST", "path": "/api/agent/report" },
+      "onChain": true
     },
     {
       "name": "verify_report",
-      "description": "Confirm a Verified Financial Reputation Report verification code (WP-...) or report ID (REP-...) was issued by OnFRA on Onfra.",
+      "description": "Confirm a Verified Financial Reputation Report verification code (WP-...) or report ID (REP-...) was issued by OnFRA and attested onchain (free).",
       "inputSchema": {
         "type": "object",
         "required": ["reportId"],
@@ -169,7 +289,10 @@
             "description": "Report ID (REP-...) or verification code (WP-...)."
           }
         }
-      }
+      },
+      "priceUsdt": "0",
+      "route": { "method": "GET", "path": "/api/agent/verify/{reportId}" },
+      "onChain": true
     }
   ],
   "prompts": [
@@ -181,6 +304,10 @@
     { "name": "verified_report", "description": "Generate a Verified Financial Reputation Report for lending." }
   ],
   "resources": [
+    {
+      "uri": "https://app.onfra.xyz/api/capabilities",
+      "name": "Capabilities (actions, pricing, on-chain)"
+    },
     {
       "uri": "https://app.onfra.xyz/schemas/lenderScreenRequest.schema.json",
       "name": "Lender Screen Request Schema"
@@ -206,6 +333,10 @@
       "name": "Chat Request Schema"
     },
     {
+      "uri": "https://app.onfra.xyz/schemas/statementRequest.schema.json",
+      "name": "Statement Request Schema"
+    },
+    {
       "uri": "https://app.onfra.xyz/schemas/reportRequest.schema.json",
       "name": "Report Request Schema"
     },
@@ -224,6 +355,14 @@
       }
     },
     {
+      "prompt": "Read loan capacity from cache",
+      "tool": "get_wallet_signal",
+      "input": {
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "signal": "loan-capacity"
+      }
+    },
+    {
       "prompt": "Can this freelancer wallet prove stable income?",
       "tool": "chat_query",
       "input": {
@@ -239,6 +378,14 @@
       }
     },
     {
+      "prompt": "Generate a 6-month statement",
+      "tool": "generate_statement",
+      "input": {
+        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "period": "6M"
+      }
+    },
+    {
       "prompt": "Purchase a Verified Financial Reputation Report for a loan application",
       "tool": "generate_report",
       "input": {
@@ -248,12 +395,13 @@
     }
   ],
   "integration": {
-    "note": "OnFRA lender infrastructure: https://app.onfra.xyz/developers · Lender screen: 0.01 USDT · Full analyze: 0.01 USDT · Verified report: 0.10 USDT · REST: screen_wallet → POST /api/lender/screen · analyze_wallet → POST /api/agent/analyze · get_wallet_signal → GET /api/wallet/{address}/signals/{signal} · chat_query → POST /api/agent/chat · generate_report → POST /api/agent/report · verify_report → GET /api/agent/verify/{reportId}",
+    "note": "OnFRA lender infrastructure: https://app.onfra.xyz/developers · Capabilities: GET /api/capabilities · Health (payTo): GET /api/health/integrations · Docs: https://onfra.xyz/docs · Skill: npx skills add jeffIshmael/onfra-skill",
     "routes": {
       "screen_wallet": { "method": "POST", "path": "/api/lender/screen" },
       "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },
       "get_wallet_signal": { "method": "GET", "path": "/api/wallet/{address}/signals/{signal}" },
       "chat_query": { "method": "POST", "path": "/api/agent/chat" },
+      "generate_statement": { "method": "POST", "path": "/api/agent/statement" },
       "generate_report": { "method": "POST", "path": "/api/agent/report" },
       "verify_report": { "method": "GET", "path": "/api/agent/verify/{reportId}" }
     }

@@ -5,6 +5,7 @@ import {
   isX402Configured,
   isX402Enforced
 } from "@/lib/agent/env";
+import { USDT_CELO_MAINNET, CHAIN, CHAIN_ID, PRICING } from "@/lib/blockchain/constants";
 
 export type IntegrationStatus = {
   configured: boolean;
@@ -28,11 +29,10 @@ export async function checkOpenAIIntegration(): Promise<IntegrationStatus> {
   }
 
   try {
-    const res = await fetch(
-      `https://api.openai.com/v1/models`, {
-        headers: { Authorization: `Bearer ${apiKey}` }
-      }
-    );
+    const res = await fetch(`https://api.openai.com/v1/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(8_000)
+    });
     if (!res.ok) {
       const message = await res.text();
       return { configured: true, ok: false, error: parseOpenAIApiError(message) };
@@ -70,12 +70,13 @@ export async function checkX402Integration(): Promise<
       method: "POST",
       headers: {
         "X-API-Key": apiKey,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         payment: "",
         network: "celo"
-      })
+      }),
+      signal: AbortSignal.timeout(8_000)
     });
 
     if (res.status === 401 || res.status === 403) {
@@ -111,14 +112,44 @@ export async function getIntegrationsSummary() {
     checkX402Integration()
   ]);
 
+  const payTo = x402Status.payTo ?? getX402PayToAddress() ?? null;
+  const agentReady = Boolean(payTo) && isX402Configured();
+
   return {
+    ok: agentReady,
+    agentReady,
+    status: agentReady ? "ok" : "degraded",
+    payTo,
+    usdtSettlementAddress: payTo,
+    settlementToken: USDT_CELO_MAINNET,
+    settlementTokenSymbol: "USDT",
+    chain: CHAIN,
+    chainId: CHAIN_ID,
+    pricing: {
+      externalWalletQueryUsdt: PRICING.externalWalletQueryUsdt,
+      verifiedReportUsdt: PRICING.verifiedReportUsdt
+    },
     openai,
-    x402Status,
+    x402Status: {
+      ...x402Status,
+      payTo: payTo ?? undefined
+    },
     x402: {
       enforce: isX402Enforced(),
       configured: isX402Configured(),
-      settlementMode: getX402SettlementMode()
+      settlementMode: getX402SettlementMode(),
+      payTo,
+      asset: USDT_CELO_MAINNET,
+      network: CHAIN,
+      chainId: CHAIN_ID,
+      paymentHeader: "X-PAYMENT",
+      configUrl: "/api/x402/config"
+    },
+    discovery: {
+      mcp: "/.well-known/mcp.json",
+      agentCard: "/.well-known/agent-card.json",
+      capabilities: "/api/capabilities",
+      skill: "https://github.com/jeffIshmael/onfra-skill"
     }
   };
 }
-

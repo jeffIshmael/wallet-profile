@@ -27,8 +27,9 @@ export default function SignalsDocsPage() {
         <DocsAssistantDropdown />
       </div>
       <p className="docs-lead">
-        After a wallet is analyzed, you can read individual reputation fields from the cache. Every API query, 
-        including fetching cached signals, requires an x402 payment of 0.01 USDT.
+        After a wallet is analyzed, you can read individual reputation fields from the cache for{" "}
+        <strong>free</strong>. Fresh analysis via <code>POST /api/agent/analyze</code> requires x402
+        (0.01 USDT) for agent/API callers.
       </p>
 
       <div className="docs-prose">
@@ -38,8 +39,8 @@ export default function SignalsDocsPage() {
           Subsequent GET requests return cached slices until the TTL expires. Missing cache returns{" "}
           <code>404</code> with a hint to call <code>analyze</code> first.
         </p>
-        <DocsCode>{`curl -H "X-PAYMENT: <x402-signature>" ${API_URL}/api/wallet/0xYourWallet.../signals`}</DocsCode>
-        <p>Lists available signal IDs and whether valid cache exists for the wallet. Costs 0.01 USDT.</p>
+        <DocsCode>{`curl ${API_URL}/api/wallet/0xYourWallet.../signals`}</DocsCode>
+        <p>Lists available signal IDs and whether valid cache exists for the wallet (free).</p>
 
         <DocsH2 id="signal-ids">Signal IDs</DocsH2>
         <DocsTable>

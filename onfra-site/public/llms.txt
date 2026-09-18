@@ -1,0 +1,37 @@
+# OnFRA — Onchain Financial Reputation Agent
+
+> Financial reputation infrastructure for Celo wallets. ERC-8004 agent #9219.
+
+## Primary surfaces
+
+- App / API: https://app.onfra.xyz
+- Docs: https://onfra.xyz/docs
+- Skills install: `npx skills add jeffIshmael/onfra-skill`
+- Skill repo: https://github.com/jeffIshmael/onfra-skill
+
+## Machine-readable discovery (no login)
+
+- MCP tools: https://app.onfra.xyz/.well-known/mcp.json (also mirrored at /.well-known/mcp.json on this site)
+- A2A agent card: https://app.onfra.xyz/.well-known/agent-card.json
+- Capabilities (actions, pricing, on-chain): https://app.onfra.xyz/api/capabilities
+- Health + USDT payTo: https://app.onfra.xyz/api/health/integrations
+- x402 config: https://app.onfra.xyz/api/x402/config
+- ERC-8004: https://8004scan.io/agents/celo/9219
+
+## Auth
+
+- No API keys. Paid routes use x402 (USDT on Celo). Unpaid paid calls return HTTP 402 with `payTo`, `asset`, `maxAmountRequired`, and `accepts[]`.
+- Retry with header `X-PAYMENT`.
+
+## Signal IDs (free cache reads)
+
+`monthly-income` | `financial-health` | `reputation-score` | `loan-capacity` | `statement` | `assessment`
+
+GET /api/wallet/{address}/signals/{signal}
+
+## On-chain actions
+
+1. USDT x402 settlement to treasury (payTo)
+2. OnchainReporter.publishFinancialReport — REP passport attestation (0xE7621aF5dE3806ba26115bdC89190c65ed835C21)
+3. OnchainReporter.verifyReport / GET /api/agent/verify/{id} (free)
+4. ERC-8004 identity #9219

@@ -15,7 +15,8 @@ OnFRA exposes financial-reputation infrastructure through REST API routes and ER
 | `POST` | `/api/agent/chat` | Conversational wallet queries | Own wallet: free · External: 0.01 USDT |
 | `POST` | `/api/agent/report` | Verified report + onchain attestation | 0.10 USDT |
 | `GET` | `/api/agent/verify/{reportId}` | Verify report by `REP-{id}` or hash | Free |
-| `GET` | `/api/health/integrations` | Integration health check | Free |
+| `GET` | `/api/health/integrations` | Integration health + USDT `payTo` (always HTTP 200) | Free |
+| `GET` | `/api/capabilities` | Actions, pricing, on-chain contracts, signal ids | Free |
 | `GET` | `/api/stats` | Platform usage metrics | Free |
 | `GET` | `/api/wallet/{address}/analysis` | Cached full `walletData` lookup | Free |
 | `GET` | `/api/wallet/{address}/signals` | List available signal ids + cache status | Free |
@@ -33,6 +34,7 @@ Request and response schemas are the single source of truth in `web/public/schem
 | Wallet analysis result | `/schemas/walletAnalysisResult.schema.json` |
 | Wallet signal result | `/schemas/walletSignalResult.schema.json` |
 | Chat request | `/schemas/chatRequest.schema.json` |
+| Statement request | `/schemas/statementRequest.schema.json` |
 | Report request | `/schemas/reportRequest.schema.json` |
 | Report result | `/schemas/reportResult.schema.json` |
 

@@ -149,9 +149,17 @@ export default function RestApiDocsPage() {
           IPFS CID, and onchain attestation status.
         </p>
 
-        <DocsH2 id="health">Health &amp; stats</DocsH2>
+        <DocsH2 id="health">Health, capabilities &amp; stats</DocsH2>
         <DocsCode>{`curl ${API_URL}/api/health/integrations
+# always HTTP 200 — use top-level payTo / usdtSettlementAddress
+curl ${API_URL}/api/capabilities
+curl ${API_URL}/api/x402/config
 curl ${API_URL}/api/stats`}</DocsCode>
+        <p>
+          <code>/api/health/integrations</code> returns settlement address and discovery links even when
+          optional probes (e.g. OpenAI) are degraded. Use <code>agentReady</code> / top-level{" "}
+          <code>ok</code> for readiness.
+        </p>
 
         <div className="docs-next-links">
           <Link href="/docs/lenders" className="docs-next-card">

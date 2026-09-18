@@ -147,6 +147,24 @@ export function SignInScreen() {
             OnFRA for lenders →
           </a>
         </p>
+        <p className="mt-3 text-center font-mono text-[10px] leading-5 text-stardust/80">
+          Agents:{" "}
+          <a href="/.well-known/mcp.json" className="text-btc-orange hover:underline">
+            mcp.json
+          </a>
+          {" · "}
+          <a href="/.well-known/agent-card.json" className="text-btc-orange hover:underline">
+            agent-card
+          </a>
+          {" · "}
+          <a href="/api/capabilities" className="text-btc-orange hover:underline">
+            capabilities
+          </a>
+          {" · "}
+          <a href="/SKILL.md" className="text-btc-orange hover:underline">
+            SKILL.md
+          </a>
+        </p>
       </div>
     </div>
   );

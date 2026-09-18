@@ -1,0 +1,23 @@
+# OnFRA — Onchain Financial Reputation Agent
+
+> Financial reputation for Celo wallets. ERC-8004 agent #9219.
+
+## Discovery
+
+- MCP: /.well-known/mcp.json
+- Agent card: /.well-known/agent-card.json
+- Capabilities: /api/capabilities
+- Health (payTo): /api/health/integrations
+- x402 config: /api/x402/config
+- Docs: https://onfra.xyz/docs
+- Skill: npx skills add jeffIshmael/onfra-skill
+
+## Auth
+
+No API keys. Paid endpoints return HTTP 402 with machine-readable `accepts[]` (payTo, asset, maxAmountRequired). Retry with `X-PAYMENT`.
+
+## On-chain
+
+- USDT x402 settlement
+- OnchainReporter REP attest/verify at 0xE7621aF5dE3806ba26115bdC89190c65ed835C21
+- ERC-8004 #9219

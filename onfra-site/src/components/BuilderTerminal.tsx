@@ -61,17 +61,32 @@ export function BuilderTerminal() {
               </span>
             </div>
           </div>
+
+          <div className="terminal-step mt-4">
+            <p className="terminal-comment"># Machine-readable discovery (no login)</p>
+            <p className="terminal-command break-all text-ink-muted">{LINKS.mcp}</p>
+            <p className="terminal-command break-all text-ink-muted">{LINKS.agentCard}</p>
+            <p className="terminal-command break-all text-ink-muted">{LINKS.capabilities}</p>
+          </div>
         </div>
       </div>
 
-      <a
-        href={LINKS.apiDocs}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="terminal-docs-link"
-      >
-        VIEW FULL DOCS →
-      </a>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
+        <a href={LINKS.mcp} className="terminal-docs-link">
+          MCP MANIFEST →
+        </a>
+        <a href={LINKS.agentCard} className="terminal-docs-link">
+          AGENT CARD →
+        </a>
+        <a
+          href={LINKS.apiDocs}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="terminal-docs-link"
+        >
+          VIEW FULL DOCS →
+        </a>
+      </div>
     </div>
   );
 }

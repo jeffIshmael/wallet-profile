@@ -1,6 +1,6 @@
 {
   "name": "OnFRA — Onfra Financial Intelligence Agent",
-  "description": "OnFRA (OnChain Financial Reputation Agent) is an AI-powered financial intelligence agent that analyzes blockchain wallet activity to generate financial reputation insights, income stability assessments, portfolio risk analysis, and estimated loan capacity. It evaluates transaction history, cash flow patterns, wallet age, asset composition, and financial behavior to produce Financial Health Scores, Wallet Reputation Scores, Income Stability classifications, Portfolio Risk Exposure analysis, AI financial summaries, and borrowing capacity recommendations. Solves proof-of-income for freelancers, remote workers, creators, DAO contributors, and crypto-native users. Available on Onfra (https://app.onfra.xyz). Celo-first; additional EVM chains planned.",
+  "description": "OnFRA (OnChain Financial Reputation Agent) analyzes Celo wallet activity into financial reputation signals (health, income, reputation, loan capacity), settles paid agent calls in USDT via x402, and can attest verified REP passports onchain. Available at https://app.onfra.xyz. ERC-8004 agent #9219.",
   "url": "https://app.onfra.xyz",
   "version": "1.0.0",
   "protocolVersion": "0.3.0",
@@ -27,7 +27,9 @@
       "currencySymbol": "USDT",
       "paymentHeader": "X-PAYMENT",
       "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
-      "enforcement": "Reading cached analysis is free. Fresh external wallet queries and statement generations cost 0.01 USDT. Verified reports cost 0.10 USDT via x402 on Celo."
+      "configUrl": "https://app.onfra.xyz/api/x402/config",
+      "healthUrl": "https://app.onfra.xyz/api/health/integrations",
+      "enforcement": "Agent/API callers pay via x402. Cached signal GETs and REP verify are free. External analyze/chat/statement: 0.01 USDT. Verified REP report: 0.10 USDT. Unpaid paid endpoints return HTTP 402 with machine-readable accepts[]."
     }
   },
   "payments": {
@@ -38,27 +40,106 @@
       "chainId": 42220,
       "tokenAddress": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
       "pricing": {
-        "own_wallet_query": "free",
+        "own_wallet_dashboard_query": "free",
         "external_wallet_query": "0.01 USDT",
         "verified_financial_reputation_report": "0.10 USDT",
+        "cached_signal_read": "free",
+        "verify_report": "free",
         "minimum": "0.01 USDT"
       },
-      "freeEndpoints": ["/api/agent/verify", "/api/agent/chat?ownWallet=true"]
+      "freeEndpoints": [
+        "/api/agent/verify/{reportId}",
+        "/api/wallet/{address}/signals",
+        "/api/wallet/{address}/signals/{signal}",
+        "/api/wallet/{address}/analysis",
+        "/api/health/integrations",
+        "/api/capabilities",
+        "/api/x402/config"
+      ],
+      "paymentRequiredBody": {
+        "status": 402,
+        "code": "PAYMENT_REQUIRED",
+        "fields": [
+          "payTo",
+          "asset",
+          "priceUsdt",
+          "maxAmountRequired",
+          "network",
+          "chainId",
+          "paymentHeader",
+          "accepts"
+        ],
+        "retry": "Sign EIP-3009 USDT auth for accepts[0].maxAmountRequired to accepts[0].payTo, then resubmit with X-PAYMENT"
+      }
     }
   },
+  "onChainActions": [
+    {
+      "id": "usdt_x402_settlement",
+      "name": "USDT x402 settlement",
+      "description": "Paid API/agent calls settle USDT on Celo mainnet to the OnFRA treasury (payTo from /api/x402/config or /api/health/integrations).",
+      "chainId": 42220,
+      "token": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+      "tokenSymbol": "USDT",
+      "executesOnChain": true,
+      "endpoints": ["/api/agent/analyze", "/api/agent/chat", "/api/agent/statement", "/api/agent/report", "/api/lender/screen"]
+    },
+    {
+      "id": "rep_passport_attestation",
+      "name": "REP passport attestation",
+      "description": "After a paid verified report, OnFRA publishes the report hash onchain via OnchainReporter.publishFinancialReport so lenders can verify without trusting the API alone.",
+      "chainId": 42220,
+      "contract": "0xE7621aF5dE3806ba26115bdC89190c65ed835C21",
+      "method": "publishFinancialReport",
+      "executesOnChain": true,
+      "trigger": "POST /api/agent/report (0.10 USDT)",
+      "explorer": "https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21"
+    },
+    {
+      "id": "rep_passport_verify",
+      "name": "REP passport verify",
+      "description": "Anyone can verify a REP-{id} / WP-{id} against the onchain registry (free). Reads OnchainReporter.verifyReport.",
+      "chainId": 42220,
+      "contract": "0xE7621aF5dE3806ba26115bdC89190c65ed835C21",
+      "method": "verifyReport",
+      "executesOnChain": true,
+      "endpoint": "GET /api/agent/verify/{reportId}",
+      "price": "free"
+    },
+    {
+      "id": "erc8004_identity",
+      "name": "ERC-8004 agent identity",
+      "description": "OnFRA is registered as ERC-8004 agent #9219 on Celo mainnet Identity Registry.",
+      "chainId": 42220,
+      "agentId": 9219,
+      "identityRegistry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+      "reputationRegistry": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+      "scan": "https://8004scan.io/agents/celo/9219",
+      "executesOnChain": false,
+      "note": "Identity/reputation registries are onchain; analysis itself reads public Celo wallet history (off-API compute)."
+    }
+  ],
   "tee": {
     "provider": "vercel",
     "attestation": "self-declared",
     "note": "Agent runs on Vercel serverless at app.onfra.xyz."
   },
+  "discovery": {
+    "mcp": "https://app.onfra.xyz/.well-known/mcp.json",
+    "capabilities": "https://app.onfra.xyz/api/capabilities",
+    "health": "https://app.onfra.xyz/api/health/integrations",
+    "skill": "https://github.com/jeffIshmael/onfra-skill",
+    "docs": "https://onfra.xyz/docs"
+  },
   "skills": [
     {
       "id": "wallet_financial_analysis",
       "name": "Wallet Financial Analysis",
-      "description": "Analyzes transaction history, cash flow, wallet age, and asset composition to produce Financial Health Scores and 3-month cash flow statements.",
+      "description": "Analyzes transaction history, cash flow, wallet age, and asset composition to produce Financial Health Scores and cash-flow statements.",
       "tags": ["celo", "defi", "credit", "underwriting", "proof-of-income"],
       "inputTypes": ["wallet_address"],
-      "outputTypes": ["financial_health_score", "cash_flow_statement"]
+      "outputTypes": ["financial_health_score", "cash_flow_statement"],
+      "endpoint": "POST /api/agent/analyze"
     },
     {
       "id": "reputation_scoring",
@@ -66,7 +147,8 @@
       "description": "Evaluates wallet maturity, transaction consistency, protocol trust, and long-term financial reliability.",
       "tags": ["reputation", "trust", "erc-8004"],
       "inputTypes": ["wallet_address"],
-      "outputTypes": ["reputation_score", "trust_category"]
+      "outputTypes": ["reputation_score", "trust_category"],
+      "endpoint": "GET /api/wallet/{address}/signals/reputation-score"
     },
     {
       "id": "income_stability",
@@ -74,7 +156,8 @@
       "description": "Detects recurring income streams and classifies income stability over time.",
       "tags": ["income", "freelancer", "remote-work"],
       "inputTypes": ["wallet_address"],
-      "outputTypes": ["income_stability_label", "monthly_income_estimate"]
+      "outputTypes": ["income_stability_label", "monthly_income_estimate"],
+      "endpoint": "GET /api/wallet/{address}/signals/monthly-income"
     },
     {
       "id": "portfolio_risk",
@@ -90,15 +173,18 @@
       "description": "Estimates responsible borrowing range from income stability, reputation, and risk signals.",
       "tags": ["lending", "microfinance", "credit"],
       "inputTypes": ["wallet_address"],
-      "outputTypes": ["loan_range", "confidence_level"]
+      "outputTypes": ["loan_range", "confidence_level"],
+      "endpoint": "GET /api/wallet/{address}/signals/loan-capacity"
     },
     {
       "id": "verified_reputation_report",
       "name": "Verified Financial Reputation Report",
-      "description": "Premium lender-ready attestation with verification code, report hash, and transaction statements.",
-      "tags": ["attestation", "verification", "reports"],
+      "description": "Premium lender-ready attestation with verification code, report hash published onchain via OnchainReporter, and IPFS pin.",
+      "tags": ["attestation", "verification", "reports", "onchain"],
       "inputTypes": ["wallet_address", "report_period"],
-      "outputTypes": ["report_id", "verification_code", "report_hash"]
+      "outputTypes": ["report_id", "verification_code", "report_hash", "onchain_tx"],
+      "endpoint": "POST /api/agent/report",
+      "onChain": true
     }
   ]
 }

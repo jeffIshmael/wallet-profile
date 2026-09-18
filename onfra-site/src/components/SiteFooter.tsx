@@ -36,6 +36,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/SKILL.md" className="transition hover:text-nude-soft">
+                SKILL.md
+              </Link>
+            </li>
+            <li>
               <Link href={LINKS.skills} className="transition hover:text-nude-soft">
                 Skills
               </Link>
@@ -57,8 +62,18 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a href={LINKS.mcp} target="_blank" rel="noopener noreferrer" className="transition hover:text-nude-soft">
+              <a href={LINKS.mcp} className="transition hover:text-nude-soft">
                 MCP manifest
+              </a>
+            </li>
+            <li>
+              <a href={LINKS.agentCard} className="transition hover:text-nude-soft">
+                Agent card
+              </a>
+            </li>
+            <li>
+              <a href={LINKS.capabilities} className="transition hover:text-nude-soft">
+                Capabilities
               </a>
             </li>
             <li>
