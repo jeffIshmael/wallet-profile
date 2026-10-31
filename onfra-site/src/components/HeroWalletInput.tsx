@@ -1,26 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, Check, Search } from "lucide-react";
 import { LINKS } from "@/lib/links";
+import { isEvmAddress } from "@/lib/walletAddress";
 
 export function HeroWalletInput() {
   const [address, setAddress] = useState("");
-  const [error, setError] = useState("");
+  const isValid = isEvmAddress(address);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = address.trim();
-    if (!clean) {
-      window.open(LINKS.app, "_blank");
-      return;
-    }
-    if (!/^0x[a-fA-F0-9]{40}$/.test(clean)) {
-      setError("Please enter a valid Celo wallet address (0x...)");
-      return;
-    }
-    setError("");
-    window.open(`${LINKS.app}?address=${clean}`, "_blank");
+    if (!isValid) return;
+    window.open(`${LINKS.app}?address=${address.trim()}`, "_blank");
   };
 
   return (
@@ -35,22 +27,29 @@ export function HeroWalletInput() {
         <input
           type="text"
           value={address}
-          onChange={(e) => {
-            setAddress(e.target.value);
-            if (error) setError("");
-          }}
+          onChange={(e) => setAddress(e.target.value)}
           placeholder="Enter any public Celo address (0x...)"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           className="w-full bg-transparent px-3 py-2 text-xs font-mono text-[#111017] placeholder:text-[#8f889e] focus:outline-none sm:text-sm"
         />
         <button
           type="submit"
-          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[#111017] px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#2a2733] active:scale-[0.98] sm:text-sm"
+          disabled={!isValid}
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[#111017] px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#2a2733] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#111017] disabled:active:scale-100 sm:text-sm"
         >
           <span>Analyse wallet</span>
           <ArrowRight className="h-4 w-4 stroke-[2.5]" />
         </button>
       </form>
-      {error && <p className="mt-2 text-center text-xs font-semibold text-rose-700">{error}</p>}
+      {isValid && (
+        <p role="status" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-700">
+          <Check className="h-3.5 w-3.5 stroke-[3]" />
+          Verified address
+        </p>
+      )}
       <p className="mt-3 text-center text-xs text-[#4a4655]">
         Start with any public address. No signups or wallet connection needed to explore.
       </p>

@@ -482,7 +482,7 @@ export default function HomePage() {
                 />
                 <span className="text-sm font-bold text-[#111017]">Celo Mainnet</span>
                 <p className="font-mono text-[11px] text-[#6f6b7a]">
-                  Supports CELO, USDT, USDC, and cUSD transactions
+                  Supports CELO, USDT, USDC, and USDm transactions
                 </p>
               </div>
 
