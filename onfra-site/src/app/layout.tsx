@@ -1,16 +1,8 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { DEFAULT_THEME_ID, THEME_BOOT_MAP } from "@/lib/nudeThemes";
 import "./globals.css";
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
-  display: "swap"
-});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,10 +11,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OnFRA — Onchain Financial Reputation Agent",
+  title: "OnFRA — Crypto Income Insights, Wallet Statements & Financial Reports",
   description:
-    "Financial reputation infrastructure for Celo. Lenders and agents screen wallets, verify income, and assess loan capacity via API. Discover MCP at /.well-known/mcp.json and the agent card at /.well-known/agent-card.json.",
+    "Understand your crypto income and wallet activity. OnFRA turns supported onchain transactions into clear statements, financial reports and financial insights.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://onfra.xyz"),
+  openGraph: {
+    title: "Make your crypto income count.",
+    description:
+      "Turn wallet activity into transaction statements, income insights and financial reports you can understand and share.",
+    siteName: "OnFRA",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Make your crypto income count.",
+    description:
+      "Turn wallet activity into transaction statements, income insights and financial reports you can understand and share.",
+  },
   other: {
     "agent-card": "/.well-known/agent-card.json",
     "mcp-manifest": "/.well-known/mcp.json"
@@ -31,14 +35,14 @@ export const metadata: Metadata = {
 
 const themeBootScript = `
 (function(){
-  var t = ${JSON.stringify(THEME_BOOT_MAP[DEFAULT_THEME_ID])};
   var r = document.documentElement;
-  r.setAttribute("data-theme", ${JSON.stringify(DEFAULT_THEME_ID)});
-  r.style.setProperty("--color-nude", t.nude);
-  r.style.setProperty("--color-nude-soft", t.soft);
-  r.style.setProperty("--color-nude-dark", t.dark);
-  r.style.setProperty("--color-nude-muted", t.muted);
-  r.style.setProperty("--accent-glow", t.glow);
+  r.setAttribute("data-theme", "light");
+  r.classList.remove("dark");
+  r.classList.add("light");
+  r.style.setProperty("--color-purple", "#7c3aed");
+  r.style.setProperty("--color-purple-dark", "#6d28d9");
+  r.style.setProperty("--color-purple-soft", "#ede9fe");
+  r.style.setProperty("--accent-glow", "124, 58, 237");
 })();
 `;
 
@@ -46,14 +50,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${jetbrainsMono.variable} ${inter.variable}`}
+      className={`${inter.variable} font-sans`}
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
-      <body className="font-sans antialiased">
-        <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <body className="font-sans antialiased bg-white text-slate-900 selection:bg-purple-100 selection:text-purple-900">
+        <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <ThemeProvider>{children}</ThemeProvider>
         </NextThemesProvider>
       </body>

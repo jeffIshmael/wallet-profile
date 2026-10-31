@@ -1,53 +1,45 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { LINKS } from "@/lib/links";
 import { cn } from "@/lib/cn";
 
 const NAV = [
-  { label: "Docs", href: LINKS.docs },
-  { label: "Skills", href: LINKS.skills },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Features", href: "/#features" },
+  { label: "Networks", href: "/#networks" },
   { label: "Pricing", href: LINKS.pricing },
-  { label: "Stats", href: LINKS.stats }
+  { label: "Developers", href: LINKS.docs }
 ] as const;
 
-export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "dark" | "light" }) {
-  const light = tone === "light";
+export function SiteNav({ active }: { active?: string }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed inset-x-0 top-6 z-50 flex justify-center px-4">
-      <div
-        className={cn(
-          "mt-[var(--nav-top)] flex w-full max-w-4xl items-center justify-between gap-4 rounded-full px-4 py-2.5 sm:px-5",
-          light ? "nav-pill-light" : "nav-pill"
-        )}
-      >
+    <header className="fixed inset-x-0 top-5 z-50 flex justify-center px-4">
+      <div className="flex w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-white/60 bg-[#dad4e8]/75 px-4 py-2.5 shadow-lg shadow-[#564870]/15 backdrop-blur-2xl sm:px-6">
+        {/* Brand Logo & Name */}
         <Link
           href="/"
-          className={cn(
-            "flex items-center gap-2 text-sm font-medium",
-            light ? "text-on-nude" : "text-ink"
-          )}
+          className="flex items-center gap-2.5 text-sm font-bold tracking-tight text-[#111017] transition hover:opacity-90"
         >
-          <img src="/logo_dark.png" alt="OnFRA" className="h-10 w-10 rounded-full " />
-          <span className="ml-1">OnFRA</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-white to-[#b7aedb] p-0.5 text-white shadow-md">
+            <img src="/logo_dark.png" alt="OnFRA" className="h-full w-full rounded-full object-cover" />
+          </div>
+          <span className="text-base font-extrabold tracking-tight text-[#111017]">OnFRA</span>
         </Link>
 
-        <nav
-          className={cn(
-            "hidden items-center gap-6 text-xs md:flex",
-            light ? "text-on-nude/60" : "text-ink-muted"
-          )}
-        >
+        {/* Desktop Nav Links */}
+        <nav className="hidden items-center gap-7 text-xs font-semibold text-[#5f5c67] md:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              target={item.href === LINKS.docs ? "_blank" : undefined}
-              rel={item.href === LINKS.docs ? "noopener noreferrer" : undefined}
               className={cn(
-                "transition",
-                light ? "hover:text-on-nude" : "hover:text-nude-soft",
-                active === item.href && (light ? "text-on-nude" : "text-nude-soft")
+                "transition hover:text-[#111017]",
+                active === item.href && "text-[#111017] font-bold"
               )}
             >
               {item.label}
@@ -55,23 +47,57 @@ export function SiteNav({ active, tone = "dark" }: { active?: string; tone?: "da
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        {/* Action Button & Mobile Menu Toggle */}
+        <div className="flex items-center gap-3">
           <a
             href={LINKS.app}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(
-              "flex h-9 items-center gap-1.5 rounded-full px-4 text-xs font-medium transition",
-              light
-                ? "bg-on-nude text-white hover:bg-on-nude/90"
-                : "bg-nude text-on-nude hover:bg-nude-soft"
-            )}
+            className="flex h-9 items-center gap-1.5 rounded-full bg-[#111017] px-5 text-xs font-bold text-white shadow-md transition hover:bg-[#2a2733] active:scale-[0.98]"
           >
-            OnFRA App
-            <ArrowUpRight size={14} strokeWidth={2} />
+            <span>Launch OnFRA app</span>
+            <ArrowUpRight size={14} strokeWidth={2.5} />
           </a>
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#564870]/25 text-[#111017] hover:bg-white/50 md:hidden"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-x-4 top-20 z-40 rounded-2xl border border-white/60 bg-[#e4e0ee]/95 p-5 shadow-xl shadow-[#564870]/15 backdrop-blur-2xl md:hidden">
+          <nav className="flex flex-col gap-4 text-sm font-semibold text-[#4a4655]">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 transition hover:text-[#111017]"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <div className="mt-2 pt-3 border-t border-[#564870]/15">
+              <a
+                href={LINKS.app}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#111017] py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#2a2733]"
+              >
+                <span>Launch OnFRA app</span>
+                <ArrowUpRight size={16} />
+              </a>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
