@@ -503,3 +503,80 @@ html.light-theme .report-btn-primary .report-price-badge {
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.2);
 }
+
+/* ==========================================================
+   APP ENTRY / SIGN-IN / ANALYZING (rebrand: lavender mist)
+   Scoped to the entry screens; the dashboard styles above are untouched.
+========================================================== */
+
+.entry-bg {
+  background:
+    radial-gradient(ellipse 60% 35% at 50% 100%, rgba(255, 255, 255, 0.35) 0%, transparent 70%),
+    linear-gradient(135deg, #dad4e8 0%, #cbc6d7 50%, #dad5e8 100%);
+}
+
+/* Quiet Fair Isle diamond lattice, same as the landing page */
+.entry-pattern {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23564870' stroke-width='1'%3E%3Cpath d='M24 4L44 24L24 44L4 24Z'/%3E%3Cpath d='M24 14L34 24L24 34L14 24Z'/%3E%3C/g%3E%3Cg fill='%23564870'%3E%3Crect x='21.5' y='21.5' width='5' height='5' transform='rotate(45 24 24)'/%3E%3Ccircle cx='0' cy='0' r='1.6'/%3E%3Ccircle cx='48' cy='0' r='1.6'/%3E%3Ccircle cx='0' cy='48' r='1.6'/%3E%3Ccircle cx='48' cy='48' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 85% at 50% 40%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 75% 85% at 50% 40%, #000 0%, transparent 78%);
+}
+
+/* ---------- Analyzing animation ---------- */
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes orbitSpinReverse {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+.orbit-cw  { animation: orbitSpin 18s linear infinite; }
+.orbit-ccw { animation: orbitSpinReverse 12s linear infinite; }
+
+/* Chips cancel out their ring's rotation so the label stays upright.
+   --a is the chip's fixed angle on the ring. */
+@keyframes chipUpCw {
+  from { transform: rotate(calc(var(--a) * -1)); }
+  to   { transform: rotate(calc(var(--a) * -1 - 360deg)); }
+}
+@keyframes chipUpCcw {
+  from { transform: rotate(calc(var(--a) * -1)); }
+  to   { transform: rotate(calc(var(--a) * -1 + 360deg)); }
+}
+.chip-up-cw  { animation: chipUpCw 18s linear infinite; }
+.chip-up-ccw { animation: chipUpCcw 12s linear infinite; }
+
+/* Radar sweep */
+.analyze-sweep {
+  background: conic-gradient(from 0deg, transparent 0deg 290deg, rgba(86, 72, 112, 0.28) 360deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 0 22%, #000 40%);
+  mask-image: radial-gradient(circle, transparent 0 22%, #000 40%);
+  animation: orbitSpin 3.2s linear infinite;
+}
+
+/* Pulse rings leaving the core */
+@keyframes analyzePulse {
+  0%   { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(3); opacity: 0; }
+}
+.analyze-pulse { animation: analyzePulse 2.2s ease-out infinite; }
+
+@keyframes coreBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+.analyze-core { animation: coreBreathe 2.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-cw, .orbit-ccw, .chip-up-cw, .chip-up-ccw,
+  .analyze-sweep, .analyze-pulse, .analyze-core {
+    animation: none !important;
+  }
+}

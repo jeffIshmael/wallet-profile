@@ -1,8 +1,10 @@
 "use client";
 
-import { Mail, Wallet } from "lucide-react";
-import { OnfraBrand } from "@/components/layout/OnfraBrand";
+import { useState, type FormEvent } from "react";
+import { ArrowRight, Mail, Search, Wallet } from "lucide-react";
+import { OnfraLogoLockup } from "@/components/layout/OnfraLogoLockup";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { isEvmAddress } from "@/lib/walletAddress";
 
 function GoogleIcon() {
   return (
@@ -43,8 +45,8 @@ function AuthButton({ onClick, disabled, icon, label, variant = "secondary" }: A
       disabled={disabled}
       className={
         variant === "primary"
-          ? "flex w-full items-center justify-center gap-3 rounded-xl bg-btc-orange px-5 py-3.5 text-sm font-semibold text-black transition hover:bg-btc-burnt disabled:cursor-wait disabled:opacity-60"
-          : "flex w-full items-center justify-center gap-3 rounded-xl border border-white/12 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:border-btc-orange/40 hover:bg-white/8 disabled:cursor-wait disabled:opacity-60"
+          ? "flex w-full items-center justify-center gap-3 rounded-full bg-[#111017] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#564870]/20 transition hover:bg-[#2a2733] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
+          : "flex w-full items-center justify-center gap-3 rounded-full border border-[#d4cee1] bg-white px-5 py-3.5 text-sm font-bold text-[#111017] shadow-sm transition hover:border-[#b7aedb] hover:bg-[#f3f1f8] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
       }
     >
       {icon}
@@ -55,7 +57,14 @@ function AuthButton({ onClick, disabled, icon, label, variant = "secondary" }: A
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
 
-export function SignInScreen() {
+type SignInScreenProps = {
+  /** Called with a valid wallet address when the visitor chooses "Analyze wallet". */
+  onAnalyze: (wallet: string) => void;
+  initialWallet?: string;
+  initialError?: string;
+};
+
+export function SignInScreen({ onAnalyze, initialWallet = "", initialError = "" }: SignInScreenProps) {
   const {
     ready,
     loginWithGoogle,
@@ -67,105 +76,166 @@ export function SignInScreen() {
   } = useWalletAuth();
   const busy = !ready || connectingMiniPay;
 
+  const [wallet, setWallet] = useState(initialWallet);
+  const [error, setError] = useState(initialError);
+
+  function handleAnalyze(e: FormEvent) {
+    e.preventDefault();
+    const value = wallet.trim();
+    if (!isEvmAddress(value)) {
+      setError("Enter a valid Celo wallet address: 0x followed by 40 characters.");
+      return;
+    }
+    setError("");
+    onAnalyze(value);
+  }
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-void px-5 py-12 font-inter text-white">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184,176,200,0.2), transparent), radial-gradient(ellipse 60% 40% at 80% 100%, rgba(184,176,200,0.08), transparent)"
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(184,176,200,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(184,176,200,0.05) 1px, transparent 1px)",
-          backgroundSize: "40px 40px"
-        }}
-      />
+    <div className="entry-bg relative flex min-h-screen flex-col overflow-hidden font-inter text-[#111017]">
+      <div className="entry-pattern" />
+      <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/40 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 top-48 h-96 w-96 rounded-full bg-[#b7aedb]/25 blur-3xl" />
 
-      <div className="relative z-10 w-full max-w-md">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <OnfraBrand size="lg" theme="dark" />
-          </div>
-          <p className="mt-4 text-sm text-stardust">
-            Onchain financial reputation for your Celo wallet
-          </p>
-        </div>
+      {/* Header: logo + back to site */}
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
+        <OnfraLogoLockup />
+        <a
+          href={SITE_URL}
+          className="rounded-full border border-[#111017]/15 bg-white/40 px-4 py-2 text-xs font-semibold transition hover:bg-white/70"
+        >
+          Back to site
+        </a>
+      </header>
 
-        <div className="mt-10 rounded-2xl border border-white/10 bg-void-surface/90 p-6 shadow-[0_0_60px_-20px_rgba(184,176,200,0.25)] backdrop-blur-xl sm:p-8">
-          <h1 className="text-center font-space text-xl font-semibold">Sign in to continue</h1>
-          <p className="mt-2 text-center text-xs leading-6 text-stardust">
-            {miniPay
-              ? "MiniPay will connect your wallet automatically."
-              : "Connect with Google, email, or your wallet to open your dashboard."}
-          </p>
+      {/* One card */}
+      <main className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-5 pb-12 pt-4">
+        <div className="rounded-3xl border border-white/70 bg-white p-6 shadow-2xl shadow-[#564870]/20 sm:p-8">
+          {/* Analyze */}
+          <form onSubmit={handleAnalyze} noValidate>
+            <p className="text-sm font-bold">Analyze a wallet</p>
+            <p className="mt-1 text-xs leading-5 text-[#5f5c67]">
+              Paste any public Celo address. No signup needed.
+            </p>
 
-          <div className="mt-8 flex flex-col gap-3">
-            {privyEnabled && (
-              <>
-                <AuthButton
-                  variant="primary"
-                  disabled={busy}
-                  onClick={loginWithGoogle}
-                  icon={<GoogleIcon />}
-                  label={busy ? "Loading…" : "Continue with Google"}
-                />
-                <AuthButton
-                  disabled={busy}
-                  onClick={loginWithEmail}
-                  icon={<Mail size={18} className="text-btc-orange" />}
-                  label="Continue with Email"
-                />
-              </>
+            <div className="relative mt-4">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#564870]" />
+              <label htmlFor="wallet-input" className="sr-only">
+                Celo wallet address
+              </label>
+              <input
+                id="wallet-input"
+                value={wallet}
+                onChange={(e) => {
+                  setWallet(e.target.value);
+                  if (error) setError("");
+                }}
+                placeholder="0x… wallet address"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? "wallet-error" : undefined}
+                className={`w-full rounded-2xl border bg-[#f3f1f8] py-3.5 pl-10 pr-4 font-mono text-xs text-[#111017] outline-none transition placeholder:text-[#8f889e] focus:border-[#564870] focus:bg-white focus:ring-4 focus:ring-[#564870]/10 ${
+                  error ? "border-rose-400" : "border-[#d4cee1]"
+                }`}
+              />
+            </div>
+            {error && (
+              <p id="wallet-error" role="alert" className="mt-2 text-xs font-medium text-rose-600">
+                {error}
+              </p>
             )}
-            <AuthButton
-              disabled={busy}
-              onClick={loginWithWallet}
-              icon={<Wallet size={18} className="text-btc-orange" />}
-              label={miniPay && connectingMiniPay ? "Connecting MiniPay…" : "Connect Wallet"}
-            />
+            <button
+              type="submit"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#564870] px-5 py-3.5 text-sm font-bold text-white shadow-md shadow-[#564870]/25 transition hover:bg-[#43385a] active:scale-[0.98]"
+            >
+              <span>Analyze wallet</span>
+              <ArrowRight className="h-4 w-4 stroke-[2.5]" />
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-3" role="separator" aria-label="or">
+            <span className="h-px flex-1 bg-[#d4cee1]" />
+            <span className="text-xs font-semibold text-[#8f889e]">or</span>
+            <span className="h-px flex-1 bg-[#d4cee1]" />
           </div>
 
-          <p className="mt-6 text-center text-[10px] leading-5 text-stardust">
-            By continuing you agree to analyze your connected wallet on Celo.{" "}
-            <a href="/terms" className="text-btc-orange hover:underline">
-              Terms
-            </a>
-            {" · "}
-            <a href="/privacy" className="text-btc-orange hover:underline">
-              Privacy
-            </a>
-          </p>
+          {/* Sign up */}
+          <div>
+            <p className="text-sm font-bold">Sign up to keep your history</p>
+            <p className="mt-1 text-xs leading-5 text-[#5f5c67]">
+              {miniPay
+                ? "MiniPay will connect your wallet automatically."
+                : "Your analyses and reports are saved to your account."}
+            </p>
+
+            <div className="mt-4 flex flex-col gap-3">
+              {privyEnabled && (
+                <>
+                  <AuthButton
+                    variant="primary"
+                    disabled={busy}
+                    onClick={loginWithGoogle}
+                    icon={<GoogleIcon />}
+                    label={busy ? "Loading…" : "Continue with Google"}
+                  />
+                  <AuthButton
+                    disabled={busy}
+                    onClick={loginWithEmail}
+                    icon={<Mail size={18} className="text-[#564870]" />}
+                    label="Continue with Email"
+                  />
+                </>
+              )}
+              <AuthButton
+                variant={privyEnabled ? "secondary" : "primary"}
+                disabled={busy}
+                onClick={loginWithWallet}
+                icon={<Wallet size={18} className={privyEnabled ? "text-[#564870]" : "text-white"} />}
+                label={miniPay && connectingMiniPay ? "Connecting MiniPay…" : "Connect wallet"}
+              />
+            </div>
+
+            <p className="mt-5 text-center text-[10px] leading-5 text-[#6f6b7a]">
+              By continuing you agree to analyze your connected wallet on Celo.{" "}
+              <a href="/terms" className="font-semibold text-[#564870] hover:underline">
+                Terms
+              </a>
+              {" · "}
+              <a href="/privacy" className="font-semibold text-[#564870] hover:underline">
+                Privacy
+              </a>
+            </p>
+          </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-stardust">
-          Building a lending integration?{" "}
-          <a href={SITE_URL} className="text-btc-orange hover:underline">
-            OnFRA for lenders →
+        <p className="mt-8 text-center text-xs text-[#4a4655]">
+          For an OnFRA integration?{" "}
+          <a href={SITE_URL} className="font-bold text-[#564870] hover:underline">
+            OnFRA for developers →
           </a>
         </p>
-        <p className="mt-3 text-center font-mono text-[10px] leading-5 text-stardust/80">
+        <p className="mt-3 text-center font-mono text-[10px] leading-5 text-[#6f6b7a]">
           Agents:{" "}
-          <a href="/.well-known/mcp.json" className="text-btc-orange hover:underline">
+          <a href="/.well-known/mcp.json" className="text-[#564870] hover:underline">
             mcp.json
           </a>
           {" · "}
-          <a href="/.well-known/agent-card.json" className="text-btc-orange hover:underline">
+          <a href="/.well-known/agent-card.json" className="text-[#564870] hover:underline">
             agent-card
           </a>
           {" · "}
-          <a href="/api/capabilities" className="text-btc-orange hover:underline">
+          <a href="/api/capabilities" className="text-[#564870] hover:underline">
             capabilities
           </a>
           {" · "}
-          <a href="/SKILL.md" className="text-btc-orange hover:underline">
+          <a href="/SKILL.md" className="text-[#564870] hover:underline">
             SKILL.md
           </a>
         </p>
-      </div>
+      </main>
     </div>
   );
 }
