@@ -15,9 +15,18 @@ const STEPS = [
 const STEP_MS = 1100;
 
 type Props = {
-  wallet: string;
-  onDone: () => void;
-  onCancel: () => void;
+  /** Address being analyzed (shown as a pill). */
+  wallet?: string;
+  /**
+   * true  = the real analysis is finished, so the screen may finish and call onDone.
+   * false = hold on the last step until it flips to true.
+   */
+  ready?: boolean;
+  /** Shows the error state instead of the steps. */
+  error?: string | null;
+  onDone?: () => void;
+  onRetry?: () => void;
+  onCancel?: () => void;
 };
 
 /** A token chip that rides an orbit ring and stays upright. */
@@ -52,29 +61,33 @@ function OrbitChip({
   );
 }
 
-export function WalletAnalyzingScreen({ wallet, onDone, onCancel }: Props) {
+export function WalletAnalyzingScreen({ wallet, ready = true, error = null, onDone, onRetry, onCancel }: Props) {
   const [completed, setCompleted] = useState(0);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
   useEffect(() => {
+    if (error) return;
     if (completed >= STEPS.length) {
-      const t = setTimeout(() => onDoneRef.current(), 650);
+      const t = setTimeout(() => onDoneRef.current?.(), 650);
       return () => clearTimeout(t);
     }
+    // Hold on the last step until the real analysis is ready.
+    const holdAt = ready ? STEPS.length : STEPS.length - 1;
+    if (completed >= holdAt) return;
     const t = setTimeout(() => setCompleted((c) => c + 1), completed === 0 ? 1400 : STEP_MS);
     return () => clearTimeout(t);
-  }, [completed]);
+  }, [completed, ready, error]);
 
   const progress = Math.round((completed / STEPS.length) * 100);
 
   return (
-    <div className="entry-bg relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-5 py-12 font-inter text-[#111017]">
+    <div className="entry-bg fixed inset-0 z-[60] flex overflow-y-auto overflow-x-hidden px-5 py-12 font-inter text-[#111017]">
       <div className="entry-pattern" />
       <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#b7aedb]/25 blur-3xl" />
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+      <div className="relative z-10 m-auto flex w-full max-w-md flex-col items-center text-center">
         {/* Orbit stage */}
         <div className="relative h-[290px] w-[290px] sm:h-[330px] sm:w-[330px]">
           {/* Radar sweep */}
@@ -114,68 +127,100 @@ export function WalletAnalyzingScreen({ wallet, onDone, onCancel }: Props) {
           aria-live="polite"
           className="mt-8 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl"
         >
-          Analyzing your wallet
+          {error ? "We couldn’t analyze this wallet" : "Analyzing your wallet"}
         </h1>
 
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/60 px-4 py-1.5 font-mono text-xs font-medium text-[#43385a] backdrop-blur">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          {shortAddress(wallet)}
-        </div>
+        {wallet && (
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/60 px-4 py-1.5 font-mono text-xs font-medium text-[#43385a] backdrop-blur">
+            <span className={`h-2 w-2 rounded-full ${error ? "bg-rose-500" : "bg-emerald-500"}`} />
+            {shortAddress(wallet)}
+          </div>
+        )}
 
-        {/* Steps */}
-        <ul className="mt-8 w-full max-w-xs space-y-3 text-left">
-          {STEPS.map((label, i) => {
-            const done = i < completed;
-            const active = i === completed;
-            return (
-              <li
-                key={label}
-                className={`flex items-center gap-3 text-sm font-medium transition-opacity duration-300 ${
-                  done || active ? "opacity-100" : "opacity-40"
-                }`}
-              >
-                <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors duration-300 ${
-                    done
-                      ? "bg-[#564870] text-white"
-                      : active
-                        ? "bg-white text-[#564870] shadow"
-                        : "border border-[#564870]/30 text-transparent"
-                  }`}
+        {error ? (
+          <div className="mt-8 w-full max-w-xs">
+            <p className="text-sm leading-6 text-[#4a4655]">{error}</p>
+            <div className="mt-6 flex flex-col gap-3">
+              {onRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="rounded-full bg-[#111017] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#564870]/20 transition hover:bg-[#2a2733] active:scale-[0.98]"
                 >
-                  {done ? (
-                    <Check className="h-3.5 w-3.5 stroke-[3]" />
-                  ) : active ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : null}
-                </span>
-                <span className={done ? "text-[#4a4655]" : "text-[#111017]"}>{label}</span>
-              </li>
-            );
-          })}
-        </ul>
+                  Try again
+                </button>
+              )}
+              {onCancel && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="rounded-full border border-[#d4cee1] bg-white px-5 py-3 text-sm font-bold text-[#111017] transition hover:bg-[#f3f1f8]"
+                >
+                  Back
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Steps */}
+            <ul className="mt-8 w-full max-w-xs space-y-3 text-left">
+              {STEPS.map((label, i) => {
+                const done = i < completed;
+                const active = i === completed;
+                return (
+                  <li
+                    key={label}
+                    className={`flex items-center gap-3 text-sm font-medium transition-opacity duration-300 ${
+                      done || active ? "opacity-100" : "opacity-40"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors duration-300 ${
+                        done
+                          ? "bg-[#564870] text-white"
+                          : active
+                            ? "bg-white text-[#564870] shadow"
+                            : "border border-[#564870]/30 text-transparent"
+                      }`}
+                    >
+                      {done ? (
+                        <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      ) : active ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : null}
+                    </span>
+                    <span className={done ? "text-[#4a4655]" : "text-[#111017]"}>{label}</span>
+                  </li>
+                );
+              })}
+            </ul>
 
-        {/* Progress */}
-        <div
-          className="mt-8 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-white/60"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={progress}
-        >
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-[#564870] to-[#9d8fd0] transition-[width] duration-700 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+            {/* Progress */}
+            <div
+              className="mt-8 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-white/60"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+            >
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#564870] to-[#9d8fd0] transition-[width] duration-700 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
 
-        <button
-          type="button"
-          onClick={onCancel}
-          className="mt-6 text-xs font-semibold text-[#6f6b7a] underline-offset-4 transition hover:text-[#111017] hover:underline"
-        >
-          Cancel
-        </button>
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="mt-6 text-xs font-semibold text-[#6f6b7a] underline-offset-4 transition hover:text-[#111017] hover:underline"
+              >
+                Cancel
+              </button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

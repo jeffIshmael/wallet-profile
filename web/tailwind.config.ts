@@ -112,15 +112,15 @@ export default {
         "ft-text": "#f0f2f8",
         "ft-muted": "#8a93b2",
         void: {
-          DEFAULT: "#030304",
-          surface: "#0F1115"
+          DEFAULT: "#15121D",
+          surface: "#1E1A29"
         },
         btc: {
-          orange: "#B8B0C8",
-          burnt: "#9088A0",
-          gold: "#D8D0E8"
+          orange: "#A794EC",
+          burnt: "#8C77D6",
+          gold: "#D2C6F6"
         },
-        stardust: "#94A3B8"
+        stardust: "#A39DB5"
       },
       borderRadius: {
         card: "8px",

@@ -208,7 +208,38 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
   }, []);
 
   const smartWalletAddress = smartWalletClient?.account?.address ?? null;
-  const privyAddress = resolvePrivyWalletAddress(user, wallets, smartWalletAddress);
+
+  // Google/email users get an embedded wallet AND a smart wallet. The smart wallet only appears a
+  // moment after login, so without waiting the address would change from the embedded wallet's to
+  // the smart wallet's while the dashboard is already analyzing. Hold the address until it exists.
+  const embeddedWallet = getEmbeddedConnectedWallet(wallets);
+  const hasLinkedEmbedded = Boolean(
+    user?.linkedAccounts?.some(
+      (account) =>
+        account.type === "wallet" && "walletClientType" in account && account.walletClientType === "privy"
+    )
+  );
+  const expectsSmartWallet =
+    authenticated &&
+    !miniPay &&
+    !isExternalWalletLogin(user) &&
+    Boolean(embeddedWallet?.address || hasLinkedEmbedded);
+
+  const [smartWaitExpired, setSmartWaitExpired] = useState(false);
+  useEffect(() => {
+    if (!expectsSmartWallet || smartWalletAddress) {
+      setSmartWaitExpired(false);
+      return;
+    }
+    // If smart wallets are not enabled for this app, fall back to the embedded wallet
+    const timer = setTimeout(() => setSmartWaitExpired(true), 5000);
+    return () => clearTimeout(timer);
+  }, [expectsSmartWallet, smartWalletAddress]);
+
+  const waitingForSmartWallet = expectsSmartWallet && !smartWalletAddress && !smartWaitExpired;
+  const privyAddress = waitingForSmartWallet
+    ? null
+    : resolvePrivyWalletAddress(user, wallets, smartWalletAddress);
   const address = miniPayAddress ?? privyAddress;
 
   useEffect(() => {

@@ -1,607 +1,467 @@
 "use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowDown,
-  ArrowUp,
+  ArrowDownLeft,
+  ArrowUpRight,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Download,
   ExternalLink,
-  FileText,
-  Search
+  FileSpreadsheet,
+  FileText
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Fragment, useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Card } from "@/components/ui/Card";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { useWalletData } from "@/hooks/useWalletData";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { useWalletData } from "@/hooks/useWalletData";
+import { copyWithToast } from "@/lib/copyToClipboard";
 import {
   formatLocalDateTime,
   formatTxAmountToken,
   formatTxAmountUsd,
-  moneyPrecise,
-  truncateAddress
+  moneyPrecise
 } from "@/lib/format";
 import { exportStatementPdf } from "@/lib/statements/exportStatementPdf";
 import {
-  aggregateTokenFlowsForPeriod,
   filterTransactionsByPeriod,
   formatStatementPeriodRange,
   PERIOD_LABELS,
   type StatementPeriod
 } from "@/lib/statements/periodUtils";
 
-type Period = StatementPeriod;
-type SortKey = "timestamp" | "amount" | "token";
-type SortDir = "asc" | "desc";
-type DirectionFilter = "All" | "Incoming" | "Outgoing";
 type TokenFilter = "All" | "USDT" | "USDC" | "USDm" | "CELO";
 
-const periods: { key: Period; label: string }[] = [
+const PERIODS: { key: StatementPeriod; label: string }[] = [
   { key: "1M", label: "1M" },
   { key: "3M", label: "3M" },
   { key: "6M", label: "6M" },
-  { key: "12M", label: "12M" }
+  { key: "12M", label: "1Y" }
 ];
 
-const periodDescriptions: Record<Period, string> = PERIOD_LABELS;
+const PAGE_STEP = 10;
 
-const TOKEN_COLORS: Record<string, string> = {
-  USDT: "#26a17b",
-  USDC: "#2775ca",
-  USDm: "#f5a623",
-  CELO: "#B8B0C8"
-};
-
-function TokenIcon({ token }: { token: string }) {
-  const color = TOKEN_COLORS[token] ?? "#64748b";
+function SummaryCard({
+  label,
+  value,
+  note,
+  tone = "text-white",
+  icon
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  tone?: string;
+  icon?: React.ReactNode;
+}) {
   return (
-    <span
-      className="mr-1.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white"
-      style={{ background: color }}
-    >
-      {token.slice(0, 1)}
-    </span>
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-void-surface p-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-[11px] font-medium text-stardust">{label}</span>
+        {icon}
+      </div>
+      <p className={`mt-1.5 truncate font-mono text-base font-bold sm:text-lg ${tone}`}>{value}</p>
+      {note && <p className="mt-0.5 truncate text-[10px] text-stardust">{note}</p>}
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  copyText,
+  explorerHref,
+  mono = false
+}: {
+  label: string;
+  value: string;
+  copyText?: string;
+  explorerHref?: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] font-semibold uppercase tracking-wide text-stardust">{label}</dt>
+      <dd className="mt-0.5 flex items-start gap-2">
+        <span className={`min-w-0 flex-1 break-all text-xs text-white ${mono ? "font-mono" : ""}`}>{value}</span>
+        {copyText && (
+          <button
+            type="button"
+            onClick={() => void copyWithToast(copyText, `${label} copied`)}
+            className="mt-0.5 shrink-0 text-stardust transition hover:text-btc-orange"
+            aria-label={`Copy ${label.toLowerCase()}`}
+          >
+            <Copy size={13} />
+          </button>
+        )}
+        {explorerHref && (
+          <a
+            href={explorerHref}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-0.5 shrink-0 text-stardust transition hover:text-btc-orange"
+            aria-label="Open in explorer"
+          >
+            <ExternalLink size={13} />
+          </a>
+        )}
+      </dd>
+    </div>
   );
 }
 
 export function TransactionStatementsView() {
   const { miniPay } = useWalletAuth();
   const { walletData } = useWalletData();
-  const [period, setPeriod] = useState<Period>("3M");
-  const [search, setSearch] = useState("");
-  const [directionFilter, setDirectionFilter] = useState<DirectionFilter>("All");
-  const [tokenFilter, setTokenFilter] = useState<TokenFilter>("All");
-  const [sortKey, setSortKey] = useState<SortKey>("timestamp");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [period, setPeriod] = useState<StatementPeriod>("3M");
+  const [token, setToken] = useState<TokenFilter>("All");
+  const [shown, setShown] = useState(PAGE_STEP);
   const [expandedHash, setExpandedHash] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
-  const periodTransactions = useMemo(() => {
-    if (!walletData) return [];
-    return filterTransactionsByPeriod(walletData.transactions, period);
-  }, [walletData, period]);
-
-  const periodTokenFlows = useMemo(() => {
-    if (!walletData) return [];
-    return aggregateTokenFlowsForPeriod(walletData.transactions, period);
-  }, [walletData, period]);
-
-  const filtered = useMemo(() => {
-    if (!walletData) return [];
-    const q = search.trim().toLowerCase();
-    let rows = [...periodTransactions];
-
-    if (directionFilter !== "All") {
-      rows = rows.filter((tx) => tx.direction === directionFilter);
+  useEffect(() => {
+    if (!exportOpen) return;
+    function onDown(e: MouseEvent) {
+      if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false);
     }
-    if (tokenFilter !== "All") {
-      rows = rows.filter((tx) => tx.token === tokenFilter);
-    }
-    if (q) {
-      rows = rows.filter(
-        (tx) =>
-          tx.token.toLowerCase().includes(q) ||
-          tx.recipient.toLowerCase().includes(q) ||
-          tx.hash.toLowerCase().includes(q) ||
-          String(tx.amount).includes(q)
-      );
-    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [exportOpen]);
 
-    rows.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "timestamp") cmp = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-      else if (sortKey === "amount") cmp = a.amount - b.amount;
-      else cmp = a.token.localeCompare(b.token);
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-
-    return rows;
-  }, [walletData, periodTransactions, search, directionFilter, tokenFilter, sortKey, sortDir]);
+  const rows = useMemo(() => {
+    if (!walletData) return [];
+    const inPeriod = filterTransactionsByPeriod(walletData.transactions, period);
+    const byToken = token === "All" ? inPeriod : inPeriod.filter((tx) => tx.token === token);
+    return [...byToken].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [walletData, period, token]);
 
   if (!walletData) return null;
 
-  const data = walletData;
-  const current = data.incomeByPeriod[period];
-  const savingsRate = current.inbound > 0 ? ((current.net / current.inbound) * 100).toFixed(1) : "0";
-  const monthlyFlow = data.statementMonthlyFlow[period] ?? [];
+  const periodSummary = walletData.incomeByPeriod[period];
+  // "All tokens" uses the stored period summary; a single token is summed from its rows
+  const totals =
+    token === "All"
+      ? { inbound: periodSummary.inbound, outbound: periodSummary.outbound, net: periodSummary.net }
+      : rows.reduce(
+          (acc, tx) => {
+            const amount = Number(tx.amount) || 0;
+            if (tx.direction === "Incoming") acc.inbound += amount;
+            else acc.outbound += amount;
+            acc.net = acc.inbound - acc.outbound;
+            return acc;
+          },
+          { inbound: 0, outbound: 0, net: 0 }
+        );
+  const netPositive = totals.net >= 0;
+  const tokens: TokenFilter[] = ["All", "USDT", "USDC", "USDm", ...(miniPay ? [] : (["CELO"] as const))];
+  const visible = rows.slice(0, shown);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortKey(key);
-      setSortDir("desc");
-    }
+  function resetList() {
+    setShown(PAGE_STEP);
+    setExpandedHash(null);
   }
 
   function exportPdf() {
+    if (!walletData) return;
     void exportStatementPdf({
-      walletAddress: data.walletAddress,
-      ens: data.ens,
+      walletAddress: walletData.walletAddress,
+      ens: walletData.ens,
       period,
       summary: {
-        inbound: current.inbound,
-        outbound: current.outbound,
-        net: current.net,
-        transactionCount: periodTransactions.length
+        inbound: totals.inbound,
+        outbound: totals.outbound,
+        net: totals.net,
+        transactionCount: rows.length
       },
-      transactions: periodTransactions
+      transactions: rows
     });
+    setExportOpen(false);
   }
 
   function exportCsv() {
     const header = "Timestamp,Token,Amount,Direction,Recipient,Hash\n";
-    const body = periodTransactions
-      .map((tx) =>
-        [tx.timestamp, tx.token, tx.amount, tx.direction, tx.recipient, tx.hash].join(",")
-      )
+    const body = rows
+      .map((tx) => [tx.timestamp, tx.token, tx.amount, tx.direction, tx.recipient, tx.hash].join(","))
       .join("\n");
     const blob = new Blob([header + body], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `onfra-statements-${period}-${formatStatementPeriodRange(period).replace(/\//g, "-").replace(/ /g, "_")}.csv`;
+    a.download = `onfra-statements-${period}-${token}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    setExportOpen(false);
   }
 
+  const exportDisabled = rows.length === 0;
+
   return (
-    <div className="grid gap-3">
-      <Card compact>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <SectionHeader
-            compact
-            title="Transaction Statements"
-            help={{
-              meaning: "A bank-style statement of all verified onchain transactions.",
-              calculation: "Aggregated from indexed transfer events across supported Celo tokens.",
-              lenderRelevance: "Lenders use transaction statements to verify income sources and spending patterns."
-            }}
-          />
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={exportCsv}
-                disabled={periodTransactions.length === 0}
-                title={periodTransactions.length === 0 ? "No transactions in this period to export" : undefined}
-                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-stardust hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download size={12} />
-                Export CSV
-              </button>
+    <div className="mx-auto w-full max-w-5xl pb-6">
+      {/* Title + export */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-space text-2xl font-semibold text-white sm:text-3xl">Transaction statements</h1>
+          <p className="mt-1 text-sm text-stardust">View and export your transaction records.</p>
+        </div>
+
+        <div ref={exportRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setExportOpen((open) => !open)}
+            disabled={exportDisabled}
+            aria-expanded={exportOpen}
+            title={exportDisabled ? "No transactions in this selection to export" : undefined}
+            className="report-btn-primary inline-flex items-center gap-1.5 rounded-xl bg-btc-orange px-3.5 py-2.5 text-xs font-bold text-void transition hover:bg-btc-orange/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Download size={14} />
+            Export
+            <ChevronDown size={13} className={`transition ${exportOpen ? "rotate-180" : ""}`} />
+          </button>
+          {exportOpen && (
+            <div className="absolute right-0 z-20 mt-2 w-40 overflow-hidden rounded-xl border border-white/10 bg-void-surface shadow-xl">
               <button
                 type="button"
                 onClick={exportPdf}
-                disabled={periodTransactions.length === 0}
-                title={periodTransactions.length === 0 ? "No transactions in this period to export" : undefined}
-                className="inline-flex items-center gap-1 rounded-lg border border-btc-orange/30 bg-btc-orange/10 px-2.5 py-1.5 text-[10px] font-semibold text-btc-orange hover:bg-btc-orange/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-semibold text-white transition hover:bg-white/5"
               >
-                <FileText size={12} />
+                <FileText size={14} className="text-btc-orange" />
                 Export PDF
               </button>
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-semibold text-white transition hover:bg-white/5"
+              >
+                <FileSpreadsheet size={14} className="text-btc-orange" />
+                Export CSV
+              </button>
             </div>
-            <p className="text-[9px] text-stardust">
-              {periodDescriptions[period]} · {formatStatementPeriodRange(period)}
-            </p>
-          </div>
+          )}
+        </div>
+      </div>
+
+      {/* Token + timeframe */}
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <label htmlFor="statement-token" className="sr-only">
+            Token
+          </label>
+          <select
+            id="statement-token"
+            value={token}
+            onChange={(e) => {
+              setToken(e.target.value as TokenFilter);
+              resetList();
+            }}
+            className="w-full rounded-xl border border-white/10 bg-void-surface px-3 py-2.5 text-xs font-semibold text-white focus:border-btc-orange/40 focus:outline-none sm:w-44"
+          >
+            {tokens.map((item) => (
+              <option key={item} value={item}>
+                {item === "All" ? "All tokens" : item}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <div className="flex gap-1">
-            {periods.map(({ key, label }) => (
+        <div className="flex gap-1.5" role="tablist" aria-label="Timeframe">
+          {PERIODS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={period === key}
+              onClick={() => {
+                setPeriod(key);
+                resetList();
+              }}
+              className={
+                period === key
+                  ? "flex-1 rounded-full bg-btc-orange px-4 py-2 text-xs font-bold text-void sm:flex-none"
+                  : "flex-1 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-stardust transition hover:text-white sm:flex-none"
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] text-stardust">
+        {PERIOD_LABELS[period]} · {formatStatementPeriodRange(period)}
+      </p>
+
+      {/* Summary */}
+      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <SummaryCard
+          label="Received"
+          value={moneyPrecise(totals.inbound)}
+          tone="text-white"
+          note={
+            token === "All"
+              ? `${periodSummary.trendPct >= 0 ? "▲" : "▼"} ${Math.abs(periodSummary.trendPct)}% vs previous`
+              : undefined
+          }
+          icon={<ArrowDownLeft size={14} className="text-teal" />}
+        />
+        <SummaryCard
+          label="Sent"
+          value={moneyPrecise(totals.outbound)}
+          icon={<ArrowUpRight size={14} className="text-btc-orange" />}
+        />
+        <SummaryCard
+          label="Net flow"
+          value={`${netPositive ? "+" : "−"}${moneyPrecise(Math.abs(totals.net))}`}
+          tone={netPositive ? "text-teal" : "text-danger"}
+        />
+        <SummaryCard label="Transactions" value={String(rows.length)} />
+      </div>
+
+      {/* Transactions */}
+      <section className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-void-surface">
+        <div className="hidden grid-cols-[1.3fr_1fr_1.2fr_0.8fr_0.9fr_1.5rem] gap-3 border-b border-white/10 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-stardust md:grid">
+          <span>Date</span>
+          <span>Type</span>
+          <span>Amount</span>
+          <span>Token</span>
+          <span>Status</span>
+          <span />
+        </div>
+
+        {rows.length === 0 ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-sm font-semibold text-white">No transactions found</p>
+            <p className="mt-1 text-xs text-stardust">for this wallet in the selected period</p>
+            {period !== "12M" && (
               <button
-                key={key}
                 type="button"
                 onClick={() => {
-                  setPeriod(key);
-                  setPage(1);
+                  setPeriod("12M");
+                  resetList();
                 }}
-                className={
-                  period === key
-                    ? "rounded-full bg-btc-orange px-2.5 py-1 text-[10px] font-bold text-white"
-                    : "rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-bold text-stardust hover:text-white"
-                }
+                className="mt-4 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-btc-orange transition hover:bg-btc-orange/10"
               >
-                {label}
+                Try a longer period
               </button>
-            ))}
+            )}
           </div>
+        ) : (
+          <ul className="divide-y divide-white/10">
+            {visible.map((tx) => {
+              const incoming = tx.direction === "Incoming";
+              const expanded = expandedHash === tx.hash;
+              const { datePart, timePart } = formatLocalDateTime(tx.timestamp);
+              const amountClass = incoming ? "text-teal" : "text-white";
+              const sign = incoming ? "+" : "−";
 
-          <div className="relative min-w-[160px] flex-1 sm:max-w-xs">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stardust" />
-            <input
-              type="search"
-              placeholder="Search txns..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="w-full rounded-lg border border-white/10 bg-black/30 py-1.5 pl-8 pr-2 text-[11px] text-white placeholder:text-stardust focus:border-btc-orange/40 focus:outline-none"
-            />
-          </div>
-
-          <select
-            value={directionFilter}
-            onChange={(e) => {
-              setDirectionFilter(e.target.value as DirectionFilter);
-              setPage(1);
-            }}
-            className="rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[10px] font-semibold text-stardust"
-          >
-            <option value="All">All directions</option>
-            <option value="Incoming">Incoming</option>
-            <option value="Outgoing">Outgoing</option>
-          </select>
-
-          <select
-            value={tokenFilter}
-            onChange={(e) => {
-              setTokenFilter(e.target.value as TokenFilter);
-              setPage(1);
-            }}
-            className="rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[10px] font-semibold text-stardust"
-          >
-            <option value="All">All tokens</option>
-            <option value="USDT">USDT</option>
-            <option value="USDC">USDC</option>
-            <option value="USDm">USDm</option>
-            {!miniPay && <option value="CELO">CELO</option>}
-          </select>
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={period}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3"
-          >
-            <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-stardust">Total Inflow</p>
-              <p className="mt-1 font-mono text-lg font-bold text-white">{moneyPrecise(current.inbound)}</p>
-              <p className={`text-[10px] font-semibold ${current.trendPct >= 0 ? "text-teal" : "text-danger"}`}>
-                {current.trendPct >= 0 ? "▲" : "▼"} {Math.abs(current.trendPct)}% vs previous {period}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-stardust">Total Outflow</p>
-              <p className="mt-1 font-mono text-lg font-bold text-white">{moneyPrecise(current.outbound)}</p>
-              <p className="text-[10px] font-semibold text-stardust">Spending across {period}</p>
-            </div>
-
-            <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-stardust">Net Flow</p>
-              <p className={`mt-1 font-mono text-lg font-bold ${current.net >= 0 ? "text-teal" : "text-danger"}`}>
-                +{moneyPrecise(current.net)}
-              </p>
-              <p className="text-[10px] text-stardust">
-                {savingsRate}% savings rate · {current.net >= 0 ? "Healthy" : "Deficit"}
-              </p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="mt-3 overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full min-w-[480px] text-left text-[10px]">
-            <thead>
-              <tr className="border-b border-white/10 text-stardust">
-                <th className="px-3 py-2 font-semibold uppercase tracking-wide">By Token</th>
-                {periodTokenFlows.map(({ symbol }) => (
-                  <th key={symbol} className="px-3 py-2 font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTokenFilter(symbol as TokenFilter);
-                        setPage(1);
-                      }}
-                      className="hover:text-btc-orange"
-                      style={{ color: TOKEN_COLORS[symbol] }}
-                    >
-                      {symbol}
-                    </button>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-white/5">
-                <td className="px-3 py-2 text-stardust">Inflow</td>
-                {periodTokenFlows.map(({ symbol, inflow }) => (
-                  <td key={symbol} className="px-3 py-2 font-mono font-semibold text-white">
-                    {inflow > 0 ? moneyPrecise(inflow) : "—"}
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                <td className="px-3 py-2 text-stardust">Outflow</td>
-                {periodTokenFlows.map(({ symbol, outflow }) => (
-                  <td key={symbol} className="px-3 py-2 font-mono font-semibold text-white">
-                    {outflow > 0 ? moneyPrecise(outflow) : "—"}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <Card compact>
-        <SectionHeader
-          compact
-          title="Cash Flow Overview"
-          help={{
-            meaning: "Monthly inflow and outflow for the selected statement period.",
-            calculation: "Aggregated transfer volumes grouped by calendar month.",
-            lenderRelevance: "Cash flow patterns help lenders assess surplus and repayment capacity."
-          }}
-        />
-        <div className="mt-2 h-[180px]">
-          {/* @ts-expect-error ResponsiveContainer type incompatibility between React 18 and Next.js */}
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={[...monthlyFlow]} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-              <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 10 }} />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                width={42}
-                tick={{ fill: "#64748b", fontSize: 9 }}
-                tickFormatter={(v) => `$${v}`}
-              />
-              <Tooltip
-                contentStyle={{
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
-                  background: "#0f1115",
-                  fontSize: 11
-                }}
-                formatter={(value, name) => [moneyPrecise(Number(value)), name === "inflow" ? "Inflow" : "Outflow"]}
-              />
-              <Bar dataKey="inflow" fill="#00d4aa" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="outflow" fill="#f5a623" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <p className="mt-1 text-[10px] text-stardust">Teal = Inflow · Amber = Outflow</p>
-      </Card>
-
-      <Card compact className="min-h-[420px]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-sora text-sm font-bold text-white">Transactions</h3>
-          <span className="text-[10px] text-stardust">{filtered.length} transactions</span>
-        </div>
-
-        <div className="mt-2 overflow-x-auto no-scrollbar">
-          <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left text-xs">
-            <thead>
-              <tr className="text-[10px] uppercase tracking-wide text-stardust">
-                <th className="py-1.5 pr-2">
-                  <button type="button" onClick={() => toggleSort("timestamp")} className="hover:text-white">
-                    Timestamp {sortKey === "timestamp" && (sortDir === "desc" ? "↓" : "↑")}
-                  </button>
-                </th>
-                <th className="py-1.5 pr-2">
-                  <button type="button" onClick={() => toggleSort("token")} className="hover:text-white">
-                    Token {sortKey === "token" && (sortDir === "desc" ? "↓" : "↑")}
-                  </button>
-                </th>
-                <th className="py-1.5 pr-2">
-                  <button type="button" onClick={() => toggleSort("amount")} className="hover:text-white">
-                    Amount {sortKey === "amount" && (sortDir === "desc" ? "↓" : "↑")}
-                  </button>
-                </th>
-                <th className="py-1.5 pr-2">Direction</th>
-                <th className="py-1.5 pr-2">Recipient</th>
-                <th className="py-1.5">Hash</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center">
-                    <p className="text-2xl">📭</p>
-                    <p className="mt-2 text-sm font-semibold text-white">No transactions found</p>
-                    <p className="mt-1 text-[11px] text-stardust">for this wallet in the selected period</p>
-                    <button
-                      type="button"
-                      onClick={() => setPeriod("12M")}
-                      className="mt-3 rounded-lg border border-white/10 px-3 py-1.5 text-[10px] font-semibold text-btc-orange hover:bg-btc-orange/10"
-                    >
-                      Try a longer period
-                    </button>
-                  </td>
-                </tr>
-              ) : (
-                paged.map((tx) => {
-                  const incoming = tx.direction === "Incoming";
-                  const expanded = expandedHash === tx.hash;
-                  const { datePart, timePart } = formatLocalDateTime(tx.timestamp);
-
-                  return (
-                    <Fragment key={tx.hash}>
-                      <tr
-                        key={tx.hash}
-                        onClick={() => setExpandedHash(expanded ? null : tx.hash)}
-                        className={`cursor-pointer transition hover:bg-white/[0.03] ${expanded ? "bg-white/[0.02]" : ""}`}
-                        style={{ borderLeft: `3px solid ${incoming ? "#00d4aa" : "#f5a623"}` }}
+              return (
+                <li key={tx.hash}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedHash(expanded ? null : tx.hash)}
+                    aria-expanded={expanded}
+                    className="w-full px-4 py-3 text-left transition hover:bg-white/[0.03]"
+                  >
+                    {/* Phone */}
+                    <div className="flex items-center gap-3 md:hidden">
+                      <span
+                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${
+                          incoming ? "bg-teal/15 text-teal" : "bg-btc-orange/15 text-btc-orange"
+                        }`}
                       >
-                        <td className="py-2 pr-2 pl-1.5">
-                          <p className="text-[10px] font-semibold text-white">{datePart}</p>
-                          <p className="text-[9px] text-stardust">{timePart}</p>
-                        </td>
-                        <td className="py-2 pr-2 font-bold text-white">
-                          <TokenIcon token={tx.token} />
-                          {tx.token}
-                        </td>
-                        <td className={`py-2 pr-2 font-mono font-semibold ${incoming ? "text-teal" : "text-btc-orange"}`}>
-                          {incoming ? "+" : "−"}
-                          {formatTxAmountUsd(tx.amount)}{" "}
-                          {incoming ? <ArrowUp size={10} className="inline" /> : <ArrowDown size={10} className="inline" />}
-                        </td>
-                        <td className="py-2 pr-2">
-                          <StatusBadge tone={incoming ? "green" : "red"} className="min-w-[90px] justify-center">
-                            {tx.direction}
-                          </StatusBadge>
-                        </td>
-                        <td className="py-2 pr-2">
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono text-[10px] text-stardust">
-                              {tx.recipient ? truncateAddress(tx.recipient, 6, 4) : "—"}
-                            </span>
-                            {tx.recipient ? (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard?.writeText(tx.recipient);
-                                }}
-                                className="text-stardust hover:text-btc-orange"
-                                aria-label="Copy recipient"
-                              >
-                                <Copy size={11} />
-                              </button>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="py-2 pr-1">
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono text-[10px] text-stardust">{truncateAddress(tx.hash, 6, 4)}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard?.writeText(tx.hash);
-                              }}
-                              className="text-stardust hover:text-btc-orange"
-                              aria-label="Copy transaction hash"
-                            >
-                              <Copy size={11} />
-                            </button>
-                            <a
-                              href={`https://celoscan.io/tx/${tx.hash}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-stardust hover:text-btc-orange"
-                              aria-label="Open in explorer"
-                            >
-                              <ExternalLink size={11} />
-                            </a>
-                            <ChevronDown
-                              size={12}
-                              className={`text-stardust transition ${expanded ? "rotate-180" : ""}`}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                      {expanded && (
-                        <tr key={`${tx.hash}-detail`} className="bg-black/30">
-                          <td colSpan={6} className="px-4 py-3 text-[10px] text-stardust">
-                            <div className="grid gap-1 sm:grid-cols-2">
-                              <p>
-                                <span className="text-white">Full Hash:</span> {tx.hash}
-                              </p>
-                              <p>
-                                <span className="text-white">Recipient:</span> {tx.recipient || "—"}
-                              </p>
-                              <p>
-                                <span className="text-white">Amount:</span>{" "}
-                                {formatTxAmountToken(tx.amountToken, tx.token)}
-                              </p>
-                              <p>
-                                <span className="text-white">USD Value:</span> {formatTxAmountUsd(tx.amount)}
-                              </p>
-                              <p>
-                                <span className="text-white">Network:</span> Celo Mainnet
-                              </p>
-                              <p>
-                                <span className="text-white">Time:</span> {datePart} {timePart}
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        {incoming ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-white">{incoming ? "Received" : "Sent"}</p>
+                        <p className="truncate text-[11px] text-stardust">
+                          {datePart} · {timePart}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-mono text-sm font-semibold ${amountClass}`}>
+                          {sign}
+                          {formatTxAmountUsd(tx.amount)}
+                        </p>
+                        <p className="text-[11px] text-stardust">{tx.token}</p>
+                      </div>
+                      <ChevronDown
+                        size={14}
+                        className={`shrink-0 text-stardust transition ${expanded ? "rotate-180" : ""}`}
+                      />
+                    </div>
 
-        {paged.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-[10px] font-semibold text-stardust disabled:opacity-40 hover:text-white"
-              >
-                <ChevronLeft size={12} />
-                Prev
-              </button>
-              <span className="text-[10px] text-stardust">
-                Page {page} of {totalPages} (showing {paged.length} of {filtered.length})
-              </span>
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-[10px] font-semibold text-stardust disabled:opacity-40 hover:text-white"
-              >
-                Next
-                <ChevronRight size={12} />
-              </button>
-            </div>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-              className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[10px] font-semibold text-stardust"
+                    {/* Tablet and desktop */}
+                    <div className="hidden grid-cols-[1.3fr_1fr_1.2fr_0.8fr_0.9fr_1.5rem] items-center gap-3 md:grid">
+                      <div>
+                        <p className="text-xs font-semibold text-white">{datePart}</p>
+                        <p className="text-[11px] text-stardust">{timePart}</p>
+                      </div>
+                      <span className="flex items-center gap-2 text-xs font-semibold text-white">
+                        <span
+                          className={`grid h-6 w-6 place-items-center rounded-full ${
+                            incoming ? "bg-teal/15 text-teal" : "bg-btc-orange/15 text-btc-orange"
+                          }`}
+                        >
+                          {incoming ? <ArrowDownLeft size={13} /> : <ArrowUpRight size={13} />}
+                        </span>
+                        {incoming ? "Received" : "Sent"}
+                      </span>
+                      <span className={`font-mono text-sm font-semibold ${amountClass}`}>
+                        {sign}
+                        {formatTxAmountUsd(tx.amount)}
+                      </span>
+                      <span className="text-xs font-semibold text-white">{tx.token}</span>
+                      <span className="w-fit rounded-full bg-success/15 px-2.5 py-0.5 text-[10px] font-semibold text-success">
+                        Confirmed
+                      </span>
+                      <ChevronDown
+                        size={14}
+                        className={`text-stardust transition ${expanded ? "rotate-180" : ""}`}
+                      />
+                    </div>
+                  </button>
+
+                  {expanded && (
+                    <div className="border-t border-white/5 bg-black/20 px-4 py-3">
+                      <dl className="grid gap-3 sm:grid-cols-2">
+                        <DetailRow
+                          label="Transaction hash"
+                          value={tx.hash}
+                          mono
+                          copyText={tx.hash}
+                          explorerHref={`https://celoscan.io/tx/${tx.hash}`}
+                        />
+                        <DetailRow
+                          label="Recipient"
+                          value={tx.recipient || "—"}
+                          mono
+                          copyText={tx.recipient || undefined}
+                        />
+                        <DetailRow label="Amount" value={formatTxAmountToken(tx.amountToken, tx.token)} />
+                        <DetailRow label="USD value" value={formatTxAmountUsd(tx.amount)} />
+                        <DetailRow label="Network" value="Celo Mainnet" />
+                        <DetailRow label="Time" value={`${datePart} ${timePart}`} />
+                      </dl>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {rows.length > shown && (
+          <div className="border-t border-white/10 p-3 text-center">
+            <button
+              type="button"
+              onClick={() => setShown((count) => count + PAGE_STEP)}
+              className="rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:border-btc-orange/40"
             >
-              <option value={10}>10 per page</option>
-              <option value={25}>25 per page</option>
-              <option value={50}>50 per page</option>
-            </select>
+              Show more ({rows.length - shown} left)
+            </button>
           </div>
         )}
-      </Card>
+      </section>
     </div>
   );
 }

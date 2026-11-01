@@ -2,82 +2,114 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { AnalysisLoading } from "@/components/layout/AnalysisLoading";
-import { AnalyzeWalletPrompt } from "@/components/layout/AnalyzeWalletPrompt";
 import { DashboardBootLoading } from "@/components/layout/DashboardBootLoading";
+import { WalletAnalyzingScreen } from "@/components/layout/WalletAnalyzingScreen";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useStoredAnalysis } from "@/hooks/useStoredAnalysis";
 import { useWalletData } from "@/hooks/useWalletData";
 import { hasCompletedAnalysis, loadWalletPayload } from "@/lib/dashboardSession";
+import { isEvmAddress } from "@/lib/walletAddress";
 import { WalletDataProvider } from "@/providers/WalletDataProvider";
 
-const ANALYSIS_STEP_MS = 1400;
-
-type DashboardPhase = "boot" | "prompt" | "loading" | "ready";
+type DashboardPhase = "boot" | "analyzing" | "error" | "ready";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const analyzeRequested = searchParams.get("analyze") === "1";
   const chatRequested = searchParams.get("chat") === "1";
-  const { ready, authenticated, address } = useWalletAuth();
-  const sessionCache = address ? loadWalletPayload(address) : null;
-  const storedStatus = useStoredAnalysis(address);
-  const { analyzeWallet, isAnalyzing, walletData, isHydrating, loadStoredWallet } = useWalletData();
+  const analyzeParam = searchParams.get("analyze");
+
+  // ?address=0x… lets a visitor view any public wallet (guest mode)
+  const rawAddressParam = searchParams.get("address")?.trim() ?? "";
+  const addressParam = isEvmAddress(rawAddressParam) ? rawAddressParam : null;
+
+  const { ready, authenticated, address: ownAddress } = useWalletAuth();
+  const subject = addressParam ?? ownAddress ?? null; // the wallet we are analyzing
+  const isGuest = !authenticated;
+
+  const sessionCache = subject ? loadWalletPayload(subject) : null;
+  const storedStatus = useStoredAnalysis(subject);
+  const { analyzeWallet, walletData, isHydrating, loadStoredWallet } = useWalletData();
+
+  // Loaded data only counts if it belongs to the wallet we are viewing
+  const dataMatches = Boolean(
+    walletData && subject && walletData.walletAddress?.toLowerCase() === subject.toLowerCase()
+  );
+
   const [phase, setPhase] = useState<DashboardPhase>("boot");
-  const [analysisStep, setAnalysisStep] = useState(0);
+  const [analysisDone, setAnalysisDone] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
   const autoAnalyzeStarted = useRef(false);
   const autoLoadStarted = useRef(false);
+  const subjectRef = useRef(subject);
+  subjectRef.current = subject;
+  const analyzingRef = useRef(false); // true while the analyzing/error screen owns the page
 
+  const cleanUrl = useCallback(() => {
+    const qs = new URLSearchParams();
+    if (addressParam) qs.set("address", addressParam);
+    if (chatRequested) qs.set("chat", "1");
+    const s = qs.toString();
+    return s ? `/dashboard?${s}` : "/dashboard";
+  }, [addressParam, chatRequested]);
+
+  // Not signed in and no wallet to view: back to the entry page
   useEffect(() => {
-    if (ready && !authenticated) {
+    if (ready && !authenticated && !addressParam) {
       router.replace("/");
     }
-  }, [ready, authenticated, router]);
+  }, [ready, authenticated, addressParam, router]);
 
+  // The wallet being viewed changed: start over
   useEffect(() => {
     autoAnalyzeStarted.current = false;
     autoLoadStarted.current = false;
+    analyzingRef.current = false;
     setPhase("boot");
-  }, [address]);
+  }, [subject]);
+
+  // Drop the legacy ?analyze=1 flag
+  useEffect(() => {
+    if (analyzeParam) router.replace(cleanUrl());
+  }, [analyzeParam, cleanUrl, router]);
 
   const hasCachedAnalysis =
-    Boolean(walletData || sessionCache) ||
+    Boolean(dataMatches || sessionCache) ||
     storedStatus === "yes" ||
-    (address ? hasCompletedAnalysis() : false);
+    (subject ? hasCompletedAnalysis() : false);
 
   const isBooting =
-    Boolean(address) &&
-    (isHydrating || (storedStatus === "unknown" && !sessionCache && !walletData));
+    Boolean(subject) &&
+    (isHydrating || (storedStatus === "unknown" && !sessionCache && !dataMatches));
 
   const startAnalysis = useCallback(async () => {
-    if (!address) return;
-    setPhase("loading");
+    if (!subject) return;
+    const target = subject;
+    analyzingRef.current = true;
+    setAttempt((n) => n + 1);
+    setAnalysisDone(false);
+    setPhase("analyzing");
     try {
-      await analyzeWallet(address);
-      setPhase("ready");
+      await analyzeWallet(target);
+      if (subjectRef.current !== target) return; // wallet changed while we waited
+      setAnalysisDone(true); // the screen finishes its steps, then calls onDone
     } catch {
-      setPhase("prompt");
+      if (subjectRef.current !== target) return;
+      setPhase("error"); // analyzingRef stays true so the effect below leaves it alone
     }
-  }, [address, analyzeWallet]);
+  }, [subject, analyzeWallet]);
 
-  const goToDashboard = useCallback(async () => {
-    if (!address) return;
-    if (!walletData) {
-      setPhase("boot");
-      const loaded = await loadStoredWallet(address);
-      if (!loaded) {
-        setPhase("prompt");
-        return;
-      }
-    }
-    router.replace(chatRequested ? "/dashboard?chat=1" : "/dashboard");
+  const handleAnimationDone = useCallback(() => {
+    analyzingRef.current = false;
     setPhase("ready");
-  }, [address, walletData, loadStoredWallet, router, chatRequested]);
+  }, []);
 
   useEffect(() => {
-    if (!address) {
-      setPhase("prompt");
+    if (analyzingRef.current) return;
+
+    if (!subject) {
+      setPhase("boot");
       return;
     }
 
@@ -86,84 +118,94 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (walletData) {
+    if (dataMatches) {
       setPhase("ready");
-      if (analyzeRequested) {
-        router.replace(chatRequested ? "/dashboard?chat=1" : "/dashboard");
-      }
       return;
     }
 
     if (hasCachedAnalysis && !autoLoadStarted.current) {
       autoLoadStarted.current = true;
-      if (sessionCache) {
-        setPhase("ready");
-        return;
-      }
       setPhase("boot");
-      void loadStoredWallet(address).then((loaded) => {
-        setPhase(loaded ? "ready" : "prompt");
+      const target = subject;
+      void loadStoredWallet(target).then((loaded) => {
+        if (subjectRef.current !== target) return; // wallet changed while loading
+        if (loaded) {
+          setPhase("ready");
+        } else {
+          autoAnalyzeStarted.current = true;
+          void startAnalysis();
+        }
       });
       return;
     }
 
-    if (analyzeRequested && !autoAnalyzeStarted.current) {
+    // First time for this wallet: analyze automatically (no prompt screen)
+    if (!hasCachedAnalysis && !autoAnalyzeStarted.current) {
       autoAnalyzeStarted.current = true;
-      router.replace(chatRequested ? "/dashboard?chat=1" : "/dashboard");
       void startAnalysis();
-      return;
-    }
-
-    if (!hasCachedAnalysis) {
-      setPhase("prompt");
     }
   }, [
-    address,
-    analyzeRequested,
-    chatRequested,
-    router,
-    startAnalysis,
-    walletData,
+    subject,
     isBooting,
+    dataMatches,
     hasCachedAnalysis,
-    sessionCache,
-    loadStoredWallet
+    loadStoredWallet,
+    startAnalysis
   ]);
 
+  // Safety net: if we sit on the boot screen too long, stop waiting and analyze
+  const startRef = useRef(startAnalysis);
+  startRef.current = startAnalysis;
   useEffect(() => {
-    if (phase !== "loading") return;
+    if (phase !== "boot" || !subject) return;
+    const timer = window.setTimeout(() => {
+      analyzingRef.current = false; // we are on the boot screen, so nothing else is working
+      autoAnalyzeStarted.current = true;
+      void startRef.current();
+    }, 12000);
+    return () => window.clearTimeout(timer);
+  }, [phase, subject]);
 
-    setAnalysisStep(0);
-    const timers = [0, 1, 2, 3].map((step) =>
-      window.setTimeout(() => setAnalysisStep(step), step * ANALYSIS_STEP_MS)
-    );
+  // Dev-only trace (console.log so it shows at default levels): paste it if the dashboard ever hangs
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    console.log("[dashboard-layout]", {
+      phase,
+      subject,
+      ownAddress,
+      addressParam,
+      dataFor: walletData?.walletAddress,
+      dataMatches,
+      isBooting,
+      isHydrating,
+      storedStatus,
+      analysisDone
+    });
+  }, [phase, subject, ownAddress, addressParam, walletData, dataMatches, isBooting, isHydrating, storedStatus, analysisDone]);
 
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-  }, [phase]);
+  if (!ready) return null;
+  if (!authenticated && !addressParam) return null; // redirecting to "/"
 
-  if (!ready || !authenticated) {
-    return null;
-  }
-
-  if (phase === "boot" || isBooting) {
-    return <DashboardBootLoading />;
-  }
-
-  if (phase === "prompt" && !isAnalyzing) {
+  if (phase === "analyzing" || phase === "error") {
     return (
-      <AnalyzeWalletPrompt
-        address={address}
-        hasStoredAnalysis={hasCachedAnalysis}
-        onAnalyze={startAnalysis}
-        onGoToDashboard={goToDashboard}
+      <WalletAnalyzingScreen
+        key={attempt}
+        wallet={subject ?? undefined}
+        ready={analysisDone}
+        error={
+          phase === "error"
+            ? "Something went wrong while reading this wallet. Check your connection and try again."
+            : null
+        }
+        onDone={handleAnimationDone}
+        onRetry={() => void startAnalysis()}
+        onCancel={isGuest ? () => router.replace("/") : undefined}
       />
     );
   }
 
-  if (phase === "loading" || isAnalyzing) {
-    return <AnalysisLoading step={analysisStep} />;
+  if (phase === "boot") {
+    return <DashboardBootLoading />;
   }
 
   return children;

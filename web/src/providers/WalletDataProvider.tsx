@@ -29,6 +29,8 @@ type AnalyzeOptions = {
 
 type WalletDataContextValue = {
   walletData: WalletData | null;
+  /** Wallet the loaded data belongs to (may differ from the signed-in wallet). */
+  activeAddress: string | null;
   isAnalyzing: boolean;
   isHydrating: boolean;
   isRefreshing: boolean;
@@ -69,6 +71,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
   const { address } = useWalletAuth();
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
+  const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -77,8 +80,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!address) {
-      setWalletData(null);
-      setLastFetchedAt(null);
+      // Signed out: keep a guest view (data loaded for a pasted wallet) alone
       setIsHydrating(false);
       silentRefreshKey.current = null;
       return;
@@ -94,6 +96,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
       if (sessionPayload && !cancelled) {
         setWalletData(sessionPayload.data);
         setLastFetchedAt(sessionPayload.fetchedAt);
+        setActiveAddress(normalized);
       }
 
       const stored = await fetchStoredAnalysisRecord(normalized);
@@ -102,11 +105,13 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
       if (stored) {
         setWalletData(stored.walletData);
         setLastFetchedAt(stored.fetchedAt);
+        setActiveAddress(normalized);
         saveWalletData(normalized, stored.walletData, stored.fetchedAt);
         markAnalysisComplete();
       } else if (!sessionPayload) {
         setWalletData(null);
         setLastFetchedAt(null);
+        setActiveAddress(null);
       }
 
       setIsHydrating(false);
@@ -167,6 +172,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
 
         setWalletData(payload.walletData);
         setLastFetchedAt(fetchedAt);
+        setActiveAddress(target);
         saveWalletData(target, payload.walletData, fetchedAt);
         markAnalysisComplete();
       } catch (err) {
@@ -188,8 +194,8 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
   );
 
   const refreshWallet = useCallback(async () => {
-    await analyzeWallet(undefined, { force: true });
-  }, [analyzeWallet]);
+    await analyzeWallet(activeAddress ?? undefined, { force: true });
+  }, [analyzeWallet, activeAddress]);
 
   const loadStoredWallet = useCallback(
     async (walletAddress?: string) => {
@@ -201,6 +207,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
 
       setWalletData(stored.walletData);
       setLastFetchedAt(stored.fetchedAt);
+      setActiveAddress(target);
       saveWalletData(target, stored.walletData, stored.fetchedAt);
       markAnalysisComplete();
       return true;
@@ -209,9 +216,10 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (!address || isHydrating || !walletData || !lastFetchedAt) return;
+    const viewed = activeAddress ?? address;
+    if (!viewed || isHydrating || !walletData || !lastFetchedAt) return;
 
-    const key = address.toLowerCase();
+    const key = viewed.toLowerCase();
     if (silentRefreshKey.current === key) return;
 
     const ageMs = Date.now() - new Date(lastFetchedAt).getTime();
@@ -219,11 +227,12 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
 
     silentRefreshKey.current = key;
     void analyzeWallet(key, { silent: true });
-  }, [address, isHydrating, walletData, lastFetchedAt, analyzeWallet]);
+  }, [address, activeAddress, isHydrating, walletData, lastFetchedAt, analyzeWallet]);
 
   const clearWallet = useCallback(() => {
     setWalletData(null);
     setLastFetchedAt(null);
+    setActiveAddress(null);
     setError(null);
     silentRefreshKey.current = null;
     clearAnalysisSession();
@@ -232,6 +241,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       walletData,
+      activeAddress,
       isAnalyzing,
       isHydrating,
       isRefreshing,
@@ -244,6 +254,7 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
     }),
     [
       walletData,
+      activeAddress,
       isAnalyzing,
       isHydrating,
       isRefreshing,

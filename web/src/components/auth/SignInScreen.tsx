@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Mail, Search, Wallet } from "lucide-react";
+import { ArrowRight, Check, Mail, Search, Wallet } from "lucide-react";
 import { OnfraLogoLockup } from "@/components/layout/OnfraLogoLockup";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { isEvmAddress } from "@/lib/walletAddress";
@@ -78,16 +78,13 @@ export function SignInScreen({ onAnalyze, initialWallet = "", initialError = "" 
 
   const [wallet, setWallet] = useState(initialWallet);
   const [error, setError] = useState(initialError);
+  const isValid = isEvmAddress(wallet);
 
   function handleAnalyze(e: FormEvent) {
     e.preventDefault();
-    const value = wallet.trim();
-    if (!isEvmAddress(value)) {
-      setError("Enter a valid Celo wallet address: 0x followed by 40 characters.");
-      return;
-    }
+    if (!isValid) return; // also blocks the Enter key
     setError("");
-    onAnalyze(value);
+    onAnalyze(wallet.trim());
   }
 
   return (
@@ -141,14 +138,21 @@ export function SignInScreen({ onAnalyze, initialWallet = "", initialError = "" 
                 }`}
               />
             </div>
-            {error && (
+            {error && !isValid && (
               <p id="wallet-error" role="alert" className="mt-2 text-xs font-medium text-rose-600">
                 {error}
               </p>
             )}
+            {isValid && (
+              <p role="status" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                <Check className="h-3.5 w-3.5 stroke-[3]" />
+                Verified address
+              </p>
+            )}
             <button
               type="submit"
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#564870] px-5 py-3.5 text-sm font-bold text-white shadow-md shadow-[#564870]/25 transition hover:bg-[#43385a] active:scale-[0.98]"
+              disabled={!isValid}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#564870] px-5 py-3.5 text-sm font-bold text-white shadow-md shadow-[#564870]/25 transition hover:bg-[#43385a] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:bg-[#564870] disabled:active:scale-100"
             >
               <span>Analyze wallet</span>
               <ArrowRight className="h-4 w-4 stroke-[2.5]" />
@@ -212,7 +216,7 @@ export function SignInScreen({ onAnalyze, initialWallet = "", initialError = "" 
         </div>
 
         <p className="mt-8 text-center text-xs text-[#4a4655]">
-          For an OnFRA integration?{" "}
+          For OnFRA integration?{" "}
           <a href={SITE_URL} className="font-bold text-[#564870] hover:underline">
             OnFRA for developers →
           </a>

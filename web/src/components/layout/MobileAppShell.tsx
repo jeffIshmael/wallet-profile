@@ -12,8 +12,10 @@ const HIDE_MOBILE_NAV_PATHS = ["/chat", "/"];
 function MobileBottomNavGate() {
   const pathname = usePathname();
   const { ready, authenticated } = useWalletAuth();
+  // Guests can view a pasted wallet on /dashboard, so they get the nav there too
+  const canShow = authenticated || pathname.startsWith("/dashboard");
 
-  if (!ready || !authenticated || HIDE_MOBILE_NAV_PATHS.includes(pathname)) return null;
+  if (!ready || !canShow || HIDE_MOBILE_NAV_PATHS.includes(pathname)) return null;
 
   return <MobileBottomNav />;
 }
@@ -25,7 +27,8 @@ type MobileAppShellProps = {
 export function MobileAppShell({ children }: MobileAppShellProps) {
   const pathname = usePathname();
   const { ready, authenticated } = useWalletAuth();
-  const showNav = ready && authenticated && !HIDE_MOBILE_NAV_PATHS.includes(pathname);
+  const showNav =
+    ready && (authenticated || pathname.startsWith("/dashboard")) && !HIDE_MOBILE_NAV_PATHS.includes(pathname);
 
   return (
     <>

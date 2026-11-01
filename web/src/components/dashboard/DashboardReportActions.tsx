@@ -5,6 +5,7 @@ import { useState } from "react";
 import { AttestationModal } from "@/components/ai/AttestationModal";
 import { exportSampleOfficialReportPdf } from "@/lib/reports/exportOfficialReportPdf";
 import { clsx } from "clsx";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 
 type DashboardReportActionsProps = {
   className?: string;
@@ -13,6 +14,7 @@ type DashboardReportActionsProps = {
 
 export function DashboardReportActions({ className, variant = "header" }: DashboardReportActionsProps) {
   const [reportOpen, setReportOpen] = useState(false);
+  const { authenticated, privyEnabled, loginWithGoogle, loginWithWallet } = useWalletAuth();
   const isMobile = variant === "mobile";
 
   return (
@@ -20,9 +22,13 @@ export function DashboardReportActions({ className, variant = "header" }: Dashbo
       <div className={clsx("flex items-stretch", isMobile ? "w-full gap-3" : "gap-1.5", className)}>
         <button
           type="button"
-          onClick={() => setReportOpen(true)}
+          onClick={() => {
+            // Paid reports need an account: guests sign up first
+            if (authenticated) setReportOpen(true);
+            else void (privyEnabled ? loginWithGoogle : loginWithWallet)();
+          }}
           className={clsx(
-            "report-btn-primary inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-btc-orange font-bold text-white transition hover:bg-btc-orange/90",
+            "report-btn-primary inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-btc-orange font-bold text-void transition hover:bg-btc-orange/90",
             isMobile ? "min-w-0 flex-1 gap-1.5 px-2.5 text-[11px]" : "gap-1 px-2 text-[10px] md:gap-1.5 md:px-2.5 md:text-[11px]"
           )}
         >

@@ -28,8 +28,9 @@ export function DashboardShell({
   scrollable = false,
   hideChatFab = false
 }: DashboardShellProps) {
-  const { ready, authenticated } = useWalletAuth();
-  const mobileNavVisible = ready && authenticated;
+  const { ready } = useWalletAuth();
+  // The shell only renders for signed-in users or guests viewing a pasted wallet; both get the bottom nav
+  const mobileNavVisible = ready;
   const [chatWidth, setChatWidth] = useState(DEFAULT_CHAT_WIDTH);
 
   const startResize = useCallback(
@@ -79,8 +80,8 @@ export function DashboardShell({
         />
 
         <div className="flex min-h-0 flex-1 overflow-visible">
-          <aside className="dashboard-sidebar relative z-20 hidden h-full w-14 shrink-0 flex-col items-center overflow-visible border-r border-white/10 bg-black/40 py-3 lg:flex">
-            <DashboardNav />
+          <aside className="dashboard-sidebar relative z-20 hidden h-full w-14 shrink-0 flex-col items-center overflow-visible xl:w-48 xl:items-stretch xl:px-2 border-r border-white/10 bg-black/40 py-3 lg:flex">
+            <DashboardNav onChatOpen={() => onChatOpenChange?.(true)} />
           </aside>
 
           <div

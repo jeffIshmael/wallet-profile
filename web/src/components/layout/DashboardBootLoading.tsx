@@ -5,7 +5,7 @@ import { OnfraLogoLockup } from "@/components/layout/OnfraLogoLockup";
 
 export function DashboardBootLoading() {
   return (
-    <div className="entry-bg fixed inset-0 z-50 flex min-h-screen items-center justify-center overflow-hidden font-inter text-[#111017]">
+    <div className="entry-bg fixed inset-0 z-[60] flex min-h-screen items-center justify-center overflow-hidden font-inter text-[#111017]">
       <div className="entry-pattern" />
       <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/40 blur-3xl" />
 
