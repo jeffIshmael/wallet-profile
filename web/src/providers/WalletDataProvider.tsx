@@ -160,7 +160,14 @@ export function WalletDataProvider({ children }: { children: ReactNode }) {
         });
 
         if (!response.ok) {
-          const message = await response.text();
+          const raw = await response.text();
+          let message = raw;
+          try {
+            const parsed = JSON.parse(raw) as { error?: string };
+            if (parsed.error) message = parsed.error;
+          } catch {
+            /* not JSON: use the text as is */
+          }
           throw new Error(message || "Analysis failed.");
         }
 

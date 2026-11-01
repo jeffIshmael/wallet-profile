@@ -39,6 +39,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<DashboardPhase>("boot");
   const [analysisDone, setAnalysisDone] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const autoAnalyzeStarted = useRef(false);
   const autoLoadStarted = useRef(false);
@@ -89,13 +90,15 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     analyzingRef.current = true;
     setAttempt((n) => n + 1);
     setAnalysisDone(false);
+    setErrorMessage("");
     setPhase("analyzing");
     try {
       await analyzeWallet(target);
       if (subjectRef.current !== target) return; // wallet changed while we waited
       setAnalysisDone(true); // the screen finishes its steps, then calls onDone
-    } catch {
+    } catch (err) {
       if (subjectRef.current !== target) return;
+      setErrorMessage(err instanceof Error ? err.message.slice(0, 180) : "");
       setPhase("error"); // analyzingRef stays true so the effect below leaves it alone
     }
   }, [subject, analyzeWallet]);
@@ -166,23 +169,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [phase, subject]);
 
-  // Dev-only trace (console.log so it shows at default levels): paste it if the dashboard ever hangs
-  useEffect(() => {
-    if (process.env.NODE_ENV === "production") return;
-    console.log("[dashboard-layout]", {
-      phase,
-      subject,
-      ownAddress,
-      addressParam,
-      dataFor: walletData?.walletAddress,
-      dataMatches,
-      isBooting,
-      isHydrating,
-      storedStatus,
-      analysisDone
-    });
-  }, [phase, subject, ownAddress, addressParam, walletData, dataMatches, isBooting, isHydrating, storedStatus, analysisDone]);
-
   if (!ready) return null;
   if (!authenticated && !addressParam) return null; // redirecting to "/"
 
@@ -194,7 +180,8 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         ready={analysisDone}
         error={
           phase === "error"
-            ? "Something went wrong while reading this wallet. Check your connection and try again."
+            ? errorMessage ||
+              "Something went wrong while reading this wallet. Check your connection and try again."
             : null
         }
         onDone={handleAnimationDone}

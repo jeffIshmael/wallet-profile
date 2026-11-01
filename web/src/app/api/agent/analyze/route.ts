@@ -7,6 +7,11 @@ import {
 import { runDashboardAnalysis } from "@/lib/agent/onfraServer";
 import { insufficientBalanceError } from "@/lib/agent/apiErrors";
 import { assertPayment, getTierPriceUsdt } from "@/lib/agent/x402";
+import {
+  freeDashboardLookupsEnabled,
+  isBrowserSameOrigin,
+  takeFreeLookup
+} from "@/lib/guestLimit";
 import { assertSufficientUsdtBalance } from "@/lib/agent/usdtBalance";
 import { resolveAnalysisTarget } from "@/lib/agent/walletQuery";
 import { badRequest, isEvmAddress, parseJsonBody } from "@/lib/agent/validate";
@@ -86,7 +91,16 @@ export async function POST(req: Request) {
   const target = resolveAnalysisTarget(walletAddress, callerAddress);
   const priceUsdt = getTierPriceUsdt("external");
 
-  if (target.isExternal) {
+  // Looking up any public wallet from our own dashboard is free, including for visitors who are
+  // not signed in. Direct API/agent calls keep paying through x402. Fresh analyses on this free
+  // path are rate limited below.
+  const freeDashboardLookup =
+    isDashboard &&
+    !target.isOwnWallet &&
+    freeDashboardLookupsEnabled() &&
+    isBrowserSameOrigin(req);
+
+  if (target.isExternal && !freeDashboardLookup) {
     try {
       const balanceCheck = await assertSufficientUsdtBalance(target.callerWallet, priceUsdt);
       if (!balanceCheck.ok) {
@@ -98,8 +112,8 @@ export async function POST(req: Request) {
   }
 
   const payment = await assertPayment(req, "external", {
-    skipPayment: target.isOwnWallet,
-    skipReason: "own-wallet analyze"
+    skipPayment: target.isOwnWallet || freeDashboardLookup,
+    skipReason: target.isOwnWallet ? "own-wallet analyze" : "free dashboard lookup"
   });
   if (!payment.ok) return payment.response;
   const settlement = payment.settlement;
@@ -131,6 +145,28 @@ export async function POST(req: Request) {
           isDashboard,
           fields,
           run?.createdAt.toISOString()
+        );
+      }
+    }
+
+    // Cached results above are free. A fresh run on the free path counts against the caller.
+    if (freeDashboardLookup) {
+      const gate = takeFreeLookup(req);
+      if (!gate.ok) {
+        const minutes = Math.max(1, Math.ceil(gate.retryAfterSec / 60));
+        await trackApiEvent({
+          endpoint: "analyze",
+          status: "error",
+          walletAddress,
+          durationMs: Date.now() - started,
+          metadata: { message: "Free lookup rate limited", retryAfterSec: gate.retryAfterSec }
+        });
+        return Response.json(
+          {
+            error: `Too many wallet lookups from this connection. Try again in about ${minutes} minute${minutes === 1 ? "" : "s"}, or sign in to analyze your own wallet.`,
+            code: "RATE_LIMITED"
+          },
+          { status: 429, headers: { "Retry-After": String(gate.retryAfterSec) } }
         );
       }
     }

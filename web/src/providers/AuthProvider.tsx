@@ -379,7 +379,7 @@ export function AppAuthProvider({ children }: { children: React.ReactNode }) {
       appId={appId}
       config={{
         appearance: {
-          theme: "dark",
+          theme: "light",
           accentColor: "#B8B0C8",
           showWalletLoginFirst: false
         },

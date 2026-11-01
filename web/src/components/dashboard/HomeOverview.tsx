@@ -31,7 +31,10 @@ import {
   type Timeframe,
   type TokenSelection
 } from "@/lib/flow";
-import { truncateAddress } from "@/lib/format";
+import { formatTokenBalance, truncateAddress } from "@/lib/format";
+import { TOKEN_COLORS } from "@/lib/flow";
+import { TokenBreakdown } from "@/components/dashboard/TokenBreakdown";
+import type { WalletData } from "@/types/walletData";
 import { addRecentWallet } from "@/lib/recentWallets";
 
 /* ---------- small pieces ---------- */
@@ -149,6 +152,52 @@ function GuestBanner() {
   );
 }
 
+function BalancesCard({ tokens, hideCelo }: { tokens: WalletData["tokens"]; hideCelo: boolean }) {
+  const list = tokens.filter((item) => !(hideCelo && item.symbol === "CELO"));
+  const hasAny = list.some((item) => item.balance > 0);
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-void-surface p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-space text-sm font-semibold text-white">Token balances</h2>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-stardust">
+          <span className="h-1.5 w-1.5 rounded-full bg-success" />
+          Celo Mainnet
+        </span>
+      </div>
+
+      {list.length === 0 ? (
+        <p className="mt-3 text-xs text-stardust">No token balances on Celo.</p>
+      ) : (
+        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {list.map(({ symbol, balance }) => (
+            <li
+              key={symbol}
+              className={`min-w-0 rounded-xl border border-white/10 bg-black/20 p-3 ${balance > 0 ? "" : "opacity-60"}`}
+            >
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-stardust">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: TOKEN_COLORS[symbol] ?? "#8f889e" }}
+                />
+                {symbol}
+              </p>
+              <p className="mt-1.5 truncate font-mono text-sm font-bold text-white">
+                {formatTokenBalance(balance, symbol)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-3 text-[11px] text-stardust">
+        {hasAny || list.length === 0 ? "" : "No balances on this wallet yet. "}
+        Celo is supported today. Base and Arc are coming soon.
+      </p>
+    </section>
+  );
+}
+
 /* ---------- the page ---------- */
 
 export function HomeOverview() {
@@ -224,7 +273,7 @@ export function HomeOverview() {
       <section className="rounded-2xl border border-white/10 bg-void-surface p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] text-stardust">{isOwn ? "Your wallet" : "Wallet"}</p>
+            <p className="text-[11px] text-stardust">{isOwn ? "Your wallet · connected" : "Wallet"}</p>
             <p className="mt-0.5 flex items-center gap-1.5 font-mono text-sm font-semibold text-white">
               {shortAddress}
               <button
@@ -240,7 +289,7 @@ export function HomeOverview() {
           <div className="flex shrink-0 items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-stardust">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              {isOwn ? "Connected" : "Celo Network"}
+              Celo Mainnet
             </span>
             <button
               type="button"
@@ -269,7 +318,11 @@ export function HomeOverview() {
             icon={TrendingUp}
           />
         </div>
+
+        <TokenBreakdown tokens={current.tokens} className="mt-3" />
       </section>
+
+      <BalancesCard tokens={walletData.tokens} hideCelo={miniPay} />
 
       <div className="grid gap-3 lg:grid-cols-3">
         {/* Cash flow */}

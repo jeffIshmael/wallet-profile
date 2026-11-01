@@ -21,6 +21,8 @@ import {
   formatTxAmountUsd,
   moneyPrecise
 } from "@/lib/format";
+import { TokenBreakdown } from "@/components/dashboard/TokenBreakdown";
+import { describeTokens, tokensByVolume } from "@/lib/flow";
 import { exportStatementPdf } from "@/lib/statements/exportStatementPdf";
 import {
   filterTransactionsByPeriod,
@@ -157,6 +159,7 @@ export function TransactionStatementsView() {
   const netPositive = totals.net >= 0;
   const tokens: TokenFilter[] = ["All", "USDT", "USDC", "USDm", ...(miniPay ? [] : (["CELO"] as const))];
   const visible = rows.slice(0, shown);
+  const tokensUsed = tokensByVolume(rows);
 
   function resetList() {
     setShown(PAGE_STEP);
@@ -314,8 +317,10 @@ export function TransactionStatementsView() {
           value={`${netPositive ? "+" : "−"}${moneyPrecise(Math.abs(totals.net))}`}
           tone={netPositive ? "text-teal" : "text-danger"}
         />
-        <SummaryCard label="Transactions" value={String(rows.length)} />
+        <SummaryCard label="Transactions" value={String(rows.length)} note={describeTokens(tokensUsed)} />
       </div>
+
+      <TokenBreakdown tokens={tokensUsed} className="mt-3" />
 
       {/* Transactions */}
       <section className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-void-surface">

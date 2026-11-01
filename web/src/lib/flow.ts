@@ -24,7 +24,36 @@ export const TOKENS: TokenSelection[] = ["All", "USDT", "USDC", "USDm", "CELO"];
 
 const DAY = 86_400_000;
 
-export type FlowTotals = { received: number; sent: number; net: number; count: number };
+export const TOKEN_COLORS: Record<string, string> = {
+  USDT: "#26a17b",
+  USDC: "#2775ca",
+  USDm: "#f5a623",
+  CELO: "#f5b862"
+};
+
+/** "Across 3 tokens", "Across 1 token", "No token activity" */
+export function describeTokens(tokens: string[]): string {
+  if (tokens.length === 0) return "No token activity";
+  return `Across ${tokens.length} token${tokens.length === 1 ? "" : "s"}`;
+}
+
+/** Distinct tokens in a set of transactions, biggest volume first. */
+export function tokensByVolume(txs: Tx[]): string[] {
+  const volume = new Map<string, number>();
+  for (const tx of txs) {
+    volume.set(tx.token, (volume.get(tx.token) ?? 0) + (Number(tx.amount) || 0));
+  }
+  return [...volume.entries()].sort((a, b) => b[1] - a[1]).map(([symbol]) => symbol);
+}
+
+export type FlowTotals = {
+  received: number;
+  sent: number;
+  net: number;
+  count: number;
+  /** Tokens that moved in this window, biggest volume first */
+  tokens: string[];
+};
 
 /** Totals for one window ending now. windowsBack = 1 gives the window just before it. */
 export function summarize(
@@ -38,7 +67,7 @@ export function summarize(
   const start = end - days * DAY;
   let received = 0;
   let sent = 0;
-  let count = 0;
+  const inWindow: Tx[] = [];
 
   for (const tx of txs) {
     if (token !== "All" && tx.token !== token) continue;
@@ -47,10 +76,16 @@ export function summarize(
     const amount = Number(tx.amount) || 0;
     if (tx.direction === "Incoming") received += amount;
     else if (tx.direction === "Outgoing") sent += amount;
-    count += 1;
+    inWindow.push(tx);
   }
 
-  return { received, sent, net: received - sent, count };
+  return {
+    received,
+    sent,
+    net: received - sent,
+    count: inWindow.length,
+    tokens: tokensByVolume(inWindow)
+  };
 }
 
 export type SeriesPoint = { label: string; received: number; sent: number };
