@@ -47,7 +47,7 @@ export default function AgentsDocsPage() {
           Works in any stdio client (Cursor, Claude Desktop, LM Studio, Continue, MCP Inspector). Requires Node.js.
         </p>
         
-        <ol className="list-decimal pl-5 space-y-2 mb-4 text-sm text-stardust">
+        <ol className="list-decimal pl-5 space-y-2 mb-4 text-sm text-[var(--ink-body)]">
           <li>Run <code>npx -y @jeffishmael/onfra-skill</code> to test it.</li>
           <li>Open your MCP config (e.g., <code>claude_desktop_config.json</code> or Cursor <em>Settings → MCP</em>).</li>
           <li>Merge the snippet below into <code>mcpServers</code>.</li>
@@ -73,17 +73,17 @@ export default function AgentsDocsPage() {
 
         <DocsH2 id="mcp">Remote hosted</DocsH2>
         <p className="font-medium">Skip the install — point at the hosted endpoint</p>
-        <p className="mt-2 text-sm text-stardust">
+        <p className="mt-2 text-sm text-[var(--ink-body)]">
           No Node, no keys. The hosted endpoint exposes all OnFRA tools for financial analysis, lender screening, and verified reports.
         </p>
 
-        <div className="mt-6 mb-8 rounded-xl border border-white/10 bg-canvas-card/50 p-5">
+        <div className="mt-6 mb-8 rounded-xl border border-[var(--lav-border)] bg-[var(--lav-tint)] p-5">
           <h3 className="text-sm font-semibold mb-2">Endpoint</h3>
           <DocsCode>{`${API_URL}/api/mcp`}</DocsCode>
         </div>
 
         <h3 className="mt-8 text-base font-semibold">Streamable HTTP clients</h3>
-        <p className="mt-2 text-sm text-stardust">
+        <p className="mt-2 text-sm text-[var(--ink-body)]">
           For clients that support remote MCP URLs directly (Cursor, Claude, etc.):
         </p>
         <DocsCode>{`{
@@ -95,7 +95,7 @@ export default function AgentsDocsPage() {
 }`}</DocsCode>
 
         <h3 className="mt-8 text-base font-semibold">Stdio-only clients (mcp-remote bridge)</h3>
-        <p className="mt-2 text-sm text-stardust">
+        <p className="mt-2 text-sm text-[var(--ink-body)]">
           If your client only supports stdio, use <code>mcp-remote</code> to bridge to the hosted endpoint:
         </p>
         <DocsCode>{`{

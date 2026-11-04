@@ -12,7 +12,7 @@ type DocsShellProps = {
 
 export function DocsShell({ children, toc = [] }: DocsShellProps) {
   return (
-    <div className="docs-shell min-h-screen bg-black text-ink">
+    <div className="docs-shell min-h-screen bg-white text-[var(--ink)]">
       <DocsHeader />
       <div className="docs-layout mx-auto max-w-[90rem]">
         <DocsSidebar />

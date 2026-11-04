@@ -44,21 +44,21 @@ export default function A2ADocsPage() {
         </p>
         
         <div className="grid gap-4 sm:grid-cols-2 mb-8 mt-6">
-          <div className="rounded-xl border border-white/10 bg-canvas-card/50 p-5">
+          <div className="rounded-xl border border-[var(--lav-border)] bg-[var(--lav-tint)] p-5">
             <h3 className="text-sm font-semibold mb-2">Agent Card</h3>
-            <p className="text-xs text-ink-muted mb-4">Machine-readable skills and JSON-RPC endpoint URL.</p>
+            <p className="text-xs text-[var(--ink-body)] mb-4">Machine-readable skills and JSON-RPC endpoint URL.</p>
             <DocsCode>{`${API_URL}/.well-known/agent-card.json`}</DocsCode>
           </div>
-          <div className="rounded-xl border border-white/10 bg-canvas-card/50 p-5">
+          <div className="rounded-xl border border-[var(--lav-border)] bg-[var(--lav-tint)] p-5">
             <h3 className="text-sm font-semibold mb-2">JSON-RPC task server</h3>
-            <p className="text-xs text-ink-muted mb-4">POST message/send with an OnFRA tool payload.</p>
+            <p className="text-xs text-[var(--ink-body)] mb-4">POST message/send with an OnFRA tool payload.</p>
             <DocsCode>{`${API_URL}/api/a2a`}</DocsCode>
           </div>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-canvas-card/50 p-5 mb-10">
+        <div className="rounded-xl border border-[var(--lav-border)] bg-[var(--lav-tint)] p-5 mb-10">
           <h3 className="text-sm font-semibold mb-2">Skill IDs (comma-separated)</h3>
-          <p className="text-xs text-ink-muted mb-4">OnFRA A2A skills from the Agent Card.</p>
+          <p className="text-xs text-[var(--ink-body)] mb-4">OnFRA A2A skills from the Agent Card.</p>
           <DocsCode>{SKILLS.map(s => s.name).join(", ")}</DocsCode>
         </div>
 
@@ -67,13 +67,13 @@ export default function A2ADocsPage() {
         
         <div className="grid gap-4 sm:grid-cols-2">
           {SKILLS.map((skill) => (
-            <div key={skill.name} className="rounded-xl border border-white/10 bg-canvas-card/30 p-5 hover:border-white/20 transition">
+            <div key={skill.name} className="card-lift p-5">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-btc-orange font-mono text-[13px]">{skill.name}</span>
+                <span className="text-[var(--brand)] font-mono text-[13px]">{skill.name}</span>
                 <span className="text-sm font-medium">{skill.title}</span>
               </div>
-              <p className="text-xs text-ink-muted">
-                Allowed tools: <code className="text-[11px] text-ink bg-white/5 px-1 rounded">{skill.allowed}</code>
+              <p className="text-xs text-[var(--ink-body)]">
+                Allowed tools: <code className="text-[11px] text-[var(--ink)] bg-[var(--lav-chip)] px-1 rounded">{skill.allowed}</code>
               </p>
             </div>
           ))}

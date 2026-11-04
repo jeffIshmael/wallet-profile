@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
    RotatingWord: swaps the headline verb ("Understand" -> "Visualize" ...)
    Drop-in replacement for the static word, so the hero layout is unchanged.
 ------------------------------------------------------------------- */
-const WORDS = ["Understand", "Visualize", "Export", "Verify", "Track"];
+const WORDS = ["Understand", "Visualize", "Export", "Track"];
 // One soft background per word (same order as WORDS)
 const COLORS = ["#ffffff99", "#ffd9a8aa", "#bfeedaaa", "#c3dcfaaa", "#f6c9d6aa"];
 

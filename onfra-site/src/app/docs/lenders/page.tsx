@@ -100,7 +100,7 @@ export default function LendersDocsPage() {
             href={`${APP_URL}/report/REP-X141GYYEUM`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition"
+            className="btn-purple inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             View Sample REP Passport →
           </a>

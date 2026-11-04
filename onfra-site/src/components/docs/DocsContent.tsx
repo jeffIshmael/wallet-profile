@@ -7,21 +7,21 @@ import { DocsAssistantDropdown } from "./DocsAssistantDropdown";
 
 export function DocsHeader() {
   return (
-    <header className="docs-header sticky top-0 z-50 border-b border-white/8 bg-black/90 backdrop-blur-xl">
+    <header className="docs-header sticky top-0 z-50 border-b border-[var(--lav-border)] bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-6">
-          <Link href="/docs" className="flex items-center gap-2 text-sm font-medium text-ink">
+          <Link href="/docs" className="flex items-center gap-2 text-sm font-medium text-[var(--ink)]">
             <img src="/logo_dark.png" alt="OnFRA" className="h-5 w-5 rounded-full" />
             <span>OnFRA Docs</span>
           </Link>
-          <nav className="hidden items-center gap-5 text-xs text-ink-muted md:flex">
-            <Link href="/" className="transition hover:text-nude-soft">
+          <nav className="hidden items-center gap-5 text-xs text-[var(--ink-body)] md:flex">
+            <Link href="/" className="transition hover:text-[var(--brand)]">
               Home
             </Link>
-            <Link href={LINKS.skills} className="transition hover:text-nude-soft">
+            <Link href={LINKS.skills} className="transition hover:text-[var(--brand)]">
               Skills
             </Link>
-            <Link href={LINKS.pricing} className="transition hover:text-nude-soft">
+            <Link href={LINKS.pricing} className="transition hover:text-[var(--brand)]">
               Pricing
             </Link>
           </nav>
@@ -32,7 +32,7 @@ export function DocsHeader() {
             href={LINKS.agent8004}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden rounded-full border border-white/10 px-3 py-1.5 text-[11px] text-ink-muted transition hover:border-white/20 hover:text-ink sm:inline-flex"
+            className="hidden rounded-full border border-[var(--lav-border)] px-3 py-1.5 text-[11px] text-[var(--ink-body)] transition hover:border-[var(--brand)] hover:text-[var(--ink)] sm:inline-flex"
           >
             ERC-8004
           </a>
@@ -40,7 +40,7 @@ export function DocsHeader() {
             href={LINKS.app}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-8 items-center gap-1 rounded-full bg-nude px-3.5 text-[11px] font-medium text-on-nude transition hover:bg-nude-soft"
+            className="btn-purple flex h-8 items-center gap-1 px-3.5 text-[11px]"
           >
             Open Web App
             <ArrowUpRight size={12} strokeWidth={2} />

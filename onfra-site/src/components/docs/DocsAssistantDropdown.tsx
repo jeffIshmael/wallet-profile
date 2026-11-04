@@ -68,26 +68,26 @@ export function DocsAssistantDropdown() {
     <div className="relative inline-block" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-lg bg-white/5 hover:bg-white/10 px-3 py-1.5 text-xs font-medium text-ink transition border border-white/10"
+        className="flex items-center gap-2 rounded-lg bg-white hover:bg-[var(--lav-tint)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition border border-[var(--lav-border)]"
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <Copy size={14} className="text-nude-soft" />
+        <Copy size={14} className="text-[var(--brand)]" />
         Copy page
         <ChevronDown size={14} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
         <div 
-          className="absolute right-0 mt-2 w-[220px] rounded-xl border border-white/10 bg-canvas-card shadow-xl overflow-hidden z-50 p-1 flex flex-col gap-0.5"
+          className="absolute right-0 mt-2 w-[220px] rounded-xl border border-[var(--lav-border)] bg-white shadow-[0_16px_36px_-4px_rgba(86,72,112,0.18)] overflow-hidden z-50 p-1 flex flex-col gap-0.5"
           role="menu"
         >
           <button
             onClick={handleCopyPage}
             role="menuitem"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink hover:bg-white/5 transition text-left"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[var(--ink)] hover:bg-[var(--lav-tint)] transition text-left"
           >
-            {copiedPage ? <Check size={16} className="text-btc-orange" /> : <Copy size={16} />}
+            {copiedPage ? <Check size={16} className="text-[var(--brand)]" /> : <Copy size={16} />}
             <span className="font-medium">Copy page</span>
           </button>
 
@@ -96,20 +96,20 @@ export function DocsAssistantDropdown() {
             target="_blank"
             rel="noopener noreferrer"
             role="menuitem"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink hover:bg-white/5 transition"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[var(--ink)] hover:bg-[var(--lav-tint)] transition"
           >
             <FileText size={16} />
             <span className="font-medium">View as Markdown</span>
           </a>
 
-          <div className="my-1 border-t border-white/10" />
+          <div className="my-1 border-t border-[var(--lav-border)]" />
 
           <button
             onClick={() => handleCopy(mcpUrl, setCopiedUrl)}
             role="menuitem"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink hover:bg-white/5 transition text-left"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-[var(--ink)] hover:bg-[var(--lav-tint)] transition text-left"
           >
-            {copiedUrl ? <Check size={16} className="text-btc-orange" /> : <Terminal size={16} />}
+            {copiedUrl ? <Check size={16} className="text-[var(--brand)]" /> : <Terminal size={16} />}
             <span className="font-medium">Copy MCP Server</span>
           </button>
         </div>

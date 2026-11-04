@@ -10,8 +10,8 @@ const NAV = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "Features", href: "/#features" },
   { label: "Networks", href: "/#networks" },
-  { label: "Pricing", href: LINKS.pricing },
-  { label: "Developers", href: LINKS.docs }
+  { label: "For Agents", href: "/#for-agents" },
+  { label: "Docs", href: LINKS.docs }
 ] as const;
 
 export function SiteNav({ active }: { active?: string }) {

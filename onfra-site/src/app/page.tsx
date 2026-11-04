@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HeroWalletInput } from "@/components/HeroWalletInput";
 import { FaqAccordion } from "@/components/FaqAccordion";
+import { AgentSection } from "@/components/AgentSection";
 import { RotatingWord, CountUp } from "@/components/AnimatedBits";
 import { LINKS } from "@/lib/links";
 import {
@@ -78,10 +78,10 @@ export default function HomePage() {
             {/* What you get */}
             <ul className="mx-auto mt-8 mb-4 grid max-w-xl gap-x-8 gap-y-3 text-left text-sm font-medium text-[#4a4655] sm:grid-cols-2">
               {[
-                "Clear transaction statements",
-                "Estimated income and inflows",
-                "A financial health score",
-                "Reports you can share and verify"
+                "See what came in and what went out",
+                "Cashflow summaries",
+                "Download a clean statement anyone can read",
+                "Spending breakdown"
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2.5">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#564870]/10 text-[#564870]">
@@ -351,7 +351,7 @@ export default function HomePage() {
         {/* ========================================================
             SECTION 5: HOW IT WORKS
         ======================================================== */}
-        <section id="how-it-works" className="section-light border-t border-[#d4cee1]/70 py-24">
+        <section id="how-it-works" className="scroll-mt-24 section-light border-t border-[#d4cee1]/70 py-24">
           <div className="mx-auto max-w-4xl px-5 text-center">
             <p className="label-accent">How It Works</p>
             <h2 className="headline mx-auto mt-3 max-w-xl text-3xl font-extrabold text-[#111017] sm:text-4xl">
@@ -389,7 +389,7 @@ export default function HomePage() {
         {/* ========================================================
             SECTION 6: FEATURES
         ======================================================== */}
-        <section id="features" className="section-subtle border-t border-[#d4cee1]/70 py-24">
+        <section id="features" className="scroll-mt-24 section-subtle border-t border-[#d4cee1]/70 py-24">
           <div className="mx-auto max-w-5xl px-5 text-center">
             <p className="label-accent">What You Can Do</p>
             <h2 className="headline mx-auto mt-3 max-w-xl text-3xl font-extrabold text-[#111017] sm:text-4xl">
@@ -458,7 +458,7 @@ export default function HomePage() {
         {/* ========================================================
             SECTION 7: SUPPORTED NETWORKS
         ======================================================== */}
-        <section className="section-light border-t border-[#d4cee1]/70 py-20">
+        <section id="networks" className="section-light scroll-mt-24 border-t border-[#d4cee1]/70 py-20">
           <div className="mx-auto max-w-4xl px-5 text-center">
             <p className="label-accent">Supported Networks</p>
             <h2 className="headline mx-auto mt-3 max-w-lg text-2xl font-extrabold text-[#111017] sm:text-3xl">
@@ -561,96 +561,9 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================
-            SECTION 9: PRICING
+            SECTION 9: FOR AGENTS (skills install + tool cards)
         ======================================================== */}
-        <section id="pricing" className="section-light border-t border-[#d4cee1]/70 py-24">
-          <div className="mx-auto max-w-4xl px-5 text-center">
-            <p className="label-accent">Simple Pricing</p>
-            <h2 className="headline mx-auto mt-3 max-w-lg text-3xl font-extrabold text-[#111017] sm:text-4xl">
-              Start free. Pay for deeper insight.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#5f5c67]">
-              Explore your wallet activity first. Pay only when you need more detailed financial reports or advanced analysis.
-            </p>
-
-            <div className="mt-12 grid gap-8 text-left sm:grid-cols-2">
-              {/* Free Tier */}
-              <div className="rounded-3xl border border-[#d4cee1] bg-white p-8 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#5f5c67]">Explore for free</p>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-[#111017]">$0</span>
-                  <span className="text-xs text-[#6f6b7a]">/ free in app</span>
-                </div>
-                <p className="mt-3 text-xs leading-6 text-[#5f5c67]">
-                  Connect your wallet or enter any public address to inspect overview metrics and basic activity.
-                </p>
-                <ul className="mt-6 space-y-3 text-xs text-[#5f5c67]">
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <span>Basic wallet analysis</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <span>Transaction activity overview</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <span>Basic health indicator</span>
-                  </li>
-                </ul>
-                <div className="mt-8">
-                  <a
-                    href={LINKS.app}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-1.5 rounded-full border border-[#d4cee1] bg-white py-3.5 text-xs font-bold text-[#111017] shadow-sm transition hover:bg-[#f3f1f8] hover:border-[#b7aedb]"
-                  >
-                    <span>Analyze my wallet</span>
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </a>
-                </div>
-              </div>
-
-              {/* Paid Deeper Insight Tier */}
-              <div className="relative rounded-3xl border-2 border-[#564870] bg-white p-8 shadow-xl shadow-[#564870]/15">
-                <span className="absolute -top-3.5 right-6 rounded-full bg-[#564870] px-3.5 py-1 text-[10px] font-bold tracking-wide uppercase text-white shadow-sm">
-                  Pay As You Go
-                </span>
-                <p className="text-xs font-bold uppercase tracking-wider text-[#43385a]">Pay for deeper insight</p>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-[#111017]">0.01 – 0.10</span>
-                  <span className="text-xs font-medium text-[#6f6b7a]">USDT / query</span>
-                </div>
-                <p className="mt-3 text-xs leading-6 text-[#5f5c67]">
-                  On-demand micropayments settled seamlessly over x402 on Celo. No subscriptions.
-                </p>
-                <ul className="mt-6 space-y-3 text-xs text-[#5f5c67]">
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-[#564870]" />
-                    <span>Detailed financial reports & statements</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-[#564870]" />
-                    <span>Verified onchain REP passports (0.10 USDT)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-[#564870]" />
-                    <span>Free onchain report verification for lenders</span>
-                  </li>
-                </ul>
-                <div className="mt-8">
-                  <Link
-                    href={LINKS.pricing}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-full bg-[#564870] py-3.5 text-xs font-bold text-white shadow-md shadow-[#564870]/25 transition hover:bg-[#43385a]"
-                  >
-                    <span>View full pricing details</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <AgentSection />
 
         {/* ========================================================
             SECTION 10: FAQ
