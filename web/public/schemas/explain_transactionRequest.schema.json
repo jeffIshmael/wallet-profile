@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/explain_transactionRequest.schema.json",
+  "title": "Explain Transaction Request",
+  "description": "Explains what happened in a specific transaction in plain language: type, amounts, parties, gas, classification with confidence, and warnings. Handles transfers, swaps, contract calls, liquidity, NFTs, bridges and failed transactions. States uncertainty rather than inventing a purpose. Costs 0.02 USDT via x402 when called by an agent or API client; free inside the OnFRA app.",
+  "type": "object",
+  "properties": {
+    "transaction_hash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Transaction hash."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Optional wallet whose perspective should be used."
+    },
+    "use_trace": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow buying a call trace (through Buy) when the transaction is complex. Disable to avoid the extra data purchase."
+    }
+  },
+  "required": [
+    "transaction_hash",
+    "chain"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0.02"
+}

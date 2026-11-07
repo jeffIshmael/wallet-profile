@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/get_spending_breakdownRequest.schema.json",
+  "title": "Get Spending Breakdown Request",
+  "description": "Where a wallet's outgoing money went, grouped by token, counterparty, protocol or category. Classifications carry confidence levels, with an unknown category where the purpose cannot be identified. Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "period": {
+      "type": "string",
+      "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+    },
+    "group_by": {
+      "type": "string",
+      "enum": [
+        "token",
+        "counterparty",
+        "protocol",
+        "category"
+      ],
+      "default": "category",
+      "description": "How to group spending."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

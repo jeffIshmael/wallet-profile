@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/get_cash_flow_summaryRequest.schema.json",
+  "title": "Get Cash Flow Summary Request",
+  "description": "Total inflow, outflow and net flow for a period, with transaction counts, daily averages and trend. Internal transfers, swaps, self-transfers, gas and failed transactions are handled explicitly and reported in data_quality. Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "period": {
+      "type": "string",
+      "description": "Period such as 7d, 30d, 90d or 1y. Ignored if start_date and end_date are given."
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Custom start date (YYYY-MM-DD)."
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Custom end date (YYYY-MM-DD)."
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Reporting currency."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

@@ -1,10 +1,10 @@
 {
-  "name": "OnFRA — Onfra Financial Intelligence Agent",
-  "version": "2026-06-08",
-  "description": "MCP discovery for OnFRA on Onfra. Analyzes Celo wallet activity into financial health, reputation, income stability, portfolio risk, loan capacity, and Verified Financial Reputation Reports. Query any wallet at https://app.onfra.xyz.",
+  "name": "OnFRA — Onchain Financial Intelligence Agent",
+  "version": "2026-11-05",
+  "description": "MCP discovery for OnFRA. Turns Celo wallet activity into structured financial intelligence: wallet profiles, cash flow, token balances and breakdowns, spending, counterparties, activity, period comparisons, transaction explanations and statements. Most tools are free; transaction explanations and statements are paid via x402 for agents and API clients. https://app.onfra.xyz",
   "auth": {
     "scheme": "x402",
-    "model": "pay-per-request",
+    "model": "free tools plus pay-per-request",
     "apiKeyRequired": false,
     "chain": "celo",
     "network": "celo",
@@ -12,16 +12,32 @@
     "currency": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
     "currencySymbol": "USDT",
     "paymentHeader": "X-PAYMENT",
-    "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
+    "alternateHeaders": [
+      "PAYMENT-SIGNATURE",
+      "x-payment"
+    ],
     "configUrl": "https://app.onfra.xyz/api/x402/config",
     "healthUrl": "https://app.onfra.xyz/api/health/integrations",
     "capabilitiesUrl": "https://app.onfra.xyz/api/capabilities",
     "pricing": {
-      "own_wallet_dashboard_query": "free",
-      "external_wallet_query": "0.01 USDT",
-      "verified_financial_reputation_report": "0.10 USDT",
-      "cached_signal_read": "free",
-      "verify_report": "free"
+      "model": "free tools plus pay-per-request for two tools",
+      "free_tools": [
+        "analyze_wallet",
+        "get_cash_flow_summary",
+        "get_token_balances",
+        "get_token_breakdown",
+        "compare_periods",
+        "get_spending_breakdown",
+        "get_dominant_counterparties",
+        "get_wallet_activity"
+      ],
+      "paid_tools": {
+        "generate_transaction_statement": "0.01 USDT",
+        "explain_transaction": "0.02 USDT"
+      },
+      "in_app": "Free inside the OnFRA app at app.onfra.xyz (rate limited). Agents and API clients pay the listed price via x402.",
+      "chat_query": "0.01 USDT for external wallets; free for the caller's own wallet in the app.",
+      "discovery_endpoints": "free"
     },
     "paymentRequired": {
       "httpStatus": 402,
@@ -45,8 +61,8 @@
         "chainId": 42220,
         "asset": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
         "currencySymbol": "USDT",
-        "priceUsdt": "0.01",
-        "maxAmountRequired": "10000",
+        "priceUsdt": "0.02",
+        "maxAmountRequired": "20000",
         "payTo": "<from /api/x402/config>",
         "paymentHeader": "X-PAYMENT",
         "accepts": [
@@ -54,7 +70,7 @@
             "scheme": "x402",
             "network": "celo",
             "chainId": 42220,
-            "maxAmountRequired": "10000",
+            "maxAmountRequired": "20000",
             "asset": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
             "payTo": "<treasury>"
           }
@@ -71,127 +87,541 @@
       }
     }
   },
-  "signals": {
-    "ids": [
-      "monthly-income",
-      "financial-health",
-      "reputation-score",
-      "loan-capacity",
-      "statement",
-      "assessment"
-    ],
-    "listPath": "/api/wallet/{address}/signals",
-    "readPath": "/api/wallet/{address}/signals/{signal}",
-    "pricing": "free from cache after analyze"
+  "responseConventions": {
+    "format": "Structured JSON, never prose only.",
+    "originTags": {
+      "description": "Every field in the result schemas carries an x-origin tag.",
+      "observed": "Read directly from the blockchain.",
+      "calculated": "Totals, averages and percentages computed by OnFRA.",
+      "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+      "interpreted": "OnFRA's plain-language interpretation."
+    },
+    "provenance": [
+      "period",
+      "data_source",
+      "data_last_updated",
+      "generated_at",
+      "data_quality.limitations"
+    ]
   },
   "onChainActions": [
-    "USDT x402 settlement to payTo on Celo",
-    "OnchainReporter.publishFinancialReport for REP passports",
-    "OnchainReporter.verifyReport / GET /api/agent/verify/{id}",
+    "USDT x402 settlement to payTo on Celo (paid tools only)",
+    "Buy gateway purchase of a Chainstack call trace (explain_transaction, complex transactions only)",
     "ERC-8004 agent #9219 identity"
   ],
   "tools": [
     {
       "name": "analyze_wallet",
-      "description": "Analyze any Celo wallet. Returns health, reputation, income, loan capacity, and AI summary. Agent/API calls cost 0.01 USDT via x402; unpaid calls return HTTP 402 with accepts[].",
+      "description": "Flagship tool. Returns a structured financial intelligence profile of a wallet: overview, financial summary, token overview, activity level, insights and data quality. Observed data, calculated metrics, classifications and insights are kept separate. Free (fair-use rate limits apply).",
       "inputSchema": {
         "type": "object",
-        "required": ["walletAddress"],
+        "required": [
+          "wallet_address",
+          "chain"
+        ],
         "properties": {
-          "walletAddress": {
+          "wallet_address": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "EVM wallet address to analyze (Celo-first)."
+            "description": "Wallet address to analyze."
           },
-          "months": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 12,
-            "default": 3,
-            "description": "Months of transaction history for cash-flow statement."
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
           },
-          "includeAttestation": {
+          "period": {
+            "type": "string",
+            "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/analyze_walletRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/walletAnalysisResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/analyze_wallet"
+      }
+    },
+    {
+      "name": "get_cash_flow_summary",
+      "description": "Total inflow, outflow and net flow for a period, with transaction counts, daily averages and trend. Internal transfers, swaps, self-transfers, gas and failed transactions are handled explicitly and reported in data_quality. Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain",
+          "period"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "period": {
+            "type": "string",
+            "description": "Period such as 7d, 30d, 90d or 1y. Ignored if start_date and end_date are given."
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Custom start date (YYYY-MM-DD)."
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Custom end date (YYYY-MM-DD)."
+          },
+          "currency": {
+            "type": "string",
+            "default": "USD",
+            "description": "Reporting currency."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/get_cash_flow_summaryRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/cashFlowSummaryResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_cash_flow_summary"
+      }
+    },
+    {
+      "name": "get_token_balances",
+      "description": "Current token holdings with normalized token identification and USD valuation. Clean data retrieval with spam filtering. Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "include_spam": {
             "type": "boolean",
-            "default": true
+            "default": false,
+            "description": "Include suspected spam tokens."
           },
-          "fields": {
+          "include_prices": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include current USD valuations."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/get_token_balancesRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/tokenBalancesResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_token_balances"
+      }
+    },
+    {
+      "name": "get_token_breakdown",
+      "description": "How a wallet's financial activity is distributed across tokens, by balance, received, sent or volume. Balances and historical volume are separate measurements and are never mixed. Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "period": {
+            "type": "string",
+            "description": "Period for the volume breakdown."
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "balance",
+              "received",
+              "sent",
+              "volume"
+            ],
+            "default": "volume",
+            "description": "Measurement to break down by."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/get_token_breakdownRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/tokenBreakdownResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_token_breakdown"
+      }
+    },
+    {
+      "name": "generate_transaction_statement",
+      "description": "Generates a period-based PDF or CSV statement, pins it to IPFS and returns the reference (CID, ipfs:// URI and HTTPS gateway URL) with a summary. The CID is only returned after the upload is verified. Costs 0.01 USDT via x402 when called by an agent or API client; free inside the OnFRA app.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain",
+          "period"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "period": {
+            "type": "string",
+            "description": "Statement period such as 30d, 90d or 1y."
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "pdf",
+              "csv"
+            ],
+            "default": "pdf",
+            "description": "Statement file format."
+          },
+          "currency": {
+            "type": "string",
+            "default": "USD",
+            "description": "Reporting currency."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/generate_transaction_statementRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/statementResult.schema.json",
+      "access": "x402",
+      "priceUsdt": "0.01",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/generate_transaction_statement"
+      }
+    },
+    {
+      "name": "compare_periods",
+      "description": "Compares financial activity between two equivalent time windows: inflow, outflow, net flow and transaction count, with percentage change and insights. Incomplete windows are flagged, never silently compared. Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain",
+          "current_period",
+          "previous_period"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "current_period": {
+            "type": "string",
+            "description": "Period being evaluated: a named period (30d), a month (2026-10) or an explicit range (YYYY-MM-DD/YYYY-MM-DD)."
+          },
+          "previous_period": {
+            "type": "string",
+            "description": "Period to compare against, same formats as current_period."
+          },
+          "metrics": {
             "type": "array",
             "items": {
               "type": "string",
               "enum": [
-                "monthlyIncome",
-                "financialHealth",
-                "reputationScore",
-                "loanCapacity",
-                "statement",
-                "assessment",
-                "walletData"
+                "inflow",
+                "outflow",
+                "net_flow",
+                "transaction_count"
               ]
             },
-            "description": "Optional subset of fields instead of full walletData."
-          },
-          "force": {
-            "type": "boolean",
-            "default": false
+            "description": "Metrics to compare. Defaults to all supported metrics."
           }
         }
       },
-      "inputSchemaUrl": "https://app.onfra.xyz/schemas/walletAnalysisRequest.schema.json",
-      "outputSchemaUrl": "https://app.onfra.xyz/schemas/walletAnalysisResult.schema.json",
-      "priceUsdt": "0.01",
-      "route": { "method": "POST", "path": "/api/agent/analyze" }
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/compare_periodsRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/comparePeriodsResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/compare_periods"
+      }
     },
     {
-      "name": "get_wallet_signal",
-      "description": "Read one reputation signal from cached analysis (free). Signal ids: monthly-income, financial-health, reputation-score, loan-capacity, statement, assessment. Returns 404 with hint to analyze_wallet if cache is missing.",
+      "name": "explain_transaction",
+      "description": "Explains what happened in a specific transaction in plain language: type, amounts, parties, gas, classification with confidence, and warnings. Handles transfers, swaps, contract calls, liquidity, NFTs, bridges and failed transactions. States uncertainty rather than inventing a purpose. Costs 0.02 USDT via x402 when called by an agent or API client; free inside the OnFRA app.",
       "inputSchema": {
         "type": "object",
-        "required": ["walletAddress", "signal"],
+        "required": [
+          "transaction_hash",
+          "chain"
+        ],
         "properties": {
-          "walletAddress": {
+          "transaction_hash": {
             "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$"
+            "pattern": "^0x[a-fA-F0-9]{64}$",
+            "description": "Transaction hash."
           },
-          "signal": {
+          "chain": {
             "type": "string",
             "enum": [
-              "monthly-income",
-              "financial-health",
-              "reputation-score",
-              "loan-capacity",
-              "statement",
-              "assessment"
-            ]
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Optional wallet whose perspective should be used."
+          },
+          "use_trace": {
+            "type": "boolean",
+            "default": true,
+            "description": "Allow buying a call trace (through Buy) when the transaction is complex. Disable to avoid the extra data purchase."
           }
         }
       },
-      "outputSchemaUrl": "https://app.onfra.xyz/schemas/walletSignalResult.schema.json",
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/explain_transactionRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/explainTransactionResult.schema.json",
+      "access": "x402",
+      "priceUsdt": "0.02",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/explain_transaction"
+      }
+    },
+    {
+      "name": "get_spending_breakdown",
+      "description": "Where a wallet's outgoing money went, grouped by token, counterparty, protocol or category. Classifications carry confidence levels, with an unknown category where the purpose cannot be identified. Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain",
+          "period"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "period": {
+            "type": "string",
+            "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+          },
+          "group_by": {
+            "type": "string",
+            "enum": [
+              "token",
+              "counterparty",
+              "protocol",
+              "category"
+            ],
+            "default": "category",
+            "description": "How to group spending."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/get_spending_breakdownRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/spendingBreakdownResult.schema.json",
+      "access": "free",
       "priceUsdt": "0",
-      "route": { "method": "GET", "path": "/api/wallet/{address}/signals/{signal}" }
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_spending_breakdown"
+      }
+    },
+    {
+      "name": "get_dominant_counterparties",
+      "description": "Ranks the addresses and entities a wallet interacts with most, by volume or frequency, with labels where known (exchanges, protocols) and interaction direction. Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "period": {
+            "type": "string",
+            "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "Number of counterparties to return."
+          },
+          "sort_by": {
+            "type": "string",
+            "enum": [
+              "volume",
+              "frequency"
+            ],
+            "default": "volume",
+            "description": "Ranking criterion."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/get_dominant_counterpartiesRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/counterpartiesResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_dominant_counterparties"
+      }
+    },
+    {
+      "name": "get_wallet_activity",
+      "description": "How active a wallet is, independent of its financial value: transaction count, active days, first and last activity, and activity pattern (frequency and trend). Free (fair-use rate limits apply).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "chain"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Wallet address to analyze."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
+          },
+          "period": {
+            "type": "string",
+            "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+          }
+        }
+      },
+      "inputSchemaUrl": "https://app.onfra.xyz/schemas/get_wallet_activityRequest.schema.json",
+      "outputSchemaUrl": "https://app.onfra.xyz/schemas/walletActivityResult.schema.json",
+      "access": "free",
+      "priceUsdt": "0",
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_wallet_activity"
+      }
     },
     {
       "name": "chat_query",
-      "description": "Natural-language query about any wallet's financial health, reputation, income stability, portfolio risk, or loan capacity. Costs 0.01 USDT via x402 when enforcement is enabled.",
+      "description": "Natural-language question about a wallet's finances, answered from OnFRA's analysis and tools. 0.01 USDT via x402 for external wallets; free for the caller's own wallet in the app. Tools that carry their own price (explain_transaction, generate_transaction_statement) are charged on top when the question needs them.",
       "inputSchema": {
         "type": "object",
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "properties": {
           "message": {
             "type": "string",
-            "description": "Question about a wallet's financial reputation."
+            "description": "Question about a wallet's financial activity."
           },
-          "walletAddress": {
+          "wallet_address": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Target wallet. Required for external wallet queries."
+            "description": "Target wallet. Required for wallet-specific questions."
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "celo"
+            ],
+            "description": "Blockchain. Celo today; more EVM chains planned."
           },
           "history": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "role": { "type": "string", "enum": ["user", "assistant", "system"] },
-                "content": { "type": "string" }
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant",
+                    "system"
+                  ]
+                },
+                "content": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -199,211 +629,237 @@
       },
       "inputSchemaUrl": "https://app.onfra.xyz/schemas/chatRequest.schema.json",
       "priceUsdt": "0.01",
-      "route": { "method": "POST", "path": "/api/agent/chat" }
-    },
-    {
-      "name": "screen_wallet",
-      "description": "Lender underwriting screen for a borrower wallet. Returns trustworthiness, reputation, income estimate, and loan capacity. Costs 0.01 USDT via x402.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["walletAddress"],
-        "properties": {
-          "walletAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Borrower wallet to screen."
-          },
-          "force": {
-            "type": "boolean",
-            "default": false
-          }
-        }
+      "route": {
+        "method": "POST",
+        "path": "/api/agent/chat"
       },
-      "inputSchemaUrl": "https://app.onfra.xyz/schemas/lenderScreenRequest.schema.json",
-      "outputSchemaUrl": "https://app.onfra.xyz/schemas/lenderScreenResult.schema.json",
-      "priceUsdt": "0.01",
-      "route": { "method": "POST", "path": "/api/lender/screen" }
-    },
-    {
-      "name": "generate_statement",
-      "description": "Generate a transaction statement PDF, pin to IPFS. period must be 3M, 6M, or 12M. Costs 0.01 USDT via x402.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["walletAddress"],
-        "properties": {
-          "walletAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$"
-          },
-          "period": {
-            "type": "string",
-            "enum": ["3M", "6M", "12M"],
-            "default": "3M",
-            "description": "Statement lookback period."
-          },
-          "force": {
-            "type": "boolean",
-            "default": false
-          }
-        }
-      },
-      "inputSchemaUrl": "https://app.onfra.xyz/schemas/statementRequest.schema.json",
-      "priceUsdt": "0.01",
-      "route": { "method": "POST", "path": "/api/agent/statement" }
-    },
-    {
-      "name": "generate_report",
-      "description": "Purchase a Verified Financial Reputation Report with scores, AI summary, verification code, and onchain OnchainReporter attestation. Costs 0.10 USDT via x402.",
-      "inputSchema": {
-        "type": "object",
-        "required": ["walletAddress"],
-        "properties": {
-          "walletAddress": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$"
-          },
-          "periodMonths": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 12,
-            "default": 3,
-            "description": "Statement period: 3, 6, or 12 months."
-          }
-        }
-      },
-      "inputSchemaUrl": "https://app.onfra.xyz/schemas/reportRequest.schema.json",
-      "outputSchemaUrl": "https://app.onfra.xyz/schemas/reportResult.schema.json",
-      "priceUsdt": "0.10",
-      "route": { "method": "POST", "path": "/api/agent/report" },
-      "onChain": true
-    },
-    {
-      "name": "verify_report",
-      "description": "Confirm a Verified Financial Reputation Report verification code (WP-...) or report ID (REP-...) was issued by OnFRA and attested onchain (free).",
-      "inputSchema": {
-        "type": "object",
-        "required": ["reportId"],
-        "properties": {
-          "reportId": {
-            "type": "string",
-            "description": "Report ID (REP-...) or verification code (WP-...)."
-          }
-        }
-      },
-      "priceUsdt": "0",
-      "route": { "method": "GET", "path": "/api/agent/verify/{reportId}" },
-      "onChain": true
+      "access": "x402"
     }
   ],
   "prompts": [
-    { "name": "financial_health", "description": "What is the Financial Health Score for this wallet?" },
-    { "name": "reputation_check", "description": "What is this wallet's reputation and trust rating?" },
-    { "name": "income_stability", "description": "Is this wallet a stable earner? What is the income classification?" },
-    { "name": "portfolio_risk", "description": "What is the portfolio risk exposure for this wallet?" },
-    { "name": "loan_capacity", "description": "How much can this wallet safely borrow?" },
-    { "name": "verified_report", "description": "Generate a Verified Financial Reputation Report for lending." }
+    {
+      "name": "wallet_profile",
+      "description": "Give me a financial profile of this wallet."
+    },
+    {
+      "name": "cash_flow",
+      "description": "How much did this wallet receive and spend in the last 30 days?"
+    },
+    {
+      "name": "dominant_tokens",
+      "description": "What are this wallet's dominant tokens?"
+    },
+    {
+      "name": "spending",
+      "description": "Where did this wallet's money go?"
+    },
+    {
+      "name": "month_over_month",
+      "description": "How does this month compare with last month?"
+    },
+    {
+      "name": "explain_tx",
+      "description": "What happened in this transaction?"
+    },
+    {
+      "name": "top_counterparties",
+      "description": "Who does this wallet interact with most?"
+    },
+    {
+      "name": "statement",
+      "description": "Generate a statement for this wallet."
+    }
   ],
   "resources": [
     {
       "uri": "https://app.onfra.xyz/api/capabilities",
-      "name": "Capabilities (actions, pricing, on-chain)"
-    },
-    {
-      "uri": "https://app.onfra.xyz/schemas/lenderScreenRequest.schema.json",
-      "name": "Lender Screen Request Schema"
-    },
-    {
-      "uri": "https://app.onfra.xyz/schemas/lenderScreenResult.schema.json",
-      "name": "Lender Screen Result Schema"
-    },
-    {
-      "uri": "https://app.onfra.xyz/schemas/walletAnalysisRequest.schema.json",
-      "name": "Wallet Analysis Request Schema"
+      "name": "Capabilities (tools, pricing, on-chain)"
     },
     {
       "uri": "https://app.onfra.xyz/schemas/walletAnalysisResult.schema.json",
-      "name": "Wallet Analysis Result Schema"
+      "name": "Analyze Wallet Result Schema"
     },
     {
-      "uri": "https://app.onfra.xyz/schemas/walletSignalResult.schema.json",
-      "name": "Wallet Signal Result Schema"
+      "uri": "https://app.onfra.xyz/schemas/cashFlowSummaryResult.schema.json",
+      "name": "Get Cash Flow Summary Result Schema"
     },
     {
-      "uri": "https://app.onfra.xyz/schemas/chatRequest.schema.json",
-      "name": "Chat Request Schema"
+      "uri": "https://app.onfra.xyz/schemas/tokenBalancesResult.schema.json",
+      "name": "Get Token Balances Result Schema"
     },
     {
-      "uri": "https://app.onfra.xyz/schemas/statementRequest.schema.json",
-      "name": "Statement Request Schema"
+      "uri": "https://app.onfra.xyz/schemas/tokenBreakdownResult.schema.json",
+      "name": "Get Token Breakdown Result Schema"
     },
     {
-      "uri": "https://app.onfra.xyz/schemas/reportRequest.schema.json",
-      "name": "Report Request Schema"
+      "uri": "https://app.onfra.xyz/schemas/statementResult.schema.json",
+      "name": "Generate Transaction Statement Result Schema"
     },
     {
-      "uri": "https://app.onfra.xyz/schemas/reportResult.schema.json",
-      "name": "Report Result Schema"
+      "uri": "https://app.onfra.xyz/schemas/comparePeriodsResult.schema.json",
+      "name": "Compare Periods Result Schema"
+    },
+    {
+      "uri": "https://app.onfra.xyz/schemas/explainTransactionResult.schema.json",
+      "name": "Explain Transaction Result Schema"
+    },
+    {
+      "uri": "https://app.onfra.xyz/schemas/spendingBreakdownResult.schema.json",
+      "name": "Get Spending Breakdown Result Schema"
+    },
+    {
+      "uri": "https://app.onfra.xyz/schemas/counterpartiesResult.schema.json",
+      "name": "Get Dominant Counterparties Result Schema"
+    },
+    {
+      "uri": "https://app.onfra.xyz/schemas/walletActivityResult.schema.json",
+      "name": "Get Wallet Activity Result Schema"
     }
   ],
   "examples": [
     {
-      "prompt": "Analyze this Celo wallet for microfinance lending eligibility",
+      "prompt": "Give me a financial profile of this wallet",
       "tool": "analyze_wallet",
       "input": {
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "months": 3
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "90d"
       }
     },
     {
-      "prompt": "Read loan capacity from cache",
-      "tool": "get_wallet_signal",
+      "prompt": "How much did this wallet receive and spend this month?",
+      "tool": "get_cash_flow_summary",
       "input": {
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "signal": "loan-capacity"
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "30d"
       }
     },
     {
-      "prompt": "Can this freelancer wallet prove stable income?",
-      "tool": "chat_query",
+      "prompt": "What does this wallet hold right now?",
+      "tool": "get_token_balances",
       "input": {
-        "message": "What is the income stability classification and monthly inflow estimate?",
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315"
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo"
       }
     },
     {
-      "prompt": "Should we approve this borrower wallet for a microloan?",
-      "tool": "screen_wallet",
+      "prompt": "What are this wallet's dominant tokens by volume?",
+      "tool": "get_token_breakdown",
       "input": {
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315"
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "90d",
+        "metric": "volume"
       }
     },
     {
-      "prompt": "Generate a 6-month statement",
-      "tool": "generate_statement",
+      "prompt": "Generate a 90-day statement",
+      "tool": "generate_transaction_statement",
       "input": {
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "period": "6M"
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "90d",
+        "format": "pdf"
       }
     },
     {
-      "prompt": "Purchase a Verified Financial Reputation Report for a loan application",
-      "tool": "generate_report",
+      "prompt": "How does this month compare with last month?",
+      "tool": "compare_periods",
       "input": {
-        "walletAddress": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
-        "periodMonths": 3
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "current_period": "2026-10",
+        "previous_period": "2026-09"
+      }
+    },
+    {
+      "prompt": "What happened in this transaction?",
+      "tool": "explain_transaction",
+      "input": {
+        "transaction_hash": "0xabababababababababababababababababababababababababababababababab",
+        "chain": "celo",
+        "use_trace": true
+      }
+    },
+    {
+      "prompt": "What is this wallet's largest spending category?",
+      "tool": "get_spending_breakdown",
+      "input": {
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "30d",
+        "group_by": "category"
+      }
+    },
+    {
+      "prompt": "Who does this wallet interact with most?",
+      "tool": "get_dominant_counterparties",
+      "input": {
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "90d",
+        "limit": 10,
+        "sort_by": "volume"
+      }
+    },
+    {
+      "prompt": "Is this wallet active, dormant or ramping up?",
+      "tool": "get_wallet_activity",
+      "input": {
+        "wallet_address": "0x4821ced48fb4456055c86e42587f61c1f39c6315",
+        "chain": "celo",
+        "period": "90d"
       }
     }
   ],
   "integration": {
-    "note": "OnFRA lender infrastructure: https://app.onfra.xyz/developers · Capabilities: GET /api/capabilities · Health (payTo): GET /api/health/integrations · Docs: https://onfra.xyz/docs · Skill: npx skills add jeffIshmael/onfra-skill",
+    "note": "Capabilities: GET /api/capabilities · Health (payTo): GET /api/health/integrations · x402 config: GET /api/x402/config · Docs: https://onfra.xyz/docs · Skill: npx skills add jeffIshmael/onfra-skill",
     "routes": {
-      "screen_wallet": { "method": "POST", "path": "/api/lender/screen" },
-      "analyze_wallet": { "method": "POST", "path": "/api/agent/analyze" },
-      "get_wallet_signal": { "method": "GET", "path": "/api/wallet/{address}/signals/{signal}" },
-      "chat_query": { "method": "POST", "path": "/api/agent/chat" },
-      "generate_statement": { "method": "POST", "path": "/api/agent/statement" },
-      "generate_report": { "method": "POST", "path": "/api/agent/report" },
-      "verify_report": { "method": "GET", "path": "/api/agent/verify/{reportId}" }
+      "analyze_wallet": {
+        "method": "POST",
+        "path": "/api/agent/tools/analyze_wallet"
+      },
+      "get_cash_flow_summary": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_cash_flow_summary"
+      },
+      "get_token_balances": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_token_balances"
+      },
+      "get_token_breakdown": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_token_breakdown"
+      },
+      "generate_transaction_statement": {
+        "method": "POST",
+        "path": "/api/agent/tools/generate_transaction_statement"
+      },
+      "compare_periods": {
+        "method": "POST",
+        "path": "/api/agent/tools/compare_periods"
+      },
+      "explain_transaction": {
+        "method": "POST",
+        "path": "/api/agent/tools/explain_transaction"
+      },
+      "get_spending_breakdown": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_spending_breakdown"
+      },
+      "get_dominant_counterparties": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_dominant_counterparties"
+      },
+      "get_wallet_activity": {
+        "method": "POST",
+        "path": "/api/agent/tools/get_wallet_activity"
+      },
+      "chat_query": {
+        "method": "POST",
+        "path": "/api/agent/chat"
+      }
     }
   }
 }

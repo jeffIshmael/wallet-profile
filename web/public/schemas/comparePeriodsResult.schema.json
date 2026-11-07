@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/comparePeriodsResult.schema.json",
+  "title": "Compare Periods Result",
+  "description": "Change in financial activity between two periods.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "comparison": {
+      "type": "object",
+      "properties": {
+        "current_period": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string",
+              "format": "date"
+            },
+            "end": {
+              "type": "string",
+              "format": "date"
+            },
+            "complete": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "start",
+            "end",
+            "complete"
+          ]
+        },
+        "previous_period": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string",
+              "format": "date"
+            },
+            "end": {
+              "type": "string",
+              "format": "date"
+            },
+            "complete": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "start",
+            "end",
+            "complete"
+          ]
+        },
+        "windows_equivalent": {
+          "type": "boolean",
+          "description": "False if the windows differ in length or one is incomplete."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "current_period",
+        "previous_period",
+        "windows_equivalent"
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "inflow": {
+          "type": "object",
+          "properties": {
+            "current": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "previous": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "change_percent": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Null if previous is zero.",
+              "x-origin": "calculated"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "previous",
+            "change_percent"
+          ]
+        },
+        "outflow": {
+          "type": "object",
+          "properties": {
+            "current": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "previous": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "change_percent": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Null if previous is zero.",
+              "x-origin": "calculated"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "previous",
+            "change_percent"
+          ]
+        },
+        "net_flow": {
+          "type": "object",
+          "properties": {
+            "current": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "previous": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "change_percent": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Null if previous is zero.",
+              "x-origin": "calculated"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "previous",
+            "change_percent"
+          ]
+        },
+        "transaction_count": {
+          "type": "object",
+          "properties": {
+            "current": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "previous": {
+              "type": "number",
+              "x-origin": "calculated"
+            },
+            "change_percent": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Null if previous is zero.",
+              "x-origin": "calculated"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "previous",
+            "change_percent"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "description": "Only requested metrics are present."
+    },
+    "insights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "OnFRA's plain-language interpretation. Not facts recorded on the blockchain.",
+      "x-origin": "interpreted"
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "comparison",
+    "metrics",
+    "insights",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

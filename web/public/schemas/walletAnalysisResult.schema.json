@@ -1,63 +1,211 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://app.onfra.xyz/schemas/walletAnalysisResult.schema.json",
-  "title": "WalletAnalysisResult",
-  "description": "Structured wallet reputation analysis returned by OnFRA.",
+  "title": "Wallet Analysis Result",
+  "description": "Structured financial intelligence profile of a wallet.",
   "type": "object",
-  "required": ["status", "walletAddress", "financialHealthScore", "reputationScore"],
   "properties": {
-    "status": {
-      "type": "string",
-      "enum": ["completed", "processing", "failed"]
-    },
-    "walletAddress": {
+    "wallet_address": {
       "type": "string",
       "pattern": "^0x[a-fA-F0-9]{40}$"
     },
-    "ens": {
-      "type": ["string", "null"]
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
     },
-    "financialHealthScore": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 100
-    },
-    "financialHealthBreakdown": {
+    "period": {
       "type": "object",
       "properties": {
-        "incomeStability": { "type": "number" },
-        "savingsDiscipline": { "type": "number" },
-        "portfolioRisk": { "type": "number" },
-        "spendingDiscipline": { "type": "number" },
-        "walletMaturity": { "type": "number" },
-        "debtRiskSignals": { "type": "number" }
-      }
+        "label": {
+          "type": "string",
+          "description": "Requested period, e.g. 30d or 2026-10."
+        },
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "complete": {
+          "type": "boolean",
+          "description": "False if the window is only partially elapsed."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "start",
+        "end"
+      ],
+      "description": "Period covered by this result."
     },
-    "reputationScore": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 100
-    },
-    "reputationCategory": { "type": "string" },
-    "riskCategory": { "type": "string" },
-    "incomeLabel": { "type": "string" },
-    "loanRange": { "type": "string" },
-    "loanConfidence": { "type": "string" },
-    "aiDashboardSummary": { "type": "string" },
-    "aiAttestation": { "type": "string" },
-    "threeMonthStatement": {
+    "wallet_overview": {
       "type": "object",
       "properties": {
-        "totalInflowUsd": { "type": "number" },
-        "totalOutflowUsd": { "type": "number" },
-        "netFlowUsd": { "type": "number" },
-        "transactionCount": { "type": "integer" }
-      }
+        "wallet_age_days": {
+          "type": "integer",
+          "minimum": 0,
+          "x-origin": "calculated"
+        },
+        "total_transactions": {
+          "type": "integer",
+          "minimum": 0,
+          "x-origin": "observed"
+        },
+        "active_days": {
+          "type": "integer",
+          "minimum": 0,
+          "x-origin": "calculated"
+        },
+        "unique_counterparties": {
+          "type": "integer",
+          "minimum": 0,
+          "x-origin": "calculated"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "wallet_age_days",
+        "total_transactions",
+        "active_days",
+        "unique_counterparties"
+      ]
     },
-    "createdAt": {
+    "financial_summary": {
+      "type": "object",
+      "properties": {
+        "total_received_usd": {
+          "type": "number",
+          "x-origin": "calculated"
+        },
+        "total_sent_usd": {
+          "type": "number",
+          "x-origin": "calculated"
+        },
+        "net_flow_usd": {
+          "type": "number",
+          "x-origin": "calculated"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "total_received_usd",
+        "total_sent_usd",
+        "net_flow_usd"
+      ]
+    },
+    "token_overview": {
+      "type": "object",
+      "properties": {
+        "dominant_token": {
+          "type": "string",
+          "description": "Token symbol, e.g. USDC.",
+          "x-origin": "calculated"
+        },
+        "dominant_token_share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "x-origin": "calculated"
+        },
+        "unique_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "x-origin": "calculated"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unique_tokens"
+      ]
+    },
+    "activity": {
+      "type": "object",
+      "properties": {
+        "activity_level": {
+          "type": "string",
+          "enum": [
+            "dormant",
+            "low",
+            "medium",
+            "high"
+          ],
+          "x-origin": "classified"
+        },
+        "most_active_period": {
+          "type": "string",
+          "description": "e.g. weekdays, weekends.",
+          "x-origin": "classified"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "activity_level"
+      ]
+    },
+    "insights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "OnFRA's plain-language interpretation. Not facts recorded on the blockchain.",
+      "x-origin": "interpreted"
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
     }
   },
-  "additionalProperties": true
+  "required": [
+    "wallet_address",
+    "chain",
+    "period",
+    "wallet_overview",
+    "financial_summary",
+    "token_overview",
+    "activity",
+    "insights",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
 }

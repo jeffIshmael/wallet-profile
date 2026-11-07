@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/spendingBreakdownResult.schema.json",
+  "title": "Spending Breakdown Result",
+  "description": "Where a wallet's outgoing money went.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Requested period, e.g. 30d or 2026-10."
+        },
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "complete": {
+          "type": "boolean",
+          "description": "False if the window is only partially elapsed."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "start",
+        "end"
+      ],
+      "description": "Period covered by this result."
+    },
+    "group_by": {
+      "type": "string",
+      "enum": [
+        "token",
+        "counterparty",
+        "protocol",
+        "category"
+      ]
+    },
+    "total_spending_usd": {
+      "type": "number",
+      "x-origin": "calculated"
+    },
+    "breakdown": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Group name: token symbol, address/label, protocol or category. Unidentified spending uses \"Unknown\"."
+          },
+          "amount_usd": {
+            "type": "number",
+            "x-origin": "calculated"
+          },
+          "share_percent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "x-origin": "calculated"
+          },
+          "transaction_count": {
+            "type": "integer",
+            "minimum": 0,
+            "x-origin": "observed"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence in the grouping. Meaningful for category and protocol.",
+            "x-origin": "classified"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "amount_usd",
+          "share_percent"
+        ]
+      }
+    },
+    "insights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "OnFRA's plain-language interpretation. Not facts recorded on the blockchain.",
+      "x-origin": "interpreted"
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period",
+    "group_by",
+    "total_spending_usd",
+    "breakdown",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

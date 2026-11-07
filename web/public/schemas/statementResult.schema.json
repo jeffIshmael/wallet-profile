@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/statementResult.schema.json",
+  "title": "Transaction Statement Result",
+  "description": "Reference to a generated transaction statement.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Requested period, e.g. 30d or 2026-10."
+        },
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "complete": {
+          "type": "boolean",
+          "description": "False if the window is only partially elapsed."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "start",
+        "end"
+      ],
+      "description": "Period covered by this result."
+    },
+    "statement_id": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_inflow": {
+          "type": "number",
+          "x-origin": "calculated"
+        },
+        "total_outflow": {
+          "type": "number",
+          "x-origin": "calculated"
+        },
+        "net_flow": {
+          "type": "number",
+          "x-origin": "calculated"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "total_inflow",
+        "total_outflow",
+        "net_flow"
+      ]
+    },
+    "statement": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "pdf",
+            "csv"
+          ]
+        },
+        "ipfs_cid": {
+          "type": "string",
+          "description": "Returned only after the upload was verified retrievable."
+        },
+        "uri": {
+          "type": "string",
+          "description": "ipfs:// URI."
+        },
+        "gateway_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "HTTPS gateway URL for agents that cannot resolve ipfs://."
+        },
+        "access": {
+          "type": "string",
+          "enum": [
+            "public",
+            "restricted"
+          ],
+          "description": "Who can retrieve the file."
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": "string",
+          "description": "Hash of the file contents."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "ipfs_cid",
+        "uri",
+        "access"
+      ]
+    },
+    "transaction_count": {
+      "type": "integer",
+      "minimum": 0,
+      "x-origin": "observed"
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period",
+    "statement_id",
+    "currency",
+    "summary",
+    "statement",
+    "transaction_count",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/get_token_balancesRequest.schema.json",
+  "title": "Get Token Balances Request",
+  "description": "Current token holdings with normalized token identification and USD valuation. Clean data retrieval with spam filtering. Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "include_spam": {
+      "type": "boolean",
+      "default": false,
+      "description": "Include suspected spam tokens."
+    },
+    "include_prices": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include current USD valuations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/explainTransactionResult.schema.json",
+  "title": "Explain Transaction Result",
+  "description": "Plain-language explanation of one transaction.",
+  "type": "object",
+  "properties": {
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "transaction_hash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$"
+    },
+    "block_timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "perspective_wallet": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet whose perspective the explanation uses, if given."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed"
+      ],
+      "x-origin": "observed"
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": [
+        "native_transfer",
+        "token_transfer",
+        "swap",
+        "contract_interaction",
+        "liquidity_add",
+        "liquidity_remove",
+        "nft_purchase",
+        "nft_transfer",
+        "bridge",
+        "failed",
+        "unknown"
+      ],
+      "x-origin": "classified"
+    },
+    "summary": {
+      "type": "string",
+      "description": "One-sentence summary.",
+      "x-origin": "interpreted"
+    },
+    "details": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "Token symbol, e.g. USDC."
+        },
+        "amount": {
+          "type": "number"
+        },
+        "sender": {
+          "type": "string",
+          "pattern": "^0x[a-fA-F0-9]{40}$"
+        },
+        "recipient": {
+          "type": "string",
+          "pattern": "^0x[a-fA-F0-9]{40}$"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "gas_fee": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "token": {
+              "type": "string",
+              "description": "Token symbol, e.g. USDC."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "token"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [],
+      "description": "Facts extracted from the transaction. Fields vary by transaction_type.",
+      "x-origin": "observed"
+    },
+    "classification": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "e.g. outgoing_payment, swap, unknown."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence from 0 to 1."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "confidence"
+      ],
+      "x-origin": "classified"
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Plain-language explanation. States uncertainty instead of inventing a purpose.",
+      "x-origin": "interpreted"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    },
+    "purchases": {
+      "type": "array",
+      "description": "Data bought through Buy to produce this result. Empty when no purchase was needed.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "service",
+          "via",
+          "route",
+          "price_usd",
+          "token",
+          "settlement_tx"
+        ],
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "via": {
+            "type": "string",
+            "enum": [
+              "buy"
+            ]
+          },
+          "route": {
+            "type": "string"
+          },
+          "price_usd": {
+            "type": "number"
+          },
+          "token": {
+            "type": "string"
+          },
+          "settlement_tx": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Celo settlement transaction hash of the Buy payment."
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "chain",
+    "transaction_hash",
+    "status",
+    "transaction_type",
+    "summary",
+    "details",
+    "classification",
+    "explanation",
+    "warnings",
+    "generated_at",
+    "data_quality",
+    "purchases"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/tokenBreakdownResult.schema.json",
+  "title": "Token Breakdown Result",
+  "description": "Token distribution by balance, received, sent or volume.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Requested period, e.g. 30d or 2026-10."
+        },
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "complete": {
+          "type": "boolean",
+          "description": "False if the window is only partially elapsed."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "start",
+        "end"
+      ],
+      "description": "Period covered by this result."
+    },
+    "metric": {
+      "type": "string",
+      "enum": [
+        "balance",
+        "received",
+        "sent",
+        "volume"
+      ]
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Token symbol, e.g. USDC."
+          },
+          "contract_address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "balance": {
+            "type": "string",
+            "x-origin": "observed"
+          },
+          "balance_usd": {
+            "type": "number",
+            "x-origin": "calculated"
+          },
+          "received_usd": {
+            "type": "number",
+            "x-origin": "calculated"
+          },
+          "sent_usd": {
+            "type": "number",
+            "x-origin": "calculated"
+          },
+          "total_volume_usd": {
+            "type": "number",
+            "x-origin": "calculated"
+          },
+          "share_percent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "x-origin": "calculated"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "symbol",
+          "share_percent"
+        ]
+      },
+      "description": "Only fields relevant to the requested metric are guaranteed."
+    },
+    "dominant_token": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Token symbol, e.g. USDC."
+        },
+        "share_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "share_percent"
+      ],
+      "x-origin": "calculated"
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period",
+    "metric",
+    "tokens",
+    "dominant_token",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

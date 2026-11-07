@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/compare_periodsRequest.schema.json",
+  "title": "Compare Periods Request",
+  "description": "Compares financial activity between two equivalent time windows: inflow, outflow, net flow and transaction count, with percentage change and insights. Incomplete windows are flagged, never silently compared. Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "current_period": {
+      "type": "string",
+      "description": "Period being evaluated: a named period (30d), a month (2026-10) or an explicit range (YYYY-MM-DD/YYYY-MM-DD)."
+    },
+    "previous_period": {
+      "type": "string",
+      "description": "Period to compare against, same formats as current_period."
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "inflow",
+          "outflow",
+          "net_flow",
+          "transaction_count"
+        ]
+      },
+      "description": "Metrics to compare. Defaults to all supported metrics."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "current_period",
+    "previous_period"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

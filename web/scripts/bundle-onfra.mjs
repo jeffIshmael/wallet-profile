@@ -1,3 +1,4 @@
+// FILE: web/scripts/bundle-onfra.mjs  (change: adds the intel_runner entry used by /api/agent/tools/[tool])
 import esbuild from "esbuild";
 import fs from "fs";
 import path from "path";
@@ -11,7 +12,8 @@ const outDir = path.join(webRoot, "src", "lib", "agent", "onfra-dist");
 const entries = {
   dashboard_bundle: path.join(agentDist, "chains", "dashboard_bundle.js"),
   chat_agent: path.join(agentDist, "chains", "chat_agent.js"),
-  warm_cache: path.join(agentDist, "chains", "warm_cache.js")
+  warm_cache: path.join(agentDist, "chains", "warm_cache.js"),
+  intel_runner: path.join(agentDist, "chains", "intel_runner.js")
 };
 
 for (const [name, entry] of Object.entries(entries)) {

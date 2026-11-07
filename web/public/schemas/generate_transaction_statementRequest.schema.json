@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/generate_transaction_statementRequest.schema.json",
+  "title": "Generate Transaction Statement Request",
+  "description": "Generates a period-based PDF or CSV statement, pins it to IPFS and returns the reference (CID, ipfs:// URI and HTTPS gateway URL) with a summary. The CID is only returned after the upload is verified. Costs 0.01 USDT via x402 when called by an agent or API client; free inside the OnFRA app.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "period": {
+      "type": "string",
+      "description": "Statement period such as 30d, 90d or 1y."
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "csv"
+      ],
+      "default": "pdf",
+      "description": "Statement file format."
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Reporting currency."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0.01"
+}

@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/counterpartiesResult.schema.json",
+  "title": "Dominant Counterparties Result",
+  "description": "Most frequent or highest-volume counterparties.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Requested period, e.g. 30d or 2026-10."
+        },
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "complete": {
+          "type": "boolean",
+          "description": "False if the window is only partially elapsed."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "start",
+        "end"
+      ],
+      "description": "Period covered by this result."
+    },
+    "sort_by": {
+      "type": "string",
+      "enum": [
+        "volume",
+        "frequency"
+      ]
+    },
+    "counterparties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Known label, e.g. an exchange. Null if unlabeled."
+          },
+          "entity_type": {
+            "type": "string",
+            "enum": [
+              "exchange",
+              "protocol",
+              "contract",
+              "wallet",
+              "unknown"
+            ],
+            "x-origin": "classified"
+          },
+          "interaction_count": {
+            "type": "integer",
+            "minimum": 0,
+            "x-origin": "observed"
+          },
+          "total_volume_usd": {
+            "type": "number",
+            "x-origin": "calculated"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing",
+              "both"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "address",
+          "interaction_count",
+          "total_volume_usd",
+          "direction"
+        ]
+      }
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "period",
+    "sort_by",
+    "counterparties",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

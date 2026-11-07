@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/tokenBalancesResult.schema.json",
+  "title": "Token Balances Result",
+  "description": "Current token holdings and valuations.",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain analyzed, e.g. celo."
+    },
+    "total_value_usd": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Null if prices were not requested.",
+      "x-origin": "calculated"
+    },
+    "priced_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When prices were taken. Null if prices were not requested."
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Token symbol, e.g. USDC."
+          },
+          "name": {
+            "type": "string"
+          },
+          "contract_address": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null for the native token."
+          },
+          "decimals": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "balance": {
+            "type": "string",
+            "description": "Decimal string in token units, e.g. \"1000\".",
+            "x-origin": "observed"
+          },
+          "price_usd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "value_usd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-origin": "calculated"
+          },
+          "is_suspected_spam": {
+            "type": "boolean",
+            "x-origin": "classified"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "symbol",
+          "balance"
+        ]
+      }
+    },
+    "data_source": {
+      "type": "string",
+      "description": "Where the underlying data came from."
+    },
+    "data_last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Latest data point included."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data_quality": {
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "True if all data for the period was retrieved and processed."
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known gaps or caveats (missing prices, unlabeled addresses, partial window, etc.)."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "limitations"
+      ],
+      "description": "Data quality and limitations."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain",
+    "total_value_usd",
+    "tokens",
+    "generated_at",
+    "data_quality"
+  ],
+  "additionalProperties": false,
+  "x-origin-legend": {
+    "observed": "Read directly from the blockchain.",
+    "calculated": "Totals, averages and percentages computed by OnFRA.",
+    "classified": "Categories or labels assigned by OnFRA, sometimes with confidence.",
+    "interpreted": "OnFRA's plain-language interpretation."
+  }
+}

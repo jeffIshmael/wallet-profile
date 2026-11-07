@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/get_token_breakdownRequest.schema.json",
+  "title": "Get Token Breakdown Request",
+  "description": "How a wallet's financial activity is distributed across tokens, by balance, received, sent or volume. Balances and historical volume are separate measurements and are never mixed. Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "period": {
+      "type": "string",
+      "description": "Period for the volume breakdown."
+    },
+    "metric": {
+      "type": "string",
+      "enum": [
+        "balance",
+        "received",
+        "sent",
+        "volume"
+      ],
+      "default": "volume",
+      "description": "Measurement to break down by."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

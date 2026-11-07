@@ -1,8 +1,8 @@
 {
-  "name": "OnFRA — Onfra Financial Intelligence Agent",
-  "description": "OnFRA (OnChain Financial Reputation Agent) analyzes Celo wallet activity into financial reputation signals (health, income, reputation, loan capacity), settles paid agent calls in USDT via x402, and can attest verified REP passports onchain. Available at https://app.onfra.xyz. ERC-8004 agent #9219.",
+  "name": "OnFRA — Onchain Financial Intelligence Agent",
+  "description": "OnFRA turns Celo wallet activity into structured financial intelligence for people and AI agents: wallet profiles, cash flow, token balances and breakdowns, spending, counterparties, activity, period comparisons, transaction explanations and downloadable statements. Most tools are free; explain_transaction (0.02 USDT) and generate_transaction_statement (0.01 USDT) are paid via x402 for agents and API clients. Available at https://app.onfra.xyz. ERC-8004 agent #9219.",
   "url": "https://app.onfra.xyz",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "protocolVersion": "0.3.0",
   "provider": {
     "name": "Onfra",
@@ -15,10 +15,16 @@
     "stateTransitionHistory": true,
     "humanInTheLoop": false
   },
-  "defaultInputModes": ["application/json"],
-  "defaultOutputModes": ["application/json"],
+  "defaultInputModes": [
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
   "authentication": {
-    "schemes": ["x402"],
+    "schemes": [
+      "x402"
+    ],
     "x402": {
       "scheme": "x402",
       "chain": "celo",
@@ -26,32 +32,51 @@
       "currency": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
       "currencySymbol": "USDT",
       "paymentHeader": "X-PAYMENT",
-      "alternateHeaders": ["PAYMENT-SIGNATURE", "x-payment"],
+      "alternateHeaders": [
+        "PAYMENT-SIGNATURE",
+        "x-payment"
+      ],
       "configUrl": "https://app.onfra.xyz/api/x402/config",
       "healthUrl": "https://app.onfra.xyz/api/health/integrations",
-      "enforcement": "Agent/API callers pay via x402. Cached signal GETs and REP verify are free. External analyze/chat/statement: 0.01 USDT. Verified REP report: 0.10 USDT. Unpaid paid endpoints return HTTP 402 with machine-readable accepts[]."
+      "enforcement": "Agents and API clients pay via x402 for generate_transaction_statement, explain_transaction (generate_transaction_statement: 0.01 USDT, explain_transaction: 0.02 USDT). All other tools are free with fair-use rate limits. Everything is free inside the OnFRA app. Discovery endpoints (capabilities, x402 config, health) are free. Unpaid calls to paid tools return HTTP 402 with machine-readable accepts[]."
     }
   },
   "payments": {
     "x402": {
-      "model": "pay-per-request",
+      "model": "free tools plus pay-per-request",
       "currency": "USDT",
       "chain": "celo",
       "chainId": 42220,
       "tokenAddress": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
       "pricing": {
-        "own_wallet_dashboard_query": "free",
-        "external_wallet_query": "0.01 USDT",
-        "verified_financial_reputation_report": "0.10 USDT",
-        "cached_signal_read": "free",
-        "verify_report": "free",
-        "minimum": "0.01 USDT"
+        "model": "free tools plus pay-per-request for two tools",
+        "free_tools": [
+          "analyze_wallet",
+          "get_cash_flow_summary",
+          "get_token_balances",
+          "get_token_breakdown",
+          "compare_periods",
+          "get_spending_breakdown",
+          "get_dominant_counterparties",
+          "get_wallet_activity"
+        ],
+        "paid_tools": {
+          "generate_transaction_statement": "0.01 USDT",
+          "explain_transaction": "0.02 USDT"
+        },
+        "in_app": "Free inside the OnFRA app at app.onfra.xyz (rate limited). Agents and API clients pay the listed price via x402.",
+        "chat_query": "0.01 USDT for external wallets; free for the caller's own wallet in the app.",
+        "discovery_endpoints": "free"
       },
       "freeEndpoints": [
-        "/api/agent/verify/{reportId}",
-        "/api/wallet/{address}/signals",
-        "/api/wallet/{address}/signals/{signal}",
-        "/api/wallet/{address}/analysis",
+        "/api/agent/tools/analyze_wallet",
+        "/api/agent/tools/get_cash_flow_summary",
+        "/api/agent/tools/get_token_balances",
+        "/api/agent/tools/get_token_breakdown",
+        "/api/agent/tools/compare_periods",
+        "/api/agent/tools/get_spending_breakdown",
+        "/api/agent/tools/get_dominant_counterparties",
+        "/api/agent/tools/get_wallet_activity",
         "/api/health/integrations",
         "/api/capabilities",
         "/api/x402/config"
@@ -77,46 +102,39 @@
     {
       "id": "usdt_x402_settlement",
       "name": "USDT x402 settlement",
-      "description": "Paid API/agent calls settle USDT on Celo mainnet to the OnFRA treasury (payTo from /api/x402/config or /api/health/integrations).",
+      "description": "Paid tool calls settle on Celo mainnet in USDT to the OnFRA treasury (payTo from /api/x402/config or /api/health/integrations).",
       "chainId": 42220,
       "token": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
       "tokenSymbol": "USDT",
       "executesOnChain": true,
-      "endpoints": ["/api/agent/analyze", "/api/agent/chat", "/api/agent/statement", "/api/agent/report", "/api/lender/screen"]
+      "endpoints": [
+        "/api/agent/tools/generate_transaction_statement",
+        "/api/agent/tools/explain_transaction",
+        "/api/agent/chat"
+      ]
     },
     {
-      "id": "rep_passport_attestation",
-      "name": "REP passport attestation",
-      "description": "After a paid verified report, OnFRA publishes the report hash onchain via OnchainReporter.publishFinancialReport so lenders can verify without trusting the API alone.",
+      "id": "buy_chainstack_trace",
+      "name": "Call trace purchase through Buy",
+      "description": "For swaps, contract calls and failed transactions, explain_transaction buys one Chainstack Celo RPC request ($0.01 USD, x402 on Celo) through the Buy gateway to fetch a call trace, and returns the settlement transaction in purchases[]. Simple transfers need no purchase.",
+      "tool": "explain_transaction",
+      "gateway": "https://gateway.usebuy.ai/chainstack/celo",
+      "priceUsd": "0.01",
+      "token": "USDT",
       "chainId": 42220,
-      "contract": "0xE7621aF5dE3806ba26115bdC89190c65ed835C21",
-      "method": "publishFinancialReport",
-      "executesOnChain": true,
-      "trigger": "POST /api/agent/report (0.10 USDT)",
-      "explorer": "https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21"
-    },
-    {
-      "id": "rep_passport_verify",
-      "name": "REP passport verify",
-      "description": "Anyone can verify a REP-{id} / WP-{id} against the onchain registry (free). Reads OnchainReporter.verifyReport.",
-      "chainId": 42220,
-      "contract": "0xE7621aF5dE3806ba26115bdC89190c65ed835C21",
-      "method": "verifyReport",
-      "executesOnChain": true,
-      "endpoint": "GET /api/agent/verify/{reportId}",
-      "price": "free"
+      "executesOnChain": true
     },
     {
       "id": "erc8004_identity",
       "name": "ERC-8004 agent identity",
-      "description": "OnFRA is registered as ERC-8004 agent #9219 on Celo mainnet Identity Registry.",
+      "description": "OnFRA is registered as ERC-8004 agent #9219 on the Celo mainnet Identity Registry.",
       "chainId": 42220,
       "agentId": 9219,
       "identityRegistry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
       "reputationRegistry": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
       "scan": "https://8004scan.io/agents/celo/9219",
       "executesOnChain": false,
-      "note": "Identity/reputation registries are onchain; analysis itself reads public Celo wallet history (off-API compute)."
+      "note": "Identity and reputation registries are onchain; analysis itself reads public Celo wallet history (off-chain compute)."
     }
   ],
   "tee": {
@@ -133,58 +151,245 @@
   },
   "skills": [
     {
-      "id": "wallet_financial_analysis",
-      "name": "Wallet Financial Analysis",
-      "description": "Analyzes transaction history, cash flow, wallet age, and asset composition to produce Financial Health Scores and cash-flow statements.",
-      "tags": ["celo", "defi", "credit", "underwriting", "proof-of-income"],
-      "inputTypes": ["wallet_address"],
-      "outputTypes": ["financial_health_score", "cash_flow_statement"],
-      "endpoint": "POST /api/agent/analyze"
+      "id": "analyze_wallet",
+      "name": "Analyze Wallet",
+      "description": "Flagship tool. Returns a structured financial intelligence profile of a wallet: overview, financial summary, token overview, activity level, insights and data quality. Observed data, calculated metrics, classifications and insights are kept separate.",
+      "tags": [
+        "celo",
+        "wallet",
+        "profile",
+        "financial-intelligence"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period"
+      ],
+      "outputTypes": [
+        "wallet_overview",
+        "financial_summary",
+        "token_overview",
+        "activity",
+        "insights",
+        "data_quality"
+      ],
+      "endpoint": "POST /api/agent/tools/analyze_wallet",
+      "pricing": "free"
     },
     {
-      "id": "reputation_scoring",
-      "name": "Wallet Reputation Scoring",
-      "description": "Evaluates wallet maturity, transaction consistency, protocol trust, and long-term financial reliability.",
-      "tags": ["reputation", "trust", "erc-8004"],
-      "inputTypes": ["wallet_address"],
-      "outputTypes": ["reputation_score", "trust_category"],
-      "endpoint": "GET /api/wallet/{address}/signals/reputation-score"
+      "id": "get_cash_flow_summary",
+      "name": "Get Cash Flow Summary",
+      "description": "Total inflow, outflow and net flow for a period, with transaction counts, daily averages and trend. Internal transfers, swaps, self-transfers, gas and failed transactions are handled explicitly and reported in data_quality.",
+      "tags": [
+        "celo",
+        "cash-flow",
+        "inflow",
+        "outflow"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period"
+      ],
+      "outputTypes": [
+        "cash_flow",
+        "transaction_counts",
+        "averages",
+        "trend",
+        "insights"
+      ],
+      "endpoint": "POST /api/agent/tools/get_cash_flow_summary",
+      "pricing": "free"
     },
     {
-      "id": "income_stability",
-      "name": "Income Stability Assessment",
-      "description": "Detects recurring income streams and classifies income stability over time.",
-      "tags": ["income", "freelancer", "remote-work"],
-      "inputTypes": ["wallet_address"],
-      "outputTypes": ["income_stability_label", "monthly_income_estimate"],
-      "endpoint": "GET /api/wallet/{address}/signals/monthly-income"
+      "id": "get_token_balances",
+      "name": "Get Token Balances",
+      "description": "Current token holdings with normalized token identification and USD valuation. Clean data retrieval with spam filtering.",
+      "tags": [
+        "celo",
+        "balances",
+        "tokens",
+        "holdings"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain"
+      ],
+      "outputTypes": [
+        "total_value_usd",
+        "tokens"
+      ],
+      "endpoint": "POST /api/agent/tools/get_token_balances",
+      "pricing": "free"
     },
     {
-      "id": "portfolio_risk",
-      "name": "Portfolio Risk Exposure",
-      "description": "Analyzes stablecoin, volatile, DeFi, and NFT allocation to classify portfolio risk.",
-      "tags": ["risk", "portfolio", "defi"],
-      "inputTypes": ["wallet_address"],
-      "outputTypes": ["risk_category", "allocation_breakdown"]
+      "id": "get_token_breakdown",
+      "name": "Get Token Breakdown",
+      "description": "How a wallet's financial activity is distributed across tokens, by balance, received, sent or volume. Balances and historical volume are separate measurements and are never mixed.",
+      "tags": [
+        "celo",
+        "tokens",
+        "allocation",
+        "volume"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period",
+        "metric"
+      ],
+      "outputTypes": [
+        "tokens",
+        "dominant_token"
+      ],
+      "endpoint": "POST /api/agent/tools/get_token_breakdown",
+      "pricing": "free"
     },
     {
-      "id": "loan_capacity",
-      "name": "Loan Capacity Estimate",
-      "description": "Estimates responsible borrowing range from income stability, reputation, and risk signals.",
-      "tags": ["lending", "microfinance", "credit"],
-      "inputTypes": ["wallet_address"],
-      "outputTypes": ["loan_range", "confidence_level"],
-      "endpoint": "GET /api/wallet/{address}/signals/loan-capacity"
+      "id": "generate_transaction_statement",
+      "name": "Generate Transaction Statement",
+      "description": "Generates a period-based PDF or CSV statement, pins it to IPFS and returns the reference (CID, ipfs:// URI and HTTPS gateway URL) with a summary. The CID is only returned after the upload is verified.",
+      "tags": [
+        "celo",
+        "statement",
+        "ipfs",
+        "pdf",
+        "csv"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period",
+        "format"
+      ],
+      "outputTypes": [
+        "statement_id",
+        "summary",
+        "ipfs_cid",
+        "uri",
+        "gateway_url",
+        "transaction_count"
+      ],
+      "endpoint": "POST /api/agent/tools/generate_transaction_statement",
+      "pricing": "0.01 USDT via x402 for agents and API clients; free in the app"
     },
     {
-      "id": "verified_reputation_report",
-      "name": "Verified Financial Reputation Report",
-      "description": "Premium lender-ready attestation with verification code, report hash published onchain via OnchainReporter, and IPFS pin.",
-      "tags": ["attestation", "verification", "reports", "onchain"],
-      "inputTypes": ["wallet_address", "report_period"],
-      "outputTypes": ["report_id", "verification_code", "report_hash", "onchain_tx"],
-      "endpoint": "POST /api/agent/report",
-      "onChain": true
+      "id": "compare_periods",
+      "name": "Compare Periods",
+      "description": "Compares financial activity between two equivalent time windows: inflow, outflow, net flow and transaction count, with percentage change and insights. Incomplete windows are flagged, never silently compared.",
+      "tags": [
+        "celo",
+        "comparison",
+        "trends",
+        "change"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "current_period",
+        "previous_period"
+      ],
+      "outputTypes": [
+        "comparison",
+        "metrics",
+        "insights"
+      ],
+      "endpoint": "POST /api/agent/tools/compare_periods",
+      "pricing": "free"
+    },
+    {
+      "id": "explain_transaction",
+      "name": "Explain Transaction",
+      "description": "Explains what happened in a specific transaction in plain language: type, amounts, parties, gas, classification with confidence, and warnings. Handles transfers, swaps, contract calls, liquidity, NFTs, bridges and failed transactions. States uncertainty rather than inventing a purpose.",
+      "tags": [
+        "celo",
+        "transaction",
+        "explanation",
+        "classification"
+      ],
+      "inputTypes": [
+        "transaction_hash",
+        "chain",
+        "wallet_address"
+      ],
+      "outputTypes": [
+        "transaction_type",
+        "summary",
+        "details",
+        "classification",
+        "explanation",
+        "warnings"
+      ],
+      "endpoint": "POST /api/agent/tools/explain_transaction",
+      "pricing": "0.02 USDT via x402 for agents and API clients; free in the app"
+    },
+    {
+      "id": "get_spending_breakdown",
+      "name": "Get Spending Breakdown",
+      "description": "Where a wallet's outgoing money went, grouped by token, counterparty, protocol or category. Classifications carry confidence levels, with an unknown category where the purpose cannot be identified.",
+      "tags": [
+        "celo",
+        "spending",
+        "categories",
+        "outflow"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period",
+        "group_by"
+      ],
+      "outputTypes": [
+        "total_spending_usd",
+        "breakdown"
+      ],
+      "endpoint": "POST /api/agent/tools/get_spending_breakdown",
+      "pricing": "free"
+    },
+    {
+      "id": "get_dominant_counterparties",
+      "name": "Get Dominant Counterparties",
+      "description": "Ranks the addresses and entities a wallet interacts with most, by volume or frequency, with labels where known (exchanges, protocols) and interaction direction.",
+      "tags": [
+        "celo",
+        "counterparties",
+        "entities",
+        "interactions"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period",
+        "limit",
+        "sort_by"
+      ],
+      "outputTypes": [
+        "counterparties"
+      ],
+      "endpoint": "POST /api/agent/tools/get_dominant_counterparties",
+      "pricing": "free"
+    },
+    {
+      "id": "get_wallet_activity",
+      "name": "Get Wallet Activity",
+      "description": "How active a wallet is, independent of its financial value: transaction count, active days, first and last activity, and activity pattern (frequency and trend).",
+      "tags": [
+        "celo",
+        "activity",
+        "frequency",
+        "dormancy"
+      ],
+      "inputTypes": [
+        "wallet_address",
+        "chain",
+        "period"
+      ],
+      "outputTypes": [
+        "activity",
+        "activity_pattern"
+      ],
+      "endpoint": "POST /api/agent/tools/get_wallet_activity",
+      "pricing": "free"
     }
   ]
 }

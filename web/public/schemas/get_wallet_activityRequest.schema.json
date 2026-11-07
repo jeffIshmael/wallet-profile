@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/get_wallet_activityRequest.schema.json",
+  "title": "Get Wallet Activity Request",
+  "description": "How active a wallet is, independent of its financial value: transaction count, active days, first and last activity, and activity pattern (frequency and trend). Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "period": {
+      "type": "string",
+      "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

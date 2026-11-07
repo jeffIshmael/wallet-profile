@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app.onfra.xyz/schemas/get_dominant_counterpartiesRequest.schema.json",
+  "title": "Get Dominant Counterparties Request",
+  "description": "Ranks the addresses and entities a wallet interacts with most, by volume or frequency, with labels where known (exchanges, protocols) and interaction direction. Free (fair-use rate limits apply).",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Wallet address to analyze."
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "celo"
+      ],
+      "description": "Blockchain. Celo today; more EVM chains planned."
+    },
+    "period": {
+      "type": "string",
+      "description": "Analysis period: 7d, 30d, 90d, 1y or all-time."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 10,
+      "description": "Number of counterparties to return."
+    },
+    "sort_by": {
+      "type": "string",
+      "enum": [
+        "volume",
+        "frequency"
+      ],
+      "default": "volume",
+      "description": "Ranking criterion."
+    }
+  },
+  "required": [
+    "wallet_address",
+    "chain"
+  ],
+  "additionalProperties": false,
+  "x-price-usdt": "0"
+}

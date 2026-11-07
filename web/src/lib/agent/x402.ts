@@ -1,3 +1,4 @@
+// FILE: src/lib/agent/x402.ts  (changes: new "tool" tier + optional per-call priceUsdt, so each tool can have its own price)
 import {
   assertMiniPayTransferPayment,
   getMiniPayTxHeader
@@ -19,7 +20,7 @@ import {
   isX402Enforced
 } from "@/lib/agent/env";
 
-export type X402PriceTier = "external" | "report";
+export type X402PriceTier = "external" | "report" | "tool";
 
 export type PaymentSettlement = {
   method: "skipped" | "unenforced" | "direct-usdt" | "x402-facilitator" | "simulated";
@@ -36,7 +37,9 @@ export type AssertPaymentResult =
 
 const TIER_AMOUNTS: Record<X402PriceTier, string> = {
   external: PRICING.externalWalletQueryUsdt,
-  report: PRICING.verifiedReportUsdt
+  report: PRICING.verifiedReportUsdt,
+  // "tool" is priced per call through options.priceUsdt (see lib/agent/toolPricing.ts); this is only a fallback.
+  tool: PRICING.externalWalletQueryUsdt
 };
 
 function usdtToAtomic(amount: string): string {
@@ -146,8 +149,8 @@ function parsePaymentPayload(header: string): PaymentPayloadRecord | null {
   return null;
 }
 
-function buildPaymentRequirements(tier: X402PriceTier, payTo: string, resource: string) {
-  const priceUsdt = TIER_AMOUNTS[tier];
+function buildPaymentRequirements(tier: X402PriceTier, payTo: string, resource: string, priceOverride?: string) {
+  const priceUsdt = priceOverride ?? TIER_AMOUNTS[tier];
   return {
     // Facilitator exact-scheme wire format — not WWW-Authenticate AUTH_SCHEME ("x402")
     scheme: "exact" as const,
@@ -195,8 +198,8 @@ export function getTierPriceUsdt(tier: X402PriceTier): string {
   return TIER_AMOUNTS[tier];
 }
 
-export function paymentRequiredResponse(tier: X402PriceTier) {
-  const priceUsdt = TIER_AMOUNTS[tier];
+export function paymentRequiredResponse(tier: X402PriceTier, priceOverride?: string) {
+  const priceUsdt = priceOverride ?? TIER_AMOUNTS[tier];
   const maxAmountRequired = usdtToAtomic(priceUsdt);
   const payTo = getX402PayToAddress() ?? null;
 
@@ -281,10 +284,10 @@ export { getX402SettlementMode } from "@/lib/agent/env";
 export async function assertPayment(
   req: Request,
   tier: X402PriceTier,
-  options?: { skipPayment?: boolean; skipReason?: string }
+  options?: { skipPayment?: boolean; skipReason?: string; priceUsdt?: string }
 ): Promise<AssertPaymentResult> {
   const logPrefix = `[x402 ${tier}]`;
-  const priceUsdt = TIER_AMOUNTS[tier];
+  const priceUsdt = options?.priceUsdt ?? TIER_AMOUNTS[tier];
 
   if (options?.skipPayment) {
     console.log(`${logPrefix} Payment skipped (${options.skipReason ?? "free request"}).`);
@@ -300,7 +303,7 @@ export async function assertPayment(
   const payTo = getX402PayToAddress();
   if (!payTo) {
     console.warn(`${logPrefix} X402_ENFORCE is enabled but payout address is not configured.`);
-    return { ok: false, response: paymentRequiredResponse(tier) };
+    return { ok: false, response: paymentRequiredResponse(tier, priceUsdt) };
   }
 
   const directTransferTx = getMiniPayTxHeader(req);
@@ -318,7 +321,7 @@ export async function assertPayment(
     console.warn(
       `${logPrefix} Direct transfer verification failed for ${directTransferTx.slice(0, 12)}… — check payer, amount, and payTo.`
     );
-    return { ok: false, response: paymentRequiredResponse(tier) };
+    return { ok: false, response: paymentRequiredResponse(tier, priceUsdt) };
   }
 
   const settlementMode = getX402SettlementMode();
@@ -326,7 +329,7 @@ export async function assertPayment(
 
   if (!paymentHeader) {
     console.log(`${logPrefix} No payment header found. Returning 402 Payment Required.`);
-    return { ok: false, response: paymentRequiredResponse(tier) };
+    return { ok: false, response: paymentRequiredResponse(tier, priceUsdt) };
   }
 
   if (settlementMode === "simulated") {
@@ -339,7 +342,7 @@ export async function assertPayment(
   const paymentPayload = parsePaymentPayload(paymentHeader);
   if (!paymentPayload) {
     console.warn(`${logPrefix} X-PAYMENT header is not a valid PaymentPayload (JSON or base64).`);
-    return { ok: false, response: paymentRequiredResponse(tier) };
+    return { ok: false, response: paymentRequiredResponse(tier, priceUsdt) };
   }
 
   const resourceUrl = (() => {
@@ -349,7 +352,7 @@ export async function assertPayment(
       return "/api";
     }
   })();
-  const paymentRequirements = buildPaymentRequirements(tier, payTo, resourceUrl);
+  const paymentRequirements = buildPaymentRequirements(tier, payTo, resourceUrl, priceUsdt);
   const x402Version =
     typeof paymentPayload.x402Version === "number" ? paymentPayload.x402Version : 1;
 
@@ -420,7 +423,7 @@ export async function assertPayment(
   );
 
   if (!responseBody || typeof responseBody !== "object") {
-    return { ok: false, response: paymentRequiredResponse(tier) };
+    return { ok: false, response: paymentRequiredResponse(tier, priceUsdt) };
   }
 
   const body = {
@@ -431,7 +434,7 @@ export async function assertPayment(
     chain: CHAIN,
     currency: USDT_CELO_MAINNET,
     currencySymbol: "USDT",
-    priceUsdt: TIER_AMOUNTS[tier],
+    priceUsdt,
     attributionTag: getAttributionTag(),
     facilitatorStatus: resultStatus,
     facilitator: responseBody,
