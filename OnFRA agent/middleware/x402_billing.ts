@@ -1,4 +1,6 @@
+// FILE: middleware/x402_billing.ts
 import { tool } from "@langchain/core/tools";
+import { getToolPrice } from "./pricing.js";
 
 // Mock local balance database
 const userBalances: Record<string, number> = {};
@@ -73,4 +75,49 @@ export function wrapWithX402(originalTool: any, costUsdt: number) {
     }
   );
   return wrapped;
+}
+
+/**
+ * Charges the caller for one tool call according to middleware/pricing.ts. Free tools pass through untouched.
+ * Pass the wallet that should pay; it defaults to the global active wallet (not safe for concurrent users).
+ */
+export function chargeForTool(toolName: string, wallet: string = getActiveUserWallet()): { charged: number; wallet: string } {
+  // ONFRA_AGENT_BILLING=off: the host (the web app) handles payment over HTTP, so skip this in-memory demo ledger.
+  if (process.env.ONFRA_AGENT_BILLING === "off") return { charged: 0, wallet };
+  const price = getToolPrice(toolName);
+  if (price <= 0) return { charged: 0, wallet };
+  if (!deductUser(wallet, price)) {
+    throw new InsufficientBalanceError(
+      `Insufficient balance. Tool "${toolName}" costs ${price} USDT. Your balance is ${getUserBalance(wallet)} USDT. Please top up.`
+    );
+  }
+  console.log(`[X402 Billing] Charged ${price} USDT from ${wallet} for "${toolName}". Remaining: ${getUserBalance(wallet)} USDT.`);
+  return { charged: price, wallet };
+}
+
+/**
+ * Prices a tool from the central pricing table. Charges before the call and refunds if the tool throws,
+ * so users are never billed for failures. `payer` returns the wallet to charge for the current request.
+ */
+export function withPricing(originalTool: any, payer: () => string = getActiveUserWallet) {
+  const price = getToolPrice(originalTool.name);
+  return tool(
+    async (args: any, config: any) => {
+      const { charged, wallet } = chargeForTool(originalTool.name, payer());
+      try {
+        return await originalTool.invoke(args, config);
+      } catch (err) {
+        if (charged > 0) {
+          topUpUser(wallet, charged);
+          console.log(`[X402 Billing] Refunded ${charged} USDT to ${wallet}: "${originalTool.name}" failed.`);
+        }
+        throw err;
+      }
+    },
+    {
+      name: originalTool.name,
+      description: price > 0 ? `${originalTool.description} (Costs ${price} USDT)` : originalTool.description,
+      schema: originalTool.schema,
+    }
+  );
 }

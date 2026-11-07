@@ -1,3 +1,4 @@
+// FILE: chains/chat_agent.ts  (only change: new questions are handed to the intelligence agent first)
 import { ChatOpenAI } from "@langchain/openai";
 import { computeFinancialHealth } from "../tools/compute_financial_health.js";
 import { computeReputationScore } from "../tools/compute_reputation_score.js";
@@ -17,6 +18,10 @@ import {
   type CachedDashboard,
   type QueryIntent
 } from "./chat_router.js";
+import { shouldUseIntelAgent } from "./intel_router.js";
+import { runIntelAgent } from "./intel_agent.js";
+export { setIpfsAdapter } from "../lib/ipfs.js";
+import { InsufficientBalanceError } from "../middleware/x402_billing.js";
 
 export type ChatAgentContext = {
   callerWallet: string;
@@ -88,7 +93,7 @@ function seedCacheFromDashboard(dashboard: CachedDashboard & { transactions?: un
 }
 
 async function runSingleTool(
-  intent: Exclude<QueryIntent, "general" | "tokens">,
+  intent: Exclude<QueryIntent, "general" | "tokens" | "statement">,
   walletAddress: string,
   onStatus?: ChatStatusCallback
 ): Promise<{ text: string; toolsUsed: string[] }> {
@@ -202,6 +207,23 @@ export async function runChatAgent(
       toolsUsed: [],
       source: "cache"
     };
+  }
+
+  // New intelligence tools (tx explanations, cash flow, spending, compare, counterparties, statements, ...).
+  // If the agent is unavailable (for example no OPENAI_API_KEY) we fall through to the legacy router below.
+  if (shouldUseIntelAgent(lastUserQuery)) {
+    try {
+      onStatus?.("Looking into it…");
+      const r = await runIntelAgent(history, {
+        apiKey: actualApiKey,
+        context: { callerWallet: context.callerWallet, targetWallet: context.targetWallet, isOwnWallet: context.isOwnWallet },
+        onStatus
+      });
+      return { text: r.text, toolsUsed: r.toolsUsed, source: r.source };
+    } catch (err) {
+      if (err instanceof InsufficientBalanceError) throw err;
+      console.warn("[ChatAgent] Intelligence agent failed, falling back to the legacy router:", err);
+    }
   }
 
   if (context.cachedDashboard) {
