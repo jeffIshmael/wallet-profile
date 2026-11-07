@@ -82,7 +82,7 @@ const wallet = z.string().regex(/^0x[a-fA-F0-9]{40}$/).describe("Wallet address 
 const chain = z.enum(["celo"]).describe("Blockchain. Celo today.");
 const period = z.string().optional().describe("7d, 30d, 90d, 1y or all-time.");
 
-const TOOLS: { name: string; description: string; shape: z.ZodRawShape }[] = [
+const TOOLS: { name: string; description: string; shape: z.ZodType }[] = [
   {
     name: "analyze_wallet",
     description: "Financial intelligence profile of a wallet: overview, summary, tokens, activity, insights. Free.",
@@ -164,26 +164,23 @@ const TOOLS: { name: string; description: string; shape: z.ZodRawShape }[] = [
   }
 ];
 
+// 2) replace the whole handle() function
 async function handle(req: Request): Promise<Response> {
-  // Built per request so tool callbacks can see the original request (IP, payment headers).
-  const handler = createMcpHandler(
-    (server) => {
+    const handler = createMcpHandler((server) => {
       for (const t of TOOLS) {
-        server.tool(t.name, t.description, t.shape, async (args: Record<string, unknown>) =>
-          runTool(req, t.name, args)
+        server.registerTool(
+          t.name,
+          { description: t.description, inputSchema: z.object(t.shape) },
+          async (args) => runTool(req, t.name, args as Record<string, unknown>)
         );
       }
-    },
-    {},
-    { basePath: "/api", maxDuration: 60 }
-  );
-
-  const res = await handler(req);
-  const headers = new Headers(res.headers);
-  for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
-  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
-}
-
+    });
+  
+    const res = await handler(req);
+    const headers = new Headers(res.headers);
+    for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+  }
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS });
 }
