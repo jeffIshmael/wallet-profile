@@ -18,6 +18,20 @@ import { Card } from "@/components/ui/Card";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { truncateAddress } from "@/lib/format";
 
+export type RecentAnalysisItem = {
+  id: string;
+  walletAddress: string;
+  financialHealthScore: number;
+  reputationScore: number;
+  reputationCategory: string;
+  riskCategory: string;
+  incomeLabel: string;
+  loanRange: string;
+  totalValueUsd: number;
+  totalTransactions: number;
+  createdAt: string;
+};
+
 export type PlatformStats = {
   totals: {
     wallets: number;
@@ -49,6 +63,7 @@ export type PlatformStats = {
     report: number;
     total: number;
   }>;
+  recentAnalyses?: RecentAnalysisItem[];
 };
 
 export type WalletStats = {
@@ -292,6 +307,83 @@ export function StatsContent() {
               </div>
             </Card>
           </div>
+
+          {platformStats.recentAnalyses && platformStats.recentAnalyses.length > 0 && (
+            <Card className="mt-2">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div>
+                  <h2 className="font-space text-base font-semibold text-white">Live Analyzed Wallets</h2>
+                  <p className="text-xs text-stardust mt-0.5">Real-time reputation and financial intelligence from recent scans</p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live feed
+                </span>
+              </div>
+
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-white/5 text-stardust uppercase tracking-wider text-[10px]">
+                      <th className="py-2.5 px-3">Wallet</th>
+                      <th className="py-2.5 px-3">Health Score</th>
+                      <th className="py-2.5 px-3">Reputation</th>
+                      <th className="py-2.5 px-3">Risk Level</th>
+                      <th className="py-2.5 px-3">Income Label</th>
+                      <th className="py-2.5 px-3">Scanned</th>
+                      <th className="py-2.5 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {platformStats.recentAnalyses.map((item) => (
+                      <tr key={item.id} className="transition hover:bg-white/[0.02]">
+                        <td className="py-3 px-3 font-mono font-medium text-white">
+                          {truncateAddress(item.walletAddress)}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 font-mono font-bold text-white">
+                            {item.financialHealthScore}/100
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="font-semibold text-btc-orange">
+                            {item.reputationScore}
+                          </span>{" "}
+                          <span className="text-stardust text-[11px]">({item.reputationCategory})</span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              item.riskCategory?.toLowerCase() === "low"
+                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                : item.riskCategory?.toLowerCase() === "medium"
+                                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                            }`}
+                          >
+                            {item.riskCategory}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-stardust">{item.incomeLabel}</td>
+                        <td className="py-3 px-3 text-stardust text-[11px]">
+                          {formatDateTime(item.createdAt)}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <Link
+                            href={`/dashboard?address=${encodeURIComponent(item.walletAddress)}`}
+                            className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:border-btc-orange/50 hover:bg-btc-orange/10"
+                          >
+                            View
+                            <ArrowRight size={12} />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </>
       )}
 

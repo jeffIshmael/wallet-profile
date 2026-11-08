@@ -19,8 +19,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const chatRequested = searchParams.get("chat") === "1";
   const analyzeParam = searchParams.get("analyze");
 
-  // ?address=0x… lets a visitor view any public wallet (guest mode)
-  const rawAddressParam = searchParams.get("address")?.trim() ?? "";
+  // ?address=0x… or ?wallet=0x… lets a visitor view any public wallet (guest mode)
+  const WALLET_PARAMS = ["address", "wallet", "w"];
+  const rawAddressParam =
+    WALLET_PARAMS.map((key) => searchParams.get(key)?.trim()).find(Boolean) ?? "";
   const addressParam = isEvmAddress(rawAddressParam) ? rawAddressParam : null;
 
   const { ready, authenticated, address: ownAddress } = useWalletAuth();

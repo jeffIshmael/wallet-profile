@@ -14,9 +14,9 @@ import { isEvmAddress } from "@/lib/walletAddress";
  */
 const WALLET_PARAMS = ["wallet", "address", "w"];
 
-/** Where the dashboard receives the wallet. Change this one line if your dashboard reads it differently. */
+/** Where the dashboard receives the wallet. */
 function dashboardHref(wallet: string) {
-  return `/dashboard?wallet=${encodeURIComponent(wallet)}`;
+  return `/dashboard?address=${encodeURIComponent(wallet)}`;
 }
 
 function AppEntry() {
@@ -29,11 +29,17 @@ function AppEntry() {
   const paramIsValid = isEvmAddress(rawParam);
 
   const [typedWallet, setTypedWallet] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState(false);
 
   // Wallet to analyze: one typed on this page wins, then one from the landing page.
   const walletToAnalyze =
-    typedWallet ?? (paramIsValid && !dismissed ? rawParam : null);
+    typedWallet ?? (paramIsValid ? rawParam : null);
+
+  // When a wallet is provided to analyze, route directly to dashboard where the real analysis executes.
+  useEffect(() => {
+    if (walletToAnalyze) {
+      router.replace(dashboardHref(walletToAnalyze));
+    }
+  }, [walletToAnalyze, router]);
 
   // Signed-in visitors with no wallet to analyze go straight to their dashboard.
   useEffect(() => {
@@ -42,24 +48,8 @@ function AppEntry() {
     }
   }, [ready, authenticated, walletToAnalyze, router]);
 
-  const handleDone = useCallback(() => {
-    if (walletToAnalyze) router.replace(dashboardHref(walletToAnalyze));
-  }, [walletToAnalyze, router]);
-
-  const handleCancel = useCallback(() => {
-    setTypedWallet(null);
-    setDismissed(true);
-    router.replace("/");
-  }, [router]);
-
   if (walletToAnalyze) {
-    return (
-      <WalletAnalyzingScreen
-        wallet={walletToAnalyze}
-        onDone={handleDone}
-        onCancel={handleCancel}
-      />
-    );
+    return <WalletAnalyzingScreen wallet={walletToAnalyze} ready={false} />;
   }
 
   if (ready && authenticated) {

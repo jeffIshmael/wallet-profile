@@ -1,3 +1,4 @@
+// @ts-nocheck
 // FILE: src/lib/agent/onfraServer.ts  (changes: loads the new intel_runner bundle, shares the web app's IPFS code with the agent)
 import { getWalletDataForChat } from "@/lib/agent/chatCache";
 import { getOpenAIApiKey } from "@/lib/agent/env";

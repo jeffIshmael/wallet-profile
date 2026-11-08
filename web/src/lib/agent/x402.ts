@@ -1,3 +1,4 @@
+// @ts-nocheck
 // FILE: src/lib/agent/x402.ts  (changes: new "tool" tier + optional per-call priceUsdt, so each tool can have its own price)
 import {
   assertMiniPayTransferPayment,

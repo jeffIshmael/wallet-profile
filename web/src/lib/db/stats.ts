@@ -81,7 +81,8 @@ export async function getPlatformStats() {
     endpointBreakdown,
     totalApiEvents,
     apiEvents24h,
-    externalApiEvents
+    externalApiEvents,
+    recentAnalyses
   ] = await Promise.all([
     prisma.wallet.count(),
     prisma.analysisRun.count(),
@@ -116,6 +117,23 @@ export async function getPlatformStats() {
           equals: true
         }
       }
+    }),
+    prisma.analysisRun.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        walletAddress: true,
+        financialHealthScore: true,
+        reputationScore: true,
+        reputationCategory: true,
+        riskCategory: true,
+        incomeLabel: true,
+        loanRange: true,
+        totalValueUsd: true,
+        totalTransactions: true,
+        createdAt: true
+      }
     })
   ]);
 
@@ -147,6 +165,19 @@ export async function getPlatformStats() {
     endpointUsage: endpointBreakdown.map((row) => ({
       endpoint: row.endpoint,
       count: row._count._all
+    })),
+    recentAnalyses: recentAnalyses.map((row) => ({
+      id: row.id,
+      walletAddress: row.walletAddress,
+      financialHealthScore: row.financialHealthScore,
+      reputationScore: row.reputationScore,
+      reputationCategory: row.reputationCategory,
+      riskCategory: row.riskCategory,
+      incomeLabel: row.incomeLabel,
+      loanRange: row.loanRange,
+      totalValueUsd: row.totalValueUsd,
+      totalTransactions: row.totalTransactions,
+      createdAt: row.createdAt.toISOString()
     })),
     dailyAnalyses,
     dailyApiUsage

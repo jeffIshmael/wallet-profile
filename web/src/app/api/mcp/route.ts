@@ -15,6 +15,7 @@ import { runIntelTool, validateIntelToolInput } from "@/lib/agent/onfraServer";
 import { getToolPriceUsdt, isIntelTool } from "@/lib/agent/toolPricing";
 import { takeToolCall } from "@/lib/agent/toolLimit";
 import { trackApiEvent } from "@/lib/db/events";
+import { upsertWallet } from "@/lib/db/wallets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,6 +43,13 @@ type TrackArgs = Parameters<typeof trackApiEvent>[0];
 // so logging fails for wallets that are not in the database (every external wallet).
 // Retry once without the FK field (wallet kept in metadata), and never throw.
 async function safeTrack(args: TrackArgs): Promise<void> {
+  if (args.walletAddress) {
+    try {
+      await upsertWallet(args.walletAddress);
+    } catch {
+      // best-effort
+    }
+  }
   try {
     await trackApiEvent(args);
   } catch {
