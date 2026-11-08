@@ -131,7 +131,7 @@ function HumanPreview() {
 
       <div className="bg-white p-2 sm:p-4">
         <img
-          src="/dashboard-preview.png"
+          src="/dashboa.png"
           alt="Onfra wallet financial analytics dashboard"
           className="h-auto w-full rounded-xl object-cover"
         />
@@ -295,15 +295,15 @@ export default function HomePage() {
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#625779]">
                   One intelligence layer. Two ways to use it.
                 </p>
-                <div className="mt-4 inline-flex rounded-full border border-white/80 bg-white/55 p-1.5 shadow-lg backdrop-blur-md">
+                <div className="mt-4 inline-flex items-center rounded-full border border-[#403653] bg-[#302641] p-1.5 shadow-xl shadow-[#302641]/20">
                   <button
                     type="button"
                     onClick={() => setAudience("humans")}
                     aria-pressed={audience === "humans"}
-                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition ${
+                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-200 ${
                       audience === "humans"
-                        ? "bg-[#171421] text-white shadow-md"
-                        : "text-[#4a4655] hover:bg-white/70"
+                        ? "bg-white text-[#302641] shadow-md"
+                        : "text-white/75 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     <User className="h-4 w-4" />
@@ -313,10 +313,10 @@ export default function HomePage() {
                     type="button"
                     onClick={() => setAudience("agents")}
                     aria-pressed={audience === "agents"}
-                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition ${
+                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-200 ${
                       audience === "agents"
-                        ? "bg-[#171421] text-white shadow-md"
-                        : "text-[#4a4655] hover:bg-white/70"
+                        ? "bg-white text-[#302641] shadow-md"
+                        : "text-white/75 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     <Bot className="h-4 w-4" />
