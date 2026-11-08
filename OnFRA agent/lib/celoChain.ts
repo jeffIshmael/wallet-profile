@@ -8,6 +8,8 @@ import { celo } from "viem/chains";
 import { sqdHead, streamCells } from "./sqdClient.js";
 import { KNOWN_TOKEN_ADDRESSES } from "./knownTokens.js";
 
+const KNOWN_SET = new Set(KNOWN_TOKEN_ADDRESSES);
+
 export const celoClient = createPublicClient({ chain: celo, transport: http(process.env.CELO_RPC_URL ?? "https://forno.celo.org") });
 
 export const CELO_TOKEN = "0x471ece3750da237f93b8e339c536989b8978a438";
@@ -60,20 +62,55 @@ export async function getTokenMeta(addresses: string[]): Promise<Map<string, Tok
 }
 
 export function looksSpam(symbol: string, name: string): boolean {
-  const s = `${symbol} ${name}`.toLowerCase();
-  return symbol.length > 16 || /https?:|www\.|\.com|\.io|\.xyz|claim|visit|airdrop|reward/.test(s);
+  const t = `${symbol} ${name}`.toLowerCase();
+  return symbol.length > 16 || /https?:|www\.|\.com|\.io|\.xyz|claim|visit|airdrop|reward/.test(t);
 }
 
-export async function getBalances(wallet: string, tokenList: string[]) {
+// Letters from other alphabets that look like Latin ones. Scam tokens use them to copy "cUSD" and friends.
+const CONFUSABLE: Record<string, string> = {
+  "\u0405": "S", "\u0455": "s", "\u0410": "A", "\u0430": "a", "\u0415": "E", "\u0435": "e", "\u041E": "O", "\u043E": "o",
+  "\u0420": "P", "\u0440": "p", "\u0421": "C", "\u0441": "c", "\u0425": "X", "\u0445": "x", "\u0406": "I", "\u0456": "i",
+  "\u0423": "Y", "\u0443": "y", "\u039F": "O", "\u03BF": "o", "\u0391": "A", "\u0395": "E", "\u0399": "I", "\u039D": "N",
+};
+const foldSymbol = (s: string) => [...s].map((ch) => CONFUSABLE[ch] ?? ch).join("").toLowerCase().replace(/[^a-z0-9$]/g, "");
+/** Symbols nobody should be able to reuse. Only the contracts in KNOWN_TOKENS may carry them. */
+const PROTECTED = new Set(["usdc", "usdt", "cusd", "usdm", "ceur", "celo", "usdglo", "creal", "ckes"]);
+
+/** Returns address -> reason for tokens that look like spam or impersonation. Tokens in KNOWN_TOKENS are never flagged.
+ *  Rules: lookalike or non-Latin characters, copying a protected symbol from another contract, the same symbol on two or
+ *  more unknown contracts in one wallet (airdrop farms), and the keyword check in looksSpam(). */
+export function flagSpam(tokens: Array<{ address: string; symbol: string; name: string }>): Map<string, string> {
+  const out = new Map<string, string>();
+  const bySymbol = new Map<string, string[]>();
+  for (const t of tokens) {
+    if (KNOWN_SET.has(t.address.toLowerCase())) continue;
+    const f = foldSymbol(t.symbol);
+    bySymbol.set(f, [...(bySymbol.get(f) ?? []), t.address.toLowerCase()]);
+  }
+  for (const t of tokens) {
+    const a = t.address.toLowerCase();
+    if (KNOWN_SET.has(a)) continue;
+    const f = foldSymbol(t.symbol);
+    if (/[^\x20-\x7E]/.test(`${t.symbol}${t.name}`)) out.set(a, "non-standard characters in the name or symbol");
+    else if (PROTECTED.has(f)) out.set(a, "copies the symbol of a well-known token");
+    else if ((bySymbol.get(f)?.length ?? 0) >= 2) out.set(a, "same symbol on several contracts");
+    else if (looksSpam(t.symbol, t.name)) out.set(a, "spam keywords");
+    if (out.get(a) === "non-standard characters in the name or symbol" && PROTECTED.has(f)) out.set(a, "impersonates a well-known token");
+  }
+  return out;
+}
+
+export async function getBalances(wallet: string, tokenList: string[], blockNumber?: bigint) {
   const tokens = [...new Set(tokenList.map((a) => a.toLowerCase()))].filter((a) => /^0x[0-9a-f]{40}$/.test(a)); // one malformed address would fail the whole batch
   const w = wallet as `0x${string}`;
-  const native = await celoClient.getBalance({ address: w });
+  const native = await celoClient.getBalance({ address: w, ...(blockNumber !== undefined ? { blockNumber } : {}) });
   const out = new Map<string, bigint>();
   for (let i = 0; i < tokens.length; i += 200) {
     const chunk = tokens.slice(i, i + 200);
     const callArgs: any = {
       contracts: chunk.map((a) => ({ address: a as `0x${string}`, abi: erc20Abi, functionName: "balanceOf", args: [w] })),
       allowFailure: true,
+      ...(blockNumber !== undefined ? { blockNumber } : {}),
     };
     const res = (await celoClient.multicall(callArgs)) as any[];
     chunk.forEach((a, idx) => {

@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { formatUnits } from "viem";
 import { ledgerFor, envelope, baseEnvelope, flowEntries, summarizeFlows, periodDays, normalizeAddress, round2 } from "../lib/ledger.js";
-import { discoverTokens, getBalances, getTokenMeta, getCeloPriceUsd, looksSpam, STABLE_ADDRESSES, NATIVE } from "../lib/celoChain.js";
+import { discoverTokens, getBalances, getTokenMeta, getCeloPriceUsd, flagSpam, STABLE_ADDRESSES, NATIVE, CELO_TOKEN } from "../lib/celoChain.js";
 import { getWalletAge } from "../lib/getWalletDetails.js";
 
 const wallet = z.string().regex(/^0x[a-fA-F0-9]{40}$/).describe("Wallet address (0x...)");
@@ -110,9 +110,12 @@ export const getTokenBalances = tool(
       : disc.source === "known" ? "The Celo explorer was unreachable, so only a built-in list of known Celo tokens was checked; other tokens may be missing."
       : "Tokens are discovered from the wallet's incoming Transfer events; tokens credited without a Transfer event are not found."
     );
-    const bal = await getBalances(w, disc.tokens);
-    const held = disc.tokens.filter((t) => (bal.tokens.get(t) ?? 0n) > 0n);
+    // The CELO token contract mirrors the native balance, which is listed on its own row below.
+    const candidates = disc.tokens.filter((t) => t !== CELO_TOKEN);
+    const bal = await getBalances(w, candidates);
+    const held = candidates.filter((t) => (bal.tokens.get(t) ?? 0n) > 0n);
     const meta = await getTokenMeta(held);
+    const spamMap = flagSpam(held.map((a) => ({ address: a, symbol: meta.get(a)!.symbol, name: meta.get(a)!.name })));
     const celoPrice = include_prices ? await getCeloPriceUsd() : null;
     if (include_prices && celoPrice === null) limitations.push("CELO price unavailable.");
 
@@ -127,11 +130,11 @@ export const getTokenBalances = tool(
       const raw = bal.tokens.get(a)!;
       const amount = formatUnits(raw, m.decimals);
       const price = include_prices && STABLE_ADDRESSES[a] ? 1 : null;
-      const spam = looksSpam(m.symbol, m.name);
+      const spam = spamMap.has(a);
       if (spam && !include_spam) { hidden++; continue; }
       tokens.push({ symbol: m.symbol, name: m.name, contract_address: a, decimals: m.decimals, balance: amount, price_usd: price, value_usd: price == null ? null : round2(Number(amount) * price), is_suspected_spam: spam });
     }
-    if (hidden) limitations.push(`${hidden} suspected spam token(s) hidden. Set include_spam to see them.`);
+    if (hidden) limitations.push(`${hidden} suspected spam token(s) hidden (lookalike or non-Latin symbols, copied well-known symbols, or the same symbol on many contracts). Set include_spam to see them.`);
     const unpriced = tokens.filter((t) => t.value_usd === null && Number(t.balance) > 0).length;
     if (include_prices && unpriced) limitations.push(`${unpriced} token(s) have no price source and are excluded from the total.`);
     const total = include_prices ? round2(tokens.reduce((s, t) => s + (t.value_usd ?? 0), 0)) : null;
@@ -159,9 +162,14 @@ export const getTokenBreakdown = tool(
 
     if (metric === "balance") {
       const disc = await discoverTokens(w);
-      const bal = await getBalances(w, disc.tokens);
-      const held = disc.tokens.filter((t) => (bal.tokens.get(t) ?? 0n) > 0n);
-      const meta = await getTokenMeta(held);
+      const candidates = disc.tokens.filter((t) => t !== CELO_TOKEN);
+      const bal = await getBalances(w, candidates);
+      const heldAll = candidates.filter((t) => (bal.tokens.get(t) ?? 0n) > 0n);
+      const metaAll = await getTokenMeta(heldAll);
+      const spamMap = flagSpam(heldAll.map((a) => ({ address: a, symbol: metaAll.get(a)!.symbol, name: metaAll.get(a)!.name })));
+      const held = heldAll.filter((a) => !spamMap.has(a));
+      if (spamMap.size) limitations.push(`${spamMap.size} suspected spam token(s) left out of the balance breakdown.`);
+      const meta = metaAll;
       const celoPrice = await getCeloPriceUsd();
       const nat = Number(formatUnits(bal.native, 18));
       const r = get("native", "CELO", null); r.balance = String(nat); if (celoPrice != null) r.balance_usd = round2(nat * celoPrice);
