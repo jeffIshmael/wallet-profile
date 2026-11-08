@@ -5,8 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import { createPublicClient, http, erc20Abi } from "viem";
 import { celo } from "viem/chains";
-import { sqdHead, streamCells } from "./sqdClient.js";
 import { KNOWN_TOKEN_ADDRESSES } from "./knownTokens.js";
+
+export const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 const KNOWN_SET = new Set(KNOWN_TOKEN_ADDRESSES);
 
@@ -175,33 +176,11 @@ async function discoverViaExplorer(wallet: string): Promise<string[] | null> {
   }
 }
 
-/** Token contracts to check for a wallet. Default (no SQD): the built-in list of known Celo tokens plus whatever the Celo
- *  explorer says the wallet holds, one request, then balances are read from the public node. If the explorer is unreachable
- *  only the known list is checked. TOKEN_DISCOVERY_SOURCE=sqd switches to scanning the wallet's incoming Transfer events
- *  on SQD (slow on the first call); TOKEN_DISCOVERY_LOOKBACK_DAYS limits that scan, 0 = full history. */
-export async function discoverTokens(wallet: string): Promise<{ tokens: string[]; complete: boolean; lookbackDays?: number; source: "explorer" | "known" | "sqd" }> {
+/** Token contracts to check for a wallet: the built-in list of known Celo tokens plus whatever the Celo
+ *  explorer says the wallet holds in one request, then balances are read directly from the public node.
+ *  If the explorer is unreachable, the known token list is checked. */
+export async function discoverTokens(wallet: string): Promise<{ tokens: string[]; complete: boolean; source: "explorer" | "known" }> {
   const w = wallet.toLowerCase();
-  if ((process.env.TOKEN_DISCOVERY_SOURCE ?? "auto") !== "sqd") {
-    const listed = await discoverViaExplorer(w);
-    return { tokens: [...new Set([...KNOWN_TOKEN_ADDRESSES, ...(listed ?? [])])], complete: true, source: listed ? "explorer" : "known" };
-  }
-  const file = path.join(CACHE_DIR, `tokens_${w}.json`);
-  let state: DiscoveryState = { tokens: [], lastBlock: -1 };
-  try { state = JSON.parse(await fs.readFile(file, "utf8")); } catch { /* first scan */ }
-  const head = await sqdHead();
-  let complete = true;
-  const lookbackDays = Number(process.env.TOKEN_DISCOVERY_LOOKBACK_DAYS ?? 0);
-  if (state.lastBlock < 0 && lookbackDays > 0) state.lastBlock = Math.max(-1, head - lookbackDays * 86_400 - 1);
-  if (state.lastBlock < head) {
-    const res = await streamCells("incoming", w, state.lastBlock + 1, head);
-    const set = new Set(state.tokens);
-    for (const b of res.blocks) for (const lg of b.logs ?? []) if (lg.topics.length === 3) set.add(lg.address.toLowerCase());
-    state = { tokens: [...set], lastBlock: res.reached };
-    complete = res.complete;
-    try {
-      await fs.mkdir(CACHE_DIR, { recursive: true });
-      await fs.writeFile(file, JSON.stringify(state));
-    } catch { /* cache is best-effort */ }
-  }
-  return { tokens: state.tokens, complete, source: "sqd", ...(lookbackDays > 0 ? { lookbackDays } : {}) };
+  const listed = await discoverViaExplorer(w);
+  return { tokens: [...new Set([...KNOWN_TOKEN_ADDRESSES, ...(listed ?? [])])], complete: true, source: listed ? "explorer" : "known" };
 }

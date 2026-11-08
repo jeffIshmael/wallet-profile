@@ -4,8 +4,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { formatUnits } from "viem";
-import { celoClient, getTokenMeta, isContract, KNOWN_LABELS, CELO_TOKEN } from "../lib/celoChain.js";
-import { TRANSFER_TOPIC } from "../lib/sqdClient.js";
+import { celoClient, getTokenMeta, isContract, KNOWN_LABELS, CELO_TOKEN, TRANSFER_TOPIC } from "../lib/celoChain.js";
 import { buyChainstackBatch, buyEnabled, type BuyPurchase } from "../lib/buyClient.js";
 
 const SELECTORS: Record<string, string> = { "0xa9059cbb": "transfer(address,uint256)", "0x095ea7b3": "approve(address,uint256)", "0x23b872dd": "transferFrom(address,address,uint256)" };
@@ -47,21 +46,26 @@ export const explainTransaction = tool(
     const outTokens = new Set(moves.filter((m) => m.from === from).map((m) => m.token));
     const inTokens = new Set(moves.filter((m) => m.to === from).map((m) => m.token));
     const isSwap = [...inTokens].some((t) => !outTokens.has(t)) && outTokens.size > 0;
+    const isErc20Transfer = (selector === "0xa9059cbb" || selector === "0x23b872dd") && moves.length === 1;
+    const isNativeTransfer = tx.input === "0x" && !toIsContract;
+    const isSimpleErc20OrNative = isErc20Transfer || isNativeTransfer;
 
     let type: string, category: string, confidence: number;
     if (success === false) { type = "failed"; category = "failed_transaction"; confidence = 0.95; }
     else if (!tx.to) { type = "contract_interaction"; category = "contract_deployment"; confidence = 0.9; }
-    else if (tx.input === "0x" && !toIsContract) { type = "native_transfer"; category = "outgoing_payment"; confidence = 0.95; }
+    else if (isNativeTransfer) { type = "native_transfer"; category = "outgoing_payment"; confidence = 0.95; }
     else if (isSwap) { type = "swap"; category = "swap"; confidence = 0.75; }
-    else if (selector === "0xa9059cbb" && moves.length === 1) { type = "token_transfer"; category = "outgoing_payment"; confidence = 0.9; }
+    else if (isErc20Transfer) { type = "token_transfer"; category = "outgoing_payment"; confidence = 0.9; }
     else if (toIsContract) { type = "contract_interaction"; category = label ? "known_protocol_call" : "contract_call"; confidence = label ? 0.8 : 0.5; }
     else { type = "unknown"; category = "unknown"; confidence = 0.2; }
 
-    // Trace: the one thing a free node cannot give us (debug_traceTransaction is not whitelisted there).
+    // For transactions that are not simple ERC-20 transfers (or if use_trace is requested),
+    // use Buy (Chainstack via Buy gateway) to fetch debug_traceTransaction so we can decode
+    // internal calls, classify protocol interactions, and explain complex execution.
     let trace: any = null;
     const purchases: BuyPurchase[] = [];
-    const wantsTrace = use_trace && ["swap", "contract_interaction", "failed", "unknown"].includes(type);
-    if (wantsTrace) {
+    const shouldTrace = !isSimpleErc20OrNative || Boolean(use_trace);
+    if (shouldTrace) {
       if (!buyEnabled()) warnings.push("Call trace skipped: purchases through Buy are disabled on this server.");
       else {
         try {
@@ -69,7 +73,7 @@ export const explainTransaction = tool(
           purchases.push(purchase);
           if (results[0]?.error) warnings.push(`Trace unavailable: ${results[0].error.message ?? "RPC error"}`);
           else trace = results[0]?.result ?? null;
-        } catch (e: any) { warnings.push(`Trace purchase failed: ${e.message}`); }
+        } catch (e: any) { warnings.push(`Trace purchase via Buy failed: ${e.message}`); }
       }
     }
 
@@ -79,7 +83,25 @@ export const explainTransaction = tool(
       const withValue = nodes.filter((n) => n.value && BigInt(n.value) > 0n).length;
       const errored = nodes.find((n) => n.error || n.revertReason);
       traceSummary = { internal_calls: nodes.length - 1, calls_moving_celo: withValue, ...(errored ? { error: errored.revertReason ?? errored.error, error_at: errored.to } : {}) };
-      if (errored && type === "failed") category = "reverted_contract_call";
+      if (errored && type === "failed") {
+        category = "reverted_contract_call";
+      } else if (type === "contract_interaction") {
+        const calledAddrs = nodes.map((n) => (n.to ?? "").toLowerCase());
+        const knownProtocol = calledAddrs.find((a) => KNOWN_LABELS[a]?.type === "protocol");
+        if (knownProtocol) {
+          category = "known_protocol_call";
+          confidence = 0.9;
+        } else if (moves.length > 0) {
+          category = "complex_token_interaction";
+          confidence = 0.85;
+        } else {
+          category = "contract_call";
+          confidence = 0.8;
+        }
+      } else if (type === "swap") {
+        category = "dex_swap";
+        confidence = 0.9;
+      }
     }
 
     const who = (a: string) => KNOWN_LABELS[a]?.label ?? a;

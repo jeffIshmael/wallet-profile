@@ -24,7 +24,7 @@ function checkBudget() {
   if (spentToday + PRICE_USD > budget) throw new Error(`Buy daily budget of $${budget} reached`);
 }
 
-export const buyEnabled = () => process.env.BUY_ENABLED === "true";
+export const buyEnabled = () => process.env.BUY_ENABLED !== "false";
 
 export async function buyChainstackBatch(calls: unknown[]): Promise<{ results: any[]; purchase: BuyPurchase }> {
   if (!buyEnabled()) throw new Error("Buy purchases are disabled (set BUY_ENABLED=true)");

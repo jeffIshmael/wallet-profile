@@ -104,11 +104,9 @@ export const getTokenBalances = tool(
     const limitations: string[] = [];
     const disc = await discoverTokens(w);
     if (!disc.complete) limitations.push("Token discovery is still catching up on older history; some tokens may be missing. Call again to continue.");
-    if (disc.lookbackDays) limitations.push(`Token discovery only looks back ${disc.lookbackDays} days; older tokens that never moved again may be missing.`);
     limitations.push(
       disc.source === "explorer" ? "The token list is the Celo explorer's list plus a built-in list of known Celo tokens; balances are read directly from the chain."
-      : disc.source === "known" ? "The Celo explorer was unreachable, so only a built-in list of known Celo tokens was checked; other tokens may be missing."
-      : "Tokens are discovered from the wallet's incoming Transfer events; tokens credited without a Transfer event are not found."
+      : "The Celo explorer was unreachable, so only a built-in list of known Celo tokens was checked; other tokens may be missing."
     );
     // The CELO token contract mirrors the native balance, which is listed on its own row below.
     const candidates = disc.tokens.filter((t) => t !== CELO_TOKEN);

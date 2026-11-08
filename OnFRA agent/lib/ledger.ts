@@ -1,9 +1,9 @@
 // FILE: lib/ledger.ts
-// Turns raw SQD blocks into a normalized ledger (one entry per asset movement) for a wallet and a period,
-// plus the helpers every intel tool shares: period parsing, flow math, and the common response envelope.
+// Builds a normalized ledger (one entry per asset movement) for a wallet and a period
+// using the public Celo node and explorer, plus the helpers every intel tool shares:
+// period parsing, flow math, and the common response envelope.
 import { formatUnits } from "viem";
-import { sqdHead, sqdBlockAtTimestamp, streamRange, walletQuery, TRANSFER_TOPIC } from "./sqdClient.js";
-import { getTokenMeta, getCeloPriceUsd, STABLE_ADDRESSES, CELO_TOKEN, NATIVE } from "./celoChain.js";
+import { getTokenMeta, getCeloPriceUsd, STABLE_ADDRESSES, CELO_TOKEN, NATIVE, celoClient } from "./celoChain.js";
 
 export interface Period { label: string; start: Date; end: Date; allTime: boolean; complete: boolean; fixed: boolean }  // fixed = a calendar month or explicit range (cacheable by dates); otherwise a trailing window
 export interface Asset { key: string; symbol: string; address: string | null; decimals: number }
@@ -47,124 +47,191 @@ export function parsePeriod(input: string, now = new Date()): Period {
 
 export const periodDays = (p: Period) => Math.max(1, Math.ceil((p.end.getTime() - p.start.getTime()) / 86_400_000));
 
-async function resolveBlocks(p: Period) {
-  const head = await sqdHead();
-  const nowSec = Math.floor(Date.now() / 1000);
-  let estimated = false;
-  const endSec = Math.floor(p.end.getTime() / 1000);
-  let toBlock = head;
-  if (endSec < nowSec - 60) {
-    const b = await sqdBlockAtTimestamp(endSec);
-    if (b === null) { estimated = true; toBlock = Math.max(0, head - (nowSec - endSec)); } else toBlock = b;
-  }
-  let fromBlock = 0;
-  if (!p.allTime) {
-    const startSec = Math.floor(p.start.getTime() / 1000);
-    const b = await sqdBlockAtTimestamp(startSec);
-    if (b === null) { estimated = true; fromBlock = Math.max(0, head - (nowSec - startSec)); } else fromBlock = b;
-  }
-  return { fromBlock, toBlock: Math.min(toBlock, head), estimated };
-}
-
 // ---------- ledger ----------
 const big = (x: unknown): bigint => { try { return x == null || x === "" ? 0n : BigInt(x as any); } catch { return 0n; } };
-const topicAddr = (t: string) => "0x" + t.slice(-40).toLowerCase();
-const CACHE_MS = 60_000;                 // fresh: reuse without asking SQD
-const STALE_MS = 6 * 60 * 60 * 1000;     // stale: only used when SQD is failing
+const CACHE_MS = 60_000;                 // fresh: reuse without hitting network
+const STALE_MS = 6 * 60 * 60 * 1000;     // stale: only used when network fails
 const ledgerCache = new Map<string, { at: number; ledger: Ledger }>();
+
+async function fetchExplorerTxs(endpoint: "txlist" | "tokentx", wallet: string, startSec: number): Promise<any[]> {
+  const base = (process.env.BLOCKSCOUT_URL ?? "https://celo.blockscout.com").replace(/\/$/, "");
+  const allResults: any[] = [];
+  const maxPages = 5;
+  for (let page = 1; page <= maxPages; page++) {
+    const url = `${base}/api?module=account&action=${endpoint}&address=${wallet}&sort=desc&page=${page}&offset=1000`;
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+      if (!res.ok) break;
+      const json = (await res.json()) as any;
+      if (json && Array.isArray(json.result)) {
+        allResults.push(...json.result);
+        if (json.result.length < 1000) break;
+        const oldest = json.result[json.result.length - 1];
+        const oldestTs = parseInt(oldest?.timeStamp || "0");
+        if (oldestTs > 0 && oldestTs < startSec) break;
+      } else {
+        break;
+      }
+    } catch (e) {
+      console.warn(`[ledger] Failed to fetch ${endpoint} page ${page} for ${wallet}:`, e);
+      break;
+    }
+  }
+  return allResults;
+}
 
 export async function loadLedger(wallet: string, period: Period): Promise<Ledger> {
   const w = wallet.toLowerCase();
-  // Trailing windows ("30d") move every millisecond, so they are keyed by label only; fixed ranges include their dates.
   const cacheKey = period.fixed ? `${w}|${period.label}|${period.start.toISOString()}|${period.end.toISOString()}` : `${w}|${period.label}`;
   const hit = ledgerCache.get(cacheKey);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.ledger;
 
   const limitations: string[] = [];
-  let range: Awaited<ReturnType<typeof resolveBlocks>>;
-  let stream: Awaited<ReturnType<typeof streamRange>>;
+  const startSec = Math.floor(period.start.getTime() / 1000);
+  const endSec = Math.floor(period.end.getTime() / 1000);
+
+  let normalList: any[] = [];
+  let tokenList: any[] = [];
+  let headBlock = 0;
+
   try {
-    range = await resolveBlocks(period);
-    stream = await streamRange(walletQuery(w), range.fromBlock, range.toBlock);
-  } catch (err) {
-    // SQD is down or overloaded: fall back to the last good result for this wallet and period, clearly labeled.
+    const [norm, tok, head] = await Promise.all([
+      fetchExplorerTxs("txlist", w, startSec),
+      fetchExplorerTxs("tokentx", w, startSec),
+      celoClient.getBlockNumber().then((n) => Number(n)).catch(() => 0)
+    ]);
+    normalList = norm;
+    tokenList = tok;
+    headBlock = head;
+  } catch (err: any) {
     if (hit && Date.now() - hit.at < STALE_MS) {
       const ago = Math.round((Date.now() - hit.at) / 60000);
-      return { ...hit.ledger, complete: false, limitations: [`The data source was unavailable, so this is the last successful result from ${ago} minute(s) ago.`, ...hit.ledger.limitations] };
+      return {
+        ...hit.ledger,
+        complete: false,
+        limitations: [`Data source temporarily unavailable; showing cached result from ${ago} minute(s) ago.`, ...hit.ledger.limitations]
+      };
     }
-    throw err;
+    limitations.push(`Failed to fetch onchain transaction history: ${err?.message ?? err}`);
   }
-  const { fromBlock, toBlock, estimated } = range;
-  if (estimated) limitations.push("Block range was estimated from timestamps (1-second block time assumed).");
-  if (!stream.complete) limitations.push(`History scan stopped at block ${stream.reached} of ${toBlock}${stream.error ? ` (${stream.error.slice(0, 120)})` : ""}; results cover only part of the period.`);
 
   const hashes = new Map<string, number>();
   const activeDays = new Set<string>();
-  const txMeta = new Map<string, { from: string; to: string; value: bigint; ok: boolean; ts: number; block: number }>();
-  const rawLogs: { address: string; topics: string[]; data: string; hash: string; ts: number; block: number }[] = [];
+  const entries: LedgerEntry[] = [];
+  const nativeKeys = new Set<string>();
   let lastTs = 0;
-
-  for (const b of stream.blocks) {
-    const ts = b.header.timestamp;
-    lastTs = Math.max(lastTs, ts);
-    for (const tx of b.transactions ?? []) {
-      hashes.set(tx.hash, ts);
-      activeDays.add(day(new Date(ts * 1000)));
-      txMeta.set(tx.hash, { from: (tx.from ?? "").toLowerCase(), to: (tx.to ?? "").toLowerCase(), value: big(tx.value), ok: tx.status === undefined || Number(tx.status) !== 0, ts, block: b.header.number });
-    }
-    for (const lg of b.logs ?? []) {
-      hashes.set(lg.transactionHash, ts);
-      activeDays.add(day(new Date(ts * 1000)));
-      rawLogs.push({ address: lg.address.toLowerCase(), topics: lg.topics, data: lg.data ?? "0x", hash: lg.transactionHash, ts, block: b.header.number });
-    }
-  }
+  let minBlock = headBlock || Infinity;
+  let maxBlock = 0;
 
   const celoPrice = await getCeloPriceUsd();
   const celoAsset: Asset = { key: "native", symbol: NATIVE.symbol, address: null, decimals: NATIVE.decimals };
-  const entries: LedgerEntry[] = [];
-  const nativeKeys = new Set<string>();
 
-  // native CELO transfers (transaction value)
-  for (const [hash, t] of txMeta) {
-    if (!t.ok || t.value === 0n) continue;
-    const amount = Number(formatUnits(t.value, 18));
-    const self = t.from === w && t.to === w;
-    const dir: LedgerEntry["direction"] = self ? "self" : t.from === w ? "out" : t.to === w ? "in" : "self";
+  // 1. Process normal native transactions
+  for (const tx of normalList) {
+    const ts = parseInt(tx.timeStamp || "0");
+    if (isNaN(ts) || ts < startSec || ts > endSec) continue;
+    lastTs = Math.max(lastTs, ts);
+    const hash = tx.hash as string;
+    hashes.set(hash, ts);
+    activeDays.add(day(new Date(ts * 1000)));
+
+    const bn = Number(tx.blockNumber);
+    if (!isNaN(bn) && bn > 0) {
+      if (bn < minBlock) minBlock = bn;
+      if (bn > maxBlock) maxBlock = bn;
+    }
+
+    const isOk = tx.isError === "0" && (tx.txreceipt_status === undefined || tx.txreceipt_status === "1" || tx.txreceipt_status === "");
+    const val = big(tx.value);
+    if (!isOk || val === 0n) continue;
+
+    const from = (tx.from || "").toLowerCase();
+    const to = (tx.to || "").toLowerCase();
+    const self = from === w && to === w;
+    const dir: LedgerEntry["direction"] = self ? "self" : from === w ? "out" : to === w ? "in" : "self";
     if (dir === "self" && !self) continue;
-    entries.push({ hash, blockNumber: t.block, timestamp: t.ts, direction: dir, asset: celoAsset, amount, amountUsd: celoPrice == null ? null : amount * celoPrice, counterparty: dir === "out" ? t.to : t.from, isSwapLeg: false });
-    nativeKeys.add(`${hash}|${dir}|${t.value}`);
+
+    const amount = Number(formatUnits(val, 18));
+    entries.push({
+      hash,
+      blockNumber: bn || 0,
+      timestamp: ts,
+      direction: dir,
+      asset: celoAsset,
+      amount,
+      amountUsd: celoPrice == null ? null : amount * celoPrice,
+      counterparty: dir === "out" ? to : from,
+      isSwapLeg: false
+    });
+    nativeKeys.add(`${hash}|${dir}|${val}`);
   }
 
-  // ERC-20 transfers (3-topic Transfer logs; 4-topic ones are NFTs and are ignored)
-  const erc20 = rawLogs.filter((l) => l.topics[0] === TRANSFER_TOPIC && l.topics.length === 3);
-  const meta = await getTokenMeta(erc20.map((l) => l.address));
-  for (const l of erc20) {
-    const from = topicAddr(l.topics[1]);
-    const to = topicAddr(l.topics[2]);
-    const raw = big(l.data);
+  // 2. Process ERC-20 token transfers
+  const unknownTokens: string[] = [];
+  for (const tx of tokenList) {
+    const ts = parseInt(tx.timeStamp || "0");
+    if (isNaN(ts) || ts < startSec || ts > endSec) continue;
+    const addr = (tx.contractAddress || "").toLowerCase();
+    if (addr && !tx.tokenSymbol && !tx.tokenDecimal) unknownTokens.push(addr);
+  }
+  const meta = unknownTokens.length > 0 ? await getTokenMeta(unknownTokens) : new Map();
+
+  for (const tx of tokenList) {
+    const ts = parseInt(tx.timeStamp || "0");
+    if (isNaN(ts) || ts < startSec || ts > endSec) continue;
+    lastTs = Math.max(lastTs, ts);
+    const hash = tx.hash as string;
+    hashes.set(hash, ts);
+    activeDays.add(day(new Date(ts * 1000)));
+
+    const bn = Number(tx.blockNumber);
+    if (!isNaN(bn) && bn > 0) {
+      if (bn < minBlock) minBlock = bn;
+      if (bn > maxBlock) maxBlock = bn;
+    }
+
+    const raw = big(tx.value);
     if (raw === 0n) continue;
-    const dir: LedgerEntry["direction"] = from === w && to === w ? "self" : from === w ? "out" : to === w ? "in" : "self";
-    if (dir === "self" && !(from === w && to === w)) continue;
-    const isCelo = l.address === CELO_TOKEN;
-    if (isCelo && nativeKeys.has(`${l.hash}|${dir}|${raw}`)) continue; // same movement already counted from tx value
-    const m = isCelo ? { symbol: NATIVE.symbol, decimals: NATIVE.decimals } : meta.get(l.address)!;
-    const amount = Number(formatUnits(raw, m.decimals));
-    const stable = STABLE_ADDRESSES[l.address] !== undefined;
+
+    const from = (tx.from || "").toLowerCase();
+    const to = (tx.to || "").toLowerCase();
+    const self = from === w && to === w;
+    const dir: LedgerEntry["direction"] = self ? "self" : from === w ? "out" : to === w ? "in" : "self";
+    if (dir === "self" && !self) continue;
+
+    const contract = (tx.contractAddress || "").toLowerCase();
+    const isCelo = contract === CELO_TOKEN;
+    if (isCelo && nativeKeys.has(`${hash}|${dir}|${raw}`)) continue;
+
+    const m = meta.get(contract);
+    const decimals = tx.tokenDecimal ? parseInt(tx.tokenDecimal) : m ? m.decimals : 18;
+    const symbol = tx.tokenSymbol || m?.symbol || "ERC20";
+    const amount = Number(formatUnits(raw, decimals));
+    const stable = STABLE_ADDRESSES[contract] !== undefined;
     const usd = isCelo ? (celoPrice == null ? null : amount * celoPrice) : stable ? amount : null;
+
     entries.push({
-      hash: l.hash, blockNumber: l.block, timestamp: l.ts, direction: dir,
-      asset: isCelo ? celoAsset : { key: l.address, symbol: m.symbol, address: l.address, decimals: m.decimals },
-      amount, amountUsd: usd, counterparty: dir === "out" ? to : from, isSwapLeg: false,
+      hash,
+      blockNumber: bn || 0,
+      timestamp: ts,
+      direction: dir,
+      asset: isCelo ? celoAsset : { key: contract, symbol, address: contract, decimals },
+      amount,
+      amountUsd: usd,
+      counterparty: dir === "out" ? to : from,
+      isSwapLeg: false
     });
   }
 
-  // swaps: same tx has at least one asset going out and a different asset coming in
+  // 3. Detect swaps
   const byHash = new Map<string, LedgerEntry[]>();
   for (const e of entries) byHash.set(e.hash, [...(byHash.get(e.hash) ?? []), e]);
   for (const group of byHash.values()) {
     const outs = new Set(group.filter((e) => e.direction === "out").map((e) => e.asset.key));
     const ins = new Set(group.filter((e) => e.direction === "in").map((e) => e.asset.key));
-    if (outs.size && ins.size && [...ins].some((k) => !outs.has(k))) group.forEach((e) => (e.isSwapLeg = true));
+    if (outs.size && ins.size && [...ins].some((k) => !outs.has(k))) {
+      group.forEach((e) => (e.isSwapLeg = true));
+    }
   }
 
   entries.sort((a, b) => a.timestamp - b.timestamp);
@@ -174,8 +241,24 @@ export async function loadLedger(wallet: string, period: Period): Promise<Ledger
   else limitations.push("CELO is valued at the current price, not the price at transfer time.");
   limitations.push("Transfers between wallets owned by the same person cannot be detected; they are counted as flows. Gas fees are not included.");
 
-  const ledger: Ledger = { wallet: w, period, entries, hashes, activeDays, complete: stream.complete, limitations, dataLastUpdated: lastTs ? new Date(lastTs * 1000) : new Date(), fromBlock, toBlock };
-  if (stream.complete) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const fromBlock = maxBlock > 0 && Number.isFinite(minBlock) ? minBlock : Math.max(0, headBlock - (nowSec - startSec));
+  const toBlock = maxBlock > 0 ? Math.min(headBlock || maxBlock, maxBlock) : (headBlock || 0);
+
+  const ledger: Ledger = {
+    wallet: w,
+    period,
+    entries,
+    hashes,
+    activeDays,
+    complete: limitations.length === 0 || !limitations.some((l) => l.startsWith("Failed to fetch")),
+    limitations,
+    dataLastUpdated: lastTs ? new Date(lastTs * 1000) : new Date(),
+    fromBlock,
+    toBlock
+  };
+
+  if (ledger.complete) {
     if (ledgerCache.size >= 200) ledgerCache.delete(ledgerCache.keys().next().value as string);
     ledgerCache.set(cacheKey, { at: Date.now(), ledger });
   }
@@ -198,7 +281,7 @@ export function summarizeFlows(entries: LedgerEntry[]) {
   return { inflow: round2(inflow), outflow: round2(outflow), net: round2(inflow - outflow), incoming, outgoing };
 }
 
-// ---------- response envelope (matches the published result schemas) ----------
+// ---------- response envelope ----------
 export function periodBlock(p: Period) {
   return { label: p.label, start: day(p.start), end: day(p.end), complete: p.complete };
 }
@@ -208,7 +291,7 @@ export function envelope(l: Ledger, extraLimitations: string[] = []) {
     wallet_address: l.wallet,
     chain: "celo",
     period: periodBlock(l.period),
-    data_source: "onfra:sqd+celo-rpc",
+    data_source: "onfra:celo-rpc",
     data_last_updated: l.dataLastUpdated.toISOString(),
     generated_at: new Date().toISOString(),
     data_quality: { complete: l.complete && l.period.complete, limitations: [...l.limitations, ...extraLimitations] },
@@ -217,7 +300,7 @@ export function envelope(l: Ledger, extraLimitations: string[] = []) {
 
 export function baseEnvelope(wallet: string, complete: boolean, limitations: string[]) {
   const now = new Date().toISOString();
-  return { wallet_address: wallet.toLowerCase(), chain: "celo", data_source: "onfra:sqd+celo-rpc", data_last_updated: now, generated_at: now, data_quality: { complete, limitations } };
+  return { wallet_address: wallet.toLowerCase(), chain: "celo", data_source: "onfra:celo-rpc", data_last_updated: now, generated_at: now, data_quality: { complete, limitations } };
 }
 
 export const normalizeAddress = (a: string) => {
