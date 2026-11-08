@@ -36,6 +36,28 @@ const out = (data: unknown, isError = false): ToolResult => ({
   content: [{ type: "text", text: typeof data === "string" ? data : JSON.stringify(data, null, 2) }]
 });
 
+type TrackArgs = Parameters<typeof trackApiEvent>[0];
+
+// Usage logging must never break a tool result. ApiEvent.walletAddress is a foreign key,
+// so logging fails for wallets that are not in the database (every external wallet).
+// Retry once without the FK field (wallet kept in metadata), and never throw.
+async function safeTrack(args: TrackArgs): Promise<void> {
+  try {
+    await trackApiEvent(args);
+  } catch {
+    try {
+      const retry = {
+        ...args,
+        walletAddress: undefined,
+        metadata: { ...(args.metadata as Record<string, unknown> | undefined), wallet_address: args.walletAddress }
+      } as TrackArgs;
+      await trackApiEvent(retry);
+    } catch (e) {
+      console.error("[mcp] trackApiEvent failed (ignored):", e);
+    }
+  }
+}
+
 async function runTool(req: Request, tool: string, args: Record<string, unknown>): Promise<ToolResult> {
   if (!isIntelTool(tool)) return out({ error: `Unknown tool "${tool}".`, code: "UNKNOWN_TOOL" }, true);
 
@@ -67,14 +89,14 @@ async function runTool(req: Request, tool: string, args: Record<string, unknown>
 
   try {
     const result = await runIntelTool(tool, args);
-    await trackApiEvent({
+    await safeTrack({
       endpoint, status: "success", walletAddress: wallet, durationMs: Date.now() - started,
       metadata: { access, priceUsdt, settlement, via: "mcp" }
     });
     return out(result);
   } catch (error) {
     const err = error as { message?: string; code?: string; details?: unknown };
-    await trackApiEvent({
+    await safeTrack({
       endpoint, status: "error", walletAddress: wallet, durationMs: Date.now() - started,
       metadata: { message: err?.message ?? "Tool failed.", access, via: "mcp" }
     });

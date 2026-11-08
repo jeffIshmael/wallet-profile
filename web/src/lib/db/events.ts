@@ -10,9 +10,7 @@ type TrackEventInput = {
   metadata?: Record<string, unknown>;
 };
 
-export async function trackApiEvent(input: TrackEventInput) {
-  const walletAddress = input.walletAddress ? normalizeAddress(input.walletAddress) : undefined;
-
+async function insertEvent(input: TrackEventInput, walletAddress: string | undefined) {
   return prisma.apiEvent.create({
     data: {
       endpoint: input.endpoint,
@@ -22,6 +20,37 @@ export async function trackApiEvent(input: TrackEventInput) {
       metadata: input.metadata as Prisma.InputJsonValue | undefined
     }
   });
+}
+
+/**
+ * Best-effort usage logging. It NEVER throws, so a logging problem can never turn a
+ * successful tool run (or a paid x402 request) into an error response.
+ *
+ * ApiEvent.walletAddress is a foreign key, so the insert fails for any wallet that is
+ * not in the database (every external wallet analyzed by an agent). In that case we
+ * retry once without the FK field and keep the address in metadata instead.
+ * Returns the created row, or null if the event could not be stored.
+ */
+export async function trackApiEvent(input: TrackEventInput) {
+  const walletAddress = input.walletAddress ? normalizeAddress(input.walletAddress) : undefined;
+
+  try {
+    return await insertEvent(input, walletAddress);
+  } catch (error) {
+    if (walletAddress) {
+      try {
+        return await insertEvent(
+          { ...input, metadata: { ...input.metadata, wallet_address: walletAddress } },
+          undefined
+        );
+      } catch (retryError) {
+        console.error("[trackApiEvent] failed (ignored):", retryError);
+        return null;
+      }
+    }
+    console.error("[trackApiEvent] failed (ignored):", error);
+    return null;
+  }
 }
 
 export async function withApiTracking<T>(
