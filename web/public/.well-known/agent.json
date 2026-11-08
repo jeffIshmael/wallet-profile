@@ -50,11 +50,7 @@
       "endpoint": "https://app.onfra.xyz/.well-known/agent-card.json",
       "version": "0.3.0"
     },
-    {
-      "name": "MCP",
-      "endpoint": "https://app.onfra.xyz/.well-known/mcp.json",
-      "version": "2026-11-05"
-    },
+    { "name": "MCP", "endpoint": "https://app.onfra.xyz/api/mcp", "version": "2025-03-26" },
     {
       "name": "WEB",
       "endpoint": "https://app.onfra.xyz/",

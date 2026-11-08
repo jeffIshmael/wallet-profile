@@ -2,6 +2,12 @@
 // MCP (Streamable HTTP) server for OnFRA -> https://app.onfra.xyz/api/mcp
 // Wraps the same logic as /api/agent/tools/[tool], called in-process so
 // per-IP rate limits and x402 payments behave exactly like the REST route.
+//
+// Built for mcp-handler 2.x + @modelcontextprotocol/server 2.x + zod 4.
+// NOTE: input schemas deliberately avoid .regex()/pattern. 8004scan's "Try agent"
+// marks any tool whose JSON Schema contains "pattern" as Unavailable. Format checks
+// (wallet 0x + 40 hex, tx hash 0x + 64 hex) still happen server-side in
+// validateIntelToolInput, before any payment is taken.
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 import { assertPayment } from "@/lib/agent/x402";
@@ -78,11 +84,12 @@ async function runTool(req: Request, tool: string, args: Record<string, unknown>
 }
 
 // ---- tool definitions (mirror your mcp.json) ----
-const wallet = z.string().regex(/^0x[a-fA-F0-9]{40}$/).describe("Wallet address to analyze.");
+// No .regex() anywhere: it would emit a JSON Schema "pattern", which 8004scan rejects.
+const wallet = z.string().describe("Wallet address to analyze: 0x followed by 40 hex characters.");
 const chain = z.enum(["celo"]).describe("Blockchain. Celo today.");
 const period = z.string().optional().describe("7d, 30d, 90d, 1y or all-time.");
 
-const TOOLS: { name: string; description: string; shape: z.ZodType }[] = [
+const TOOLS: { name: string; description: string; shape: Record<string, z.ZodType> }[] = [
   {
     name: "analyze_wallet",
     description: "Financial intelligence profile of a wallet: overview, summary, tokens, activity, insights. Free.",
@@ -156,7 +163,7 @@ const TOOLS: { name: string; description: string; shape: z.ZodType }[] = [
     name: "explain_transaction",
     description: "Plain-language explanation of a transaction. PAID: 0.02 USDT via x402 (send X-PAYMENT header; otherwise a 402 payment payload is returned).",
     shape: {
-      transaction_hash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).describe("Transaction hash."),
+      transaction_hash: z.string().describe("Transaction hash: 0x followed by 64 hex characters."),
       chain,
       wallet_address: wallet.optional(),
       use_trace: z.boolean().optional()
@@ -164,23 +171,24 @@ const TOOLS: { name: string; description: string; shape: z.ZodType }[] = [
   }
 ];
 
-// 2) replace the whole handle() function
 async function handle(req: Request): Promise<Response> {
-    const handler = createMcpHandler((server) => {
-      for (const t of TOOLS) {
-        server.registerTool(
-          t.name,
-          { description: t.description, inputSchema: z.object(t.shape) },
-          async (args) => runTool(req, t.name, args as Record<string, unknown>)
-        );
-      }
-    });
-  
-    const res = await handler(req);
-    const headers = new Headers(res.headers);
-    for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
-    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
-  }
+  // Built per request so tool callbacks can see the original request (IP, payment headers).
+  const handler = createMcpHandler((server) => {
+    for (const t of TOOLS) {
+      server.registerTool(
+        t.name,
+        { description: t.description, inputSchema: z.object(t.shape) },
+        async (args) => runTool(req, t.name, args as Record<string, unknown>)
+      );
+    }
+  });
+
+  const res = await handler(req);
+  const headers = new Headers(res.headers);
+  for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS });
 }
