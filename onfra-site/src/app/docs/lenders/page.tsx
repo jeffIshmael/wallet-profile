@@ -1,3 +1,4 @@
+// FILE: app/docs/lenders/page.tsx  (uploaded as page_e0439d.tsx — Lender screening)
 import Link from "next/link";
 import {
   DocsBreadcrumb,
@@ -51,7 +52,7 @@ export default function LendersDocsPage() {
           <li>Borrower provides wallet address (and optionally a REP passport ID)</li>
           <li>Your backend calls <code>POST /api/lender/screen</code> with x402 payment <strong>(0.01 USDT)</strong></li>
           <li>Use <code>trust.isTrustworthy</code>, reputation, income, and lending capacity to apply your rules</li>
-          <li>Optionally verify REP passport via <code>GET /api/agent/verify/{"{id}"}</code></li>
+          <li>Optionally verify the REP passport via <code>GET /api/agent/verify/{"{id}"}</code> (accepts <code>REP-…</code> IDs or <code>WP-…</code> codes)</li>
         </ol>
 
         <DocsH2 id="screen">Screen endpoint</DocsH2>
@@ -62,6 +63,9 @@ export default function LendersDocsPage() {
     "walletAddress": "0xBorrowerWallet...",
     "callerAddress": "0xYourLenderWallet..."
   }'`}</DocsCode>
+        <p className="text-sm text-[var(--ink-body)]">
+          Optional: <code>force</code> (boolean, default <code>false</code>) to bypass cached results.
+        </p>
         <div className="docs-callout">
           <strong>callerAddress</strong> is required — the lender wallet that pays 0.01 USDT via x402
           on Celo mainnet.
@@ -93,7 +97,7 @@ export default function LendersDocsPage() {
         <DocsH3 id="sample-passport">Sample passport</DocsH3>
         <p>
           You can view an example of a generated REP passport. The PDF contains verified
-          financial signals including the wallet's health score, estimated income, and transaction summary.
+          financial signals including the wallet&apos;s health score, estimated income, and transaction summary.
         </p>
         <p className="mt-4 mb-6">
           <a
@@ -108,8 +112,8 @@ export default function LendersDocsPage() {
 
         <DocsH3 id="verify-passport">Verify onchain</DocsH3>
         <p>
-          Borrowers can purchase a verified financial passport (<code>REP-{"{id}"}</code>) for 0.10 USDT.
-          Verify it in your flow:
+          Borrowers can purchase a Verified Financial Reputation Report (<code>REP-{"{id}"}</code>) for
+          0.10 USDT, attested onchain via <code>OnchainReporter</code>. Verification is free:
         </p>
         <DocsCode>{`curl ${API_URL}/api/agent/verify/REP-X141GYYEUM`}</DocsCode>
 

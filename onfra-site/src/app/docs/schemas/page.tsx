@@ -1,8 +1,7 @@
+// FILE: app/docs/schemas/page.tsx  (uploaded as page_abcb44.tsx — JSON schemas)
 import Link from "next/link";
-import { DocsBreadcrumb, DocsH2, DocsAssistantDropdown,
-} from "@/components/docs/DocsContent";
+import { DocsBreadcrumb, DocsH2, DocsAssistantDropdown } from "@/components/docs/DocsContent";
 import { DocsShell } from "@/components/docs/DocsShell";
-import { API_URL } from "@/lib/links";
 import type { TocItem } from "@/lib/docsNav";
 
 const TOC: TocItem[] = [
@@ -17,6 +16,7 @@ const SCHEMAS = [
   { file: "walletAnalysisResult.schema.json", kind: "Response" },
   { file: "walletSignalResult.schema.json", kind: "Response" },
   { file: "chatRequest.schema.json", kind: "Request" },
+  { file: "statementRequest.schema.json", kind: "Request" },
   { file: "reportRequest.schema.json", kind: "Request" },
   { file: "reportResult.schema.json", kind: "Response" }
 ] as const;
@@ -39,11 +39,7 @@ export default function SchemasDocsPage() {
         <ul>
           {SCHEMAS.filter((s) => s.kind === "Request").map((schema) => (
             <li key={schema.file}>
-              <a
-                href={`/schemas/${schema.file}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={`/schemas/${schema.file}`} target="_blank" rel="noopener noreferrer">
                 {schema.file}
               </a>
             </li>
@@ -54,11 +50,7 @@ export default function SchemasDocsPage() {
         <ul>
           {SCHEMAS.filter((s) => s.kind === "Response").map((schema) => (
             <li key={schema.file}>
-              <a
-                href={`/schemas/${schema.file}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={`/schemas/${schema.file}`} target="_blank" rel="noopener noreferrer">
                 {schema.file}
               </a>
             </li>

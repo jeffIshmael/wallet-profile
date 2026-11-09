@@ -1,3 +1,4 @@
+// FILE: app/docs/onchain/page.tsx  (uploaded as page_c29804.tsx — Onchain & Attribution)
 import Link from "next/link";
 import {
   DocsBreadcrumb,
@@ -13,6 +14,7 @@ import type { TocItem } from "@/lib/docsNav";
 
 const TOC: TocItem[] = [
   { id: "deployed-contracts", title: "Deployed contracts" },
+  { id: "onchain-actions", title: "Onchain actions" },
   { id: "erc-8004-agent", title: "ERC-8004 Agent" },
   { id: "attribution-tags", title: "Attribution tags" }
 ];
@@ -100,6 +102,18 @@ export default function OnchainDocsPage() {
           </tbody>
         </DocsTable>
 
+        <DocsH2 id="onchain-actions">Onchain actions</DocsH2>
+        <ul>
+          <li>USDT x402 settlement to <code>payTo</code> on Celo</li>
+          <li>
+            <code>OnchainReporter.publishFinancialReport</code> — publishes REP passports
+          </li>
+          <li>
+            <code>OnchainReporter.verifyReport</code> — also exposed as <code>GET /api/agent/verify/{"{id}"}</code>
+          </li>
+          <li>ERC-8004 agent #9219 identity</li>
+        </ul>
+
         <DocsH2 id="erc-8004-agent">ERC-8004 Agent ID</DocsH2>
         <p>
           OnFRA is registered on the Celo ERC-8004 Identity Registry under Agent ID <strong>9219</strong>.
@@ -150,11 +164,11 @@ const hash = await walletClient.sendTransaction({
         <div className="docs-next-links">
           <Link href="/docs/x402" className="docs-next-card">
             <span className="docs-next-label">Previous</span>
-            <span className="docs-next-title">x402 payments →</span>
+            <span className="docs-next-title">← x402 payments</span>
           </Link>
           <Link href="/docs/agents" className="docs-next-card">
             <span className="docs-next-label">Next</span>
-            <span className="docs-next-title">MCP &amp; ERC-8004 →</span>
+            <span className="docs-next-title">MCP →</span>
           </Link>
         </div>
       </div>

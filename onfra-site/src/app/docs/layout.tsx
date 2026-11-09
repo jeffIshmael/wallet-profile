@@ -3,7 +3,7 @@ import { DocsShell } from "@/components/docs/DocsShell";
 
 export const metadata: Metadata = {
   title: "Documentation — OnFRA",
-  description: "Integrate OnFRA financial reputation infrastructure on Celo."
+  description: "Integrate OnFRA financial agent on Celo."
 };
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {

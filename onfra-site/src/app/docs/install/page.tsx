@@ -1,3 +1,4 @@
+// FILE: app/docs/install/page.tsx  (uploaded as page_98da32.tsx — Install skill)
 import Link from "next/link";
 import {
   DocsBreadcrumb,
@@ -44,8 +45,8 @@ export default function InstallDocsPage() {
         </p>
         <DocsCode>{`${API_URL}/.well-known/mcp.json`}</DocsCode>
         <p>
-          See <Link href="/docs/agents">MCP &amp; ERC-8004</Link> for tool names, input schemas, and
-          routing.
+          See <Link href="/docs/agents">MCP</Link> for tool names, pricing, and setup, and{" "}
+          <Link href="/docs/schemas">JSON schemas</Link> for input and output shapes.
         </p>
 
         <DocsH2 id="what-you-get">What the skill teaches</DocsH2>
@@ -57,12 +58,21 @@ export default function InstallDocsPage() {
             <code>GET /api/wallet/{"{address}"}/signals/{"{signal}"}</code> — free cached signal reads
           </li>
           <li>
+            <code>POST /api/agent/chat</code> — natural-language wallet queries
+          </li>
+          <li>
             <code>POST /api/lender/screen</code> — lender underwriting screen
           </li>
           <li>
-            <code>GET /api/agent/verify/{"{reportId}"}</code> — verify REP passports
+            <code>POST /api/agent/statement</code> — transaction statement PDF (3M, 6M or 12M)
           </li>
-          <li>x402 <code>X-PAYMENT</code> header handling for external wallet queries</li>
+          <li>
+            <code>POST /api/agent/report</code> — verified REP passport with onchain attestation
+          </li>
+          <li>
+            <code>GET /api/agent/verify/{"{reportId}"}</code> — verify REP passports (free)
+          </li>
+          <li>x402 <code>X-PAYMENT</code> header handling for paid agent/API queries</li>
         </ul>
 
         <DocsH3 id="github-source">Source</DocsH3>
@@ -79,7 +89,7 @@ export default function InstallDocsPage() {
           </Link>
           <Link href="/docs/agents" className="docs-next-card">
             <span className="docs-next-label">Agents</span>
-            <span className="docs-next-title">MCP &amp; ERC-8004 →</span>
+            <span className="docs-next-title">MCP →</span>
           </Link>
         </div>
       </div>

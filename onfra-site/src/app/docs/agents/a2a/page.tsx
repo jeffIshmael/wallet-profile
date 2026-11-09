@@ -1,3 +1,4 @@
+// FILE: app/docs/agents/a2a/page.tsx  (uploaded as page_1.tsx — A2A)
 import Link from "next/link";
 import {
   DocsBreadcrumb,
@@ -10,7 +11,7 @@ import { API_URL, LINKS } from "@/lib/links";
 import type { TocItem } from "@/lib/docsNav";
 
 const TOC: TocItem[] = [
-  { id: "peer", title: "OnFRA as a peer agent" },
+  { id: "peer", title: "Peer discovery" },
   { id: "skills", title: "Skills" },
   { id: "erc-8004", title: "ERC-8004" }
 ];
@@ -39,10 +40,11 @@ export default function A2ADocsPage() {
       <div className="docs-prose">
         <DocsH2 id="peer">Peer Discovery</DocsH2>
         <p>
-          OnFRA exposes a read-only A2A server. Send structured tool invocations 
-          to the JSON-RPC task server.
+          OnFRA exposes a read-only A2A server. Send structured tool invocations
+          to the JSON-RPC task server. Paid tools still settle via x402 (see{" "}
+          <Link href="/docs/x402">x402 payments</Link>).
         </p>
-        
+
         <div className="grid gap-4 sm:grid-cols-2 mb-8 mt-6">
           <div className="rounded-xl border border-[var(--lav-border)] bg-[var(--lav-tint)] p-5">
             <h3 className="text-sm font-semibold mb-2">Agent Card</h3>
@@ -64,7 +66,7 @@ export default function A2ADocsPage() {
 
         <DocsH2 id="skills">Skills ({SKILLS.length})</DocsH2>
         <p className="mb-6">Each skill maps to a subset of hosted MCP tools. Peers discover these via the Agent Card.</p>
-        
+
         <div className="grid gap-4 sm:grid-cols-2">
           {SKILLS.map((skill) => (
             <div key={skill.name} className="card-lift p-5">
@@ -81,7 +83,7 @@ export default function A2ADocsPage() {
 
         <DocsH2 id="erc-8004">ERC-8004</DocsH2>
         <p>
-          OnFRA is an onchain-identified agent on Celo mainnet. View the public registration:
+          OnFRA is an onchain-identified agent on Celo mainnet (agent #9219). View the public registration:
         </p>
         <p>
           <a href={LINKS.agent8004} target="_blank" rel="noopener noreferrer">

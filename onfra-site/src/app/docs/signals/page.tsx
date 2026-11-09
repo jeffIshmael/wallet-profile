@@ -1,3 +1,4 @@
+// FILE: app/docs/signals/page.tsx  (uploaded as page_b0d28d.tsx — Signal endpoints)
 import Link from "next/link";
 import {
   DocsBreadcrumb,
@@ -27,7 +28,7 @@ export default function SignalsDocsPage() {
         <DocsAssistantDropdown />
       </div>
       <p className="docs-lead">
-        After a wallet is analyzed, you can read individual reputation fields from the cache for{" "}
+        After a wallet is analyzed, you can read individual reputation signals from the cache for{" "}
         <strong>free</strong>. Fresh analysis via <code>POST /api/agent/analyze</code> requires x402
         (0.01 USDT) for agent/API callers.
       </p>
@@ -37,7 +38,7 @@ export default function SignalsDocsPage() {
         <p>
           <code>POST /api/agent/analyze</code> runs the full analysis pipeline and writes to cache.
           Subsequent GET requests return cached slices until the TTL expires. Missing cache returns{" "}
-          <code>404</code> with a hint to call <code>analyze</code> first.
+          <code>404</code> with a hint to call <code>analyze_wallet</code> first.
         </p>
         <DocsCode>{`curl ${API_URL}/api/wallet/0xYourWallet.../signals`}</DocsCode>
         <p>Lists available signal IDs and whether valid cache exists for the wallet (free).</p>
@@ -52,47 +53,35 @@ export default function SignalsDocsPage() {
           </thead>
           <tbody>
             <tr>
-              <td>
-                <code>monthly-income</code>
-              </td>
+              <td><code>monthly-income</code></td>
               <td>Income label, monthly estimate, weekly consistency, income by period</td>
             </tr>
             <tr>
-              <td>
-                <code>financial-health</code>
-              </td>
+              <td><code>financial-health</code></td>
               <td>Health score (0–100) and breakdown</td>
             </tr>
             <tr>
-              <td>
-                <code>reputation-score</code>
-              </td>
+              <td><code>reputation-score</code></td>
               <td>Reputation score, category, rationale</td>
             </tr>
             <tr>
-              <td>
-                <code>loan-capacity</code>
-              </td>
+              <td><code>loan-capacity</code></td>
               <td>Min/max USD range, confidence, factors</td>
             </tr>
             <tr>
-              <td>
-                <code>statement</code>
-              </td>
-              <td>3-month inflow/outflow, net, monthly breakdown</td>
+              <td><code>statement</code></td>
+              <td>Inflow/outflow, net, and monthly breakdown for the analysis period</td>
             </tr>
             <tr>
-              <td>
-                <code>assessment</code>
-              </td>
+              <td><code>assessment</code></td>
               <td>AI narrative, strengths, watch items, attestation</td>
             </tr>
           </tbody>
         </DocsTable>
 
         <DocsH2 id="read-signal">Read one signal</DocsH2>
-        <DocsCode>{`curl -H "X-PAYMENT: <x402-signature>" ${API_URL}/api/wallet/0xYourWallet.../signals/loan-capacity`}</DocsCode>
-        <p>Response shape:</p>
+        <DocsCode>{`curl ${API_URL}/api/wallet/0xYourWallet.../signals/loan-capacity`}</DocsCode>
+        <p>Free — no <code>X-PAYMENT</code> header needed. Response shape:</p>
         <DocsCode>{`{
   "signal": "loan-capacity",
   "walletAddress": "0x...",
