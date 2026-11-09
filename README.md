@@ -81,6 +81,66 @@ Copy `web/.env.local.example` to `web/.env` and configure:
 
 See each package README and [docs/architecture.md](./docs/architecture.md) for additional configuration.
 
+## Local installation
+
+Full step-by-step setup from scratch:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/jeffIshmael/wallet-profile.git
+cd wallet-profile
+
+# 2. Install all workspace dependencies
+npm install
+
+# 3. Set up environment variables
+cp web/.env.local.example web/.env
+# Edit web/.env and fill in the required values (see table below)
+
+# 4. Build the OnFRA agent bundle
+npm run build:agent --prefix web
+
+# 5. Start the development server
+npm run dev
+```
+
+The app will be available at **http://localhost:3000**.
+
+#### Required environment variables (`web/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_PRIVY_APP_ID` | Privy app ID for wallet authentication |
+| `DATABASE_URL` | PostgreSQL connection string (Prisma) |
+| `REPORTER_PRIVATE_KEY` | Private key for the onchain report relayer wallet |
+| `ONCHAIN_REPORTER_PROXY_ADDRESS` | Deployed `OnchainReporter` UUPS proxy address on Celo |
+| `OPENAI_API_KEY` | OpenAI API key for the AI analysis agent |
+| `PINATA_JWT` | Pinata JWT for IPFS report pinning |
+| `PINATA_GATEWAY` | Pinata IPFS gateway URL |
+
+Optional (for x402 paid tools):
+
+| Variable | Description |
+|----------|-------------|
+| `BUY_ENABLED` | Set to `true` to enable x402 payments via the `buy` CLI |
+| `BUY_ACCOUNT` | Account name configured in `buy` CLI |
+
+## Running the test script
+
+After building the agent bundle, run all 9 intelligence tools against a test wallet to verify everything is working:
+
+```bash
+node scripts/test-agent.mjs [wallet_address] [tx_hash]
+```
+
+Example:
+
+```bash
+node scripts/test-agent.mjs 0x4821ced48fb4456055c86e42587f61c1f39c6315
+```
+
+This runs every tool (`analyze_wallet`, `get_cash_flow_summary`, `get_token_balances`, etc.) and prints a pass/fail table with response times. Exit code is `0` if all pass, `1` if any fail.
+
 ## Package overview
 
 | Package | Role |
@@ -108,7 +168,7 @@ See [docs/api.md](./docs/api.md) for full API reference.
 |----------|---------|
 | OnchainReporter proxy | [`0xE7621aF5dE3806ba26115bdC89190c65ed835C21`](https://celoscan.io/address/0xE7621aF5dE3806ba26115bdC89190c65ed835C21) |
 | ERC-8004 Identity Registry | [`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`](https://celoscan.io/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432) |
-| OnFRA agent ID | [`9219`](https://8004scan.io/agents/celo/9219) |
+| OnFRA agent ID | [`https://8004scan.io/agents/celo/9219`](https://8004scan.io/agents/celo/9219) |
 
 See [docs/onchain.md](./docs/onchain.md) for verification flow and contract details.
 
