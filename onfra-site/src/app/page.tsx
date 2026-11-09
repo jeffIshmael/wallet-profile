@@ -157,8 +157,7 @@ function AgentPreview() {
 
       <div className="space-y-4 p-4 sm:p-6">
         <div className="ml-auto max-w-[90%] rounded-2xl rounded-tr-sm bg-[#6f5a9f] px-4 py-3 text-sm leading-6 text-white">
-          Summarize this wallet&apos;s activity for October. Who received the
-          most funds?
+          Summarize this wallet&apos;s activity for October. How much came in?
         </div>
 
         <div className="max-w-[95%] rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.06] px-4 py-3">
