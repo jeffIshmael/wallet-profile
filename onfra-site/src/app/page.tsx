@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HeroWalletInput } from "@/components/HeroWalletInput";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { AgentSection } from "@/components/AgentSection";
-import { LINKS } from "@/lib/links";
+import { CountUp } from "@/components/AnimatedBits";
+import { API_URL, LINKS } from "@/lib/links";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -213,8 +214,37 @@ function AgentPreview() {
   );
 }
 
+type PlatformStats = {
+  totals?: {
+    wallets?: number;
+    analyses?: number;
+    reports?: number;
+  };
+};
+
 export default function HomePage() {
   const [audience, setAudience] = useState<Audience>("humans");
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/stats`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.totals) setStats(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const walletsCount = stats?.totals?.wallets ?? 0;
+  const statementsCount = stats?.totals?.reports ?? 0;
+  const reportsCount = stats?.totals?.analyses ?? 0;
+
+  const STATS_ITEMS = [
+    { value: walletsCount, prefix: "", suffix: walletsCount > 0 ? "+" : "", decimals: 0, label: "Wallets analyzed" },
+    { value: statementsCount, prefix: "", suffix: statementsCount > 0 ? "+" : "", decimals: 0, label: "Exported transaction statements" },
+    { value: reportsCount, prefix: "", suffix: reportsCount > 0 ? "+" : "", decimals: 0, label: "Reports generated" },
+    { value: 1, prefix: "", suffix: "", decimals: 0, label: "Networks supported (Celo)" },
+  ];
 
   return (
     <div className="page-shell bg-white text-[#111017]">
@@ -379,6 +409,30 @@ export default function HomePage() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* STATS STRIP */}
+        <section className="section-light border-t border-[#d4cee1]/70 py-16">
+          <div className="mx-auto max-w-5xl px-5">
+            <div className="grid grid-cols-2 gap-y-10 text-center md:grid-cols-4">
+              {STATS_ITEMS.map((s, i) => (
+                <div key={s.label} className="relative px-4">
+                  {i > 0 && (
+                    <span className="stat-divider absolute left-0 top-1/2 hidden h-14 w-px -translate-y-1/2 md:block" />
+                  )}
+                  <p className="headline text-4xl font-extrabold text-[#111017] sm:text-5xl">
+                    <CountUp
+                      to={s.value}
+                      prefix={s.prefix}
+                      suffix={s.suffix}
+                      decimals={s.decimals}
+                    />
+                  </p>
+                  <p className="mt-2 text-xs font-medium text-[#5f5c67]">{s.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
