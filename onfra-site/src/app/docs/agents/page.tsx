@@ -49,7 +49,7 @@ export default function AgentsDocsPage() {
           No API keys: paid tools settle per request in USDT on Celo via x402.
         </p>
         <p className="mt-2 text-sm text-[var(--ink-body)]">
-          Discovery manifest: <code>{`${API_URL}/.well-known/mcp.json`}</code>
+          Discovery manifest: <code>{`${API_URL}/api/mcp`}</code>
         </p>
 
         <DocsH2 id="local">Local stdio (Recommended)</DocsH2>
